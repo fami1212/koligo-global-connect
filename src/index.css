@@ -2,41 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* KoliGo Design System - Global, Collaborative Delivery Platform
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
+    /* Background & Base */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 210 12% 16%;
 
+    /* Cards & Surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 12% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 12% 16%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - KoliGo Green (Trust & Security) */
+    --primary: 142 69% 45%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 142 69% 65%;
+    --primary-dark: 142 69% 35%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Reliability Blue */
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-light: 217 91% 75%;
+    --secondary-dark: 217 91% 45%;
 
+    /* Accent - Energy Orange */
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 98%;
+    --accent-light: 24 95% 68%;
+    --accent-dark: 24 95% 38%;
+
+    /* Muted & Neutral */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 43 89% 55%;
+    --warning-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
+    /* Borders & Inputs */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 142 69% 45%;
 
-    --radius: 0.5rem;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(210 40% 98%));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
+    --shadow-medium: 0 8px 25px -8px hsl(var(--primary) / 0.15);
+    --shadow-strong: 0 25px 50px -12px hsl(var(--primary) / 0.25);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.05), 0 2px 4px -1px hsl(var(--primary) / 0.1);
+
+    /* Animations */
+    --transition-fast: all 0.15s ease-out;
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
