@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, userData?: any) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -132,6 +132,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     } else {
+      // Call edge function to create profile and assign role
+      if (data.user && userData) {
+        try {
+          await supabase.functions.invoke('handle-new-user', {
+            body: {
+              user: data.user,
+              metadata: userData
+            }
+          });
+        } catch (error) {
+          console.error('Error calling handle-new-user function:', error);
+        }
+      }
+
       toast({
         title: "Inscription réussie",
         description: "Vérifiez votre email pour confirmer votre compte.",

@@ -9,6 +9,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import CreateShipment from "./pages/CreateShipment";
+import CreateTrip from "./pages/CreateTrip";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,22 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/sender/create-shipment" 
+                element={
+                  <ProtectedRoute requiredRole="sender">
+                    <CreateShipment />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/traveler/create-trip" 
+                element={
+                  <ProtectedRoute requiredRole="traveler">
+                    <CreateTrip />
                   </ProtectedRoute>
                 } 
               />

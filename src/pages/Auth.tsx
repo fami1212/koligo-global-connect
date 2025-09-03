@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Truck, Package, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,10 +39,12 @@ export default function Auth() {
     const password = formData.get('password') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
+    const userType = formData.get('userType') as string;
     
     await signUp(email, password, {
       first_name: firstName,
-      last_name: lastName
+      last_name: lastName,
+      user_type: userType
     });
     setIsLoading(false);
   };
@@ -154,6 +157,31 @@ export default function Auth() {
                       placeholder="••••••••"
                       minLength={6}
                     />
+                  </div>
+                  <div className="space-y-3">
+                    <Label>Type de profil</Label>
+                    <RadioGroup name="userType" defaultValue="sender" className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                        <RadioGroupItem value="sender" id="sender" />
+                        <Label htmlFor="sender" className="cursor-pointer flex items-center gap-2 flex-1">
+                          <Package className="h-4 w-4 text-primary" />
+                          <div>
+                            <div className="font-medium">Expéditeur</div>
+                            <div className="text-xs text-muted-foreground">J'envoie des colis</div>
+                          </div>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                        <RadioGroupItem value="traveler" id="traveler" />
+                        <Label htmlFor="traveler" className="cursor-pointer flex items-center gap-2 flex-1">
+                          <Truck className="h-4 w-4 text-success" />
+                          <div>
+                            <div className="font-medium">Transporteur</div>
+                            <div className="text-xs text-muted-foreground">Je transporte des colis</div>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                   <Button 
                     type="submit" 

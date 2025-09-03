@@ -154,45 +154,94 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              Envoyer un colis
-            </CardTitle>
-            <CardDescription>
-              Créez une demande de livraison pour votre colis
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="default" className="w-full">
-              <Link to="/sender/create-shipment">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau colis
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {hasRole('sender') && (
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Envoyer un colis
+              </CardTitle>
+              <CardDescription>
+                Créez une demande de livraison pour votre colis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="default" className="w-full">
+                <Link to="/sender/create-shipment">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau colis
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Truck className="h-5 w-5 text-accent" />
-              Proposer un trajet
-            </CardTitle>
-            <CardDescription>
-              Publiez votre trajet pour transporter des colis
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="accent" className="w-full">
-              <Link to="/traveler/create-trip">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau trajet
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {hasRole('traveler') && (
+          <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-accent" />
+                Proposer un trajet
+              </CardTitle>
+              <CardDescription>
+                Publiez votre trajet pour transporter des colis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="secondary" className="w-full">
+                <Link to="/traveler/create-trip">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau trajet
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* If user has no roles yet, show both options */}
+        {!hasRole('sender') && !hasRole('traveler') && (
+          <>
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  Envoyer un colis
+                </CardTitle>
+                <CardDescription>
+                  Créez une demande de livraison pour votre colis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="default" className="w-full">
+                  <Link to="/sender/create-shipment">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau colis
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-accent" />
+                  Proposer un trajet
+                </CardTitle>
+                <CardDescription>
+                  Publiez votre trajet pour transporter des colis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="secondary" className="w-full">
+                  <Link to="/traveler/create-trip">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau trajet
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Recent Activity */}
