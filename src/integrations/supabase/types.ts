@@ -14,16 +14,695 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assignments: {
+        Row: {
+          commission_amount: number | null
+          commission_rate: number | null
+          created_at: string
+          delivery_completed_at: string | null
+          final_price: number
+          id: string
+          match_request_id: string
+          payment_status: string | null
+          pickup_completed_at: string | null
+          sender_id: string
+          shipment_id: string
+          traveler_amount: number | null
+          traveler_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_rate?: number | null
+          created_at?: string
+          delivery_completed_at?: string | null
+          final_price: number
+          id?: string
+          match_request_id: string
+          payment_status?: string | null
+          pickup_completed_at?: string | null
+          sender_id: string
+          shipment_id: string
+          traveler_amount?: number | null
+          traveler_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_rate?: number | null
+          created_at?: string
+          delivery_completed_at?: string | null
+          final_price?: number
+          id?: string
+          match_request_id?: string
+          payment_status?: string | null
+          pickup_completed_at?: string | null
+          sender_id?: string
+          shipment_id?: string
+          traveler_amount?: number | null
+          traveler_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_match_request_id_fkey"
+            columns: ["match_request_id"]
+            isOneToOne: false
+            referencedRelation: "match_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          traveler_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          traveler_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          traveler_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disputes: {
+        Row: {
+          assignment_id: string
+          complainant_id: string
+          created_at: string
+          description: string
+          id: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          respondent_id: string
+          status: Database["public"]["Enums"]["dispute_status"] | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          complainant_id: string
+          created_at?: string
+          description: string
+          id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          respondent_id: string
+          status?: Database["public"]["Enums"]["dispute_status"] | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          complainant_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          respondent_id?: string
+          status?: Database["public"]["Enums"]["dispute_status"] | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kyc_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          document_url: string
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["kyc_status"] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          document_url: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          document_url?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      match_requests: {
+        Row: {
+          created_at: string
+          estimated_price: number
+          id: string
+          message: string | null
+          sender_id: string
+          shipment_id: string
+          status: string | null
+          traveler_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_price: number
+          id?: string
+          message?: string | null
+          sender_id: string
+          shipment_id: string
+          status?: string | null
+          traveler_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_price?: number
+          id?: string
+          message?: string | null
+          sender_id?: string
+          shipment_id?: string
+          status?: string | null
+          traveler_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_requests_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_requests_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          amount: number
+          assignment_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          status: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          assignment_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          assignment_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      proof_of_delivery: {
+        Row: {
+          assignment_id: string
+          delivered_at: string
+          delivered_by: string
+          delivery_notes: string | null
+          delivery_photo_url: string
+          id: string
+          recipient_name: string
+          signature_data: string | null
+        }
+        Insert: {
+          assignment_id: string
+          delivered_at?: string
+          delivered_by: string
+          delivery_notes?: string | null
+          delivery_photo_url: string
+          id?: string
+          recipient_name: string
+          signature_data?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          delivered_at?: string
+          delivered_by?: string
+          delivery_notes?: string | null
+          delivery_photo_url?: string
+          id?: string
+          recipient_name?: string
+          signature_data?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_of_delivery_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          assignment_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          assignment_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Update: {
+          assignment_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipments: {
+        Row: {
+          created_at: string
+          delivery_address: string
+          delivery_city: string
+          delivery_contact_name: string
+          delivery_contact_phone: string
+          delivery_country: string
+          description: string | null
+          estimated_value: number | null
+          id: string
+          photos: string[] | null
+          pickup_address: string
+          pickup_city: string
+          pickup_contact_name: string
+          pickup_contact_phone: string
+          pickup_country: string
+          sender_id: string
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["delivery_status"] | null
+          title: string
+          updated_at: string
+          volume_m3: number | null
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_address: string
+          delivery_city: string
+          delivery_contact_name: string
+          delivery_contact_phone: string
+          delivery_country: string
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          photos?: string[] | null
+          pickup_address: string
+          pickup_city: string
+          pickup_contact_name: string
+          pickup_contact_phone: string
+          pickup_country: string
+          sender_id: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"] | null
+          title: string
+          updated_at?: string
+          volume_m3?: number | null
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string
+          delivery_city?: string
+          delivery_contact_name?: string
+          delivery_contact_phone?: string
+          delivery_country?: string
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          photos?: string[] | null
+          pickup_address?: string
+          pickup_city?: string
+          pickup_contact_name?: string
+          pickup_contact_phone?: string
+          pickup_country?: string
+          sender_id?: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"] | null
+          title?: string
+          updated_at?: string
+          volume_m3?: number | null
+          weight_kg?: number
+        }
+        Relationships: []
+      }
+      tracking_events: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          photo_url: string | null
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          photo_url?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          arrival_city: string
+          arrival_country: string
+          arrival_date: string | null
+          available_weight_kg: number
+          created_at: string
+          departure_city: string
+          departure_country: string
+          departure_date: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_volume_m3: number | null
+          max_weight_kg: number
+          price_per_kg: number
+          transport_type: string
+          traveler_id: string
+          updated_at: string
+        }
+        Insert: {
+          arrival_city: string
+          arrival_country: string
+          arrival_date?: string | null
+          available_weight_kg: number
+          created_at?: string
+          departure_city: string
+          departure_country: string
+          departure_date: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_volume_m3?: number | null
+          max_weight_kg: number
+          price_per_kg: number
+          transport_type: string
+          traveler_id: string
+          updated_at?: string
+        }
+        Update: {
+          arrival_city?: string
+          arrival_country?: string
+          arrival_date?: string | null
+          available_weight_kg?: number
+          created_at?: string
+          departure_city?: string
+          departure_country?: string
+          departure_date?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_volume_m3?: number | null
+          max_weight_kg?: number
+          price_per_kg?: number
+          transport_type?: string
+          traveler_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "sender" | "traveler"
+      delivery_status:
+        | "pending"
+        | "accepted"
+        | "in_transit"
+        | "delivered"
+        | "cancelled"
+      dispute_status: "open" | "investigating" | "resolved" | "closed"
+      kyc_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +829,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "sender", "traveler"],
+      delivery_status: [
+        "pending",
+        "accepted",
+        "in_transit",
+        "delivered",
+        "cancelled",
+      ],
+      dispute_status: ["open", "investigating", "resolved", "closed"],
+      kyc_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
