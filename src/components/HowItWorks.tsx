@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Users, Shield, Truck, Smartphone, CreditCard, Send } from "lucide-react";
+import { useState } from "react";
 
 const HowItWorks = () => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const senderSteps = [
     {
       icon: <Package className="h-8 w-8" />,
@@ -73,18 +75,27 @@ const HowItWorks = () => {
             
             <div className="space-y-6">
               {senderSteps.map((step, index) => (
-                <Card key={index} className="border-none shadow-soft hover:shadow-medium transition-all duration-300">
+                <Card 
+                  key={index} 
+                  className="border-none shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer group"
+                  onMouseEnter={() => setHoveredCard(index)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-primary-light rounded-xl flex items-center justify-center text-primary-foreground">
+                      <div className={`flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-primary-light rounded-xl flex items-center justify-center text-primary-foreground transition-transform duration-300 ${
+                        hoveredCard === index ? 'scale-110 rotate-6' : ''
+                      }`}>
                         {step.icon}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                        <p className="text-muted-foreground">{step.description}</p>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">{step.title}</h3>
+                        <p className="text-muted-foreground group-hover:text-foreground transition-colors">{step.description}</p>
                       </div>
-                      <div className="flex-shrink-0 w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-primary">{index + 1}</span>
+                      <div className={`flex-shrink-0 w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        hoveredCard === index ? 'bg-primary text-primary-foreground scale-110' : ''
+                      }`}>
+                        <span className="text-sm font-bold">{index + 1}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -104,18 +115,27 @@ const HowItWorks = () => {
             
             <div className="space-y-6">
               {travelerSteps.map((step, index) => (
-                <Card key={index} className="border-none shadow-soft hover:shadow-medium transition-all duration-300">
+                <Card 
+                  key={index} 
+                  className="border-none shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer group"
+                  onMouseEnter={() => setHoveredCard(index + 10)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-secondary to-secondary-light rounded-xl flex items-center justify-center text-secondary-foreground">
+                      <div className={`flex-shrink-0 w-12 h-12 bg-gradient-to-br from-secondary to-secondary-light rounded-xl flex items-center justify-center text-secondary-foreground transition-transform duration-300 ${
+                        hoveredCard === index + 10 ? 'scale-110 rotate-6' : ''
+                      }`}>
                         {step.icon}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                        <p className="text-muted-foreground">{step.description}</p>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-2 group-hover:text-secondary transition-colors">{step.title}</h3>
+                        <p className="text-muted-foreground group-hover:text-foreground transition-colors">{step.description}</p>
                       </div>
-                      <div className="flex-shrink-0 w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-secondary">{index + 1}</span>
+                      <div className={`flex-shrink-0 w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        hoveredCard === index + 10 ? 'bg-secondary text-secondary-foreground scale-110' : ''
+                      }`}>
+                        <span className="text-sm font-bold">{index + 1}</span>
                       </div>
                     </div>
                   </CardContent>
