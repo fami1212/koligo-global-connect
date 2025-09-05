@@ -87,21 +87,29 @@ export default function Messages() {
   const loadConversations = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          sender_profile:profiles!conversations_sender_id_fkey(first_name, last_name, avatar_url),
-          traveler_profile:profiles!conversations_traveler_id_fkey(first_name, last_name, avatar_url)
-        `)
+        .select('*')
         .or(`sender_id.eq.${user?.id},traveler_id.eq.${user?.id}`)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
+      // Get profiles for conversations
+      const senderIds = [...new Set(conversationsData?.map(c => c.sender_id) || [])];
+      const travelerIds = [...new Set(conversationsData?.map(c => c.traveler_id) || [])];
+      const allUserIds = [...new Set([...senderIds, ...travelerIds])];
+
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, avatar_url')
+        .in('user_id', allUserIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
       // Get last message for each conversation
       const conversationsWithLastMessage = await Promise.all(
-        (data || []).map(async (conv) => {
+        (conversationsData || []).map(async (conv) => {
           const { data: lastMessage } = await supabase
             .from('messages')
             .select('content, created_at, sender_id')
@@ -112,6 +120,8 @@ export default function Messages() {
 
           return {
             ...conv,
+            sender_profile: profilesMap.get(conv.sender_id) || { first_name: '', last_name: '', avatar_url: '' },
+            traveler_profile: profilesMap.get(conv.traveler_id) || { first_name: '', last_name: '', avatar_url: '' },
             last_message: lastMessage
           };
         })

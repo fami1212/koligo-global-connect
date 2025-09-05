@@ -58,14 +58,7 @@ export default function SearchShipments() {
       setLoading(true);
       let query = supabase
         .from('shipments')
-        .select(`
-          *,
-          profiles!shipments_sender_id_fkey (
-            first_name,
-            last_name,
-            rating
-          )
-        `)
+        .select('*')
         .eq('status', 'pending');
 
       if (filters.pickup_city) {
@@ -81,10 +74,25 @@ export default function SearchShipments() {
         query = query.gte('estimated_value', parseFloat(filters.min_value));
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data: shipmentsData, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setShipments(data || []);
+
+      // Get sender profiles
+      const senderIds = [...new Set(shipmentsData?.map(s => s.sender_id) || [])];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, rating')
+        .in('user_id', senderIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      const shipmentsWithProfiles = shipmentsData?.map(shipment => ({
+        ...shipment,
+        profiles: profilesMap.get(shipment.sender_id) || { first_name: '', last_name: '', rating: 0 }
+      })) || [];
+
+      setShipments(shipmentsWithProfiles);
     } catch (error) {
       console.error('Error loading shipments:', error);
       toast({

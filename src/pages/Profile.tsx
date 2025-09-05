@@ -60,17 +60,29 @@ export default function Profile() {
 
   const loadReviews = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: reviewsData, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          reviewer:profiles!reviews_reviewer_id_fkey(first_name, last_name)
-        `)
+        .select('*')
         .eq('reviewee_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReviews(data || []);
+
+      // Get reviewer profiles
+      const reviewerIds = [...new Set(reviewsData?.map(r => r.reviewer_id) || [])];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', reviewerIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      const reviewsWithProfiles = reviewsData?.map(review => ({
+        ...review,
+        reviewer: profilesMap.get(review.reviewer_id) || { first_name: '', last_name: '' }
+      })) || [];
+
+      setReviews(reviewsWithProfiles);
     } catch (error) {
       console.error('Error loading reviews:', error);
     }

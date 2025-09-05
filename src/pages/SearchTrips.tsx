@@ -59,14 +59,7 @@ export default function SearchTrips() {
       setLoading(true);
       let query = supabase
         .from('trips')
-        .select(`
-          *,
-          profiles!trips_traveler_id_fkey (
-            first_name,
-            last_name,
-            rating
-          )
-        `)
+        .select('*')
         .eq('is_active', true)
         .gte('departure_date', new Date().toISOString());
 
@@ -86,10 +79,25 @@ export default function SearchTrips() {
         query = query.eq('transport_type', filters.transport_type);
       }
 
-      const { data, error } = await query.order('departure_date', { ascending: true });
+      const { data: tripsData, error } = await query.order('departure_date', { ascending: true });
 
       if (error) throw error;
-      setTrips(data || []);
+
+      // Get traveler profiles
+      const travelerIds = [...new Set(tripsData?.map(t => t.traveler_id) || [])];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, rating')
+        .in('user_id', travelerIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      const tripsWithProfiles = tripsData?.map(trip => ({
+        ...trip,
+        profiles: profilesMap.get(trip.traveler_id) || { first_name: '', last_name: '', rating: 0 }
+      })) || [];
+
+      setTrips(tripsWithProfiles);
     } catch (error) {
       console.error('Error loading trips:', error);
       toast({

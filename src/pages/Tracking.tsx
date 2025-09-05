@@ -16,7 +16,7 @@ interface Assignment {
   pickup_completed_at: string;
   delivery_completed_at: string;
   created_at: string;
-  shipments: {
+  shipment?: {
     title: string;
     pickup_city: string;
     pickup_country: string;
@@ -27,7 +27,7 @@ interface Assignment {
     delivery_contact_name: string;
     delivery_contact_phone: string;
   };
-  trips: {
+  trip?: {
     departure_date: string;
     arrival_date: string;
     transport_type: string;
@@ -79,11 +79,11 @@ export default function Tracking() {
   const loadAssignments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select(`
           *,
-          shipments!assignments_shipment_id_fkey (
+          shipment:shipments (
             title,
             pickup_city,
             pickup_country,
@@ -94,22 +94,39 @@ export default function Tracking() {
             delivery_contact_name,
             delivery_contact_phone
           ),
-          trips!assignments_trip_id_fkey (
+          trip:trips (
             departure_date,
             arrival_date,
             transport_type
-          ),
-          sender_profile:profiles!assignments_sender_id_fkey(first_name, last_name, phone),
-          traveler_profile:profiles!assignments_traveler_id_fkey(first_name, last_name, phone)
+          )
         `)
         .or(`sender_id.eq.${user?.id},traveler_id.eq.${user?.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAssignments(data || []);
+
+      // Get profiles for assignments
+      const senderIds = [...new Set(assignmentsData?.map((a: any) => a.sender_id) || [])];
+      const travelerIds = [...new Set(assignmentsData?.map((a: any) => a.traveler_id) || [])];
+      const allUserIds = [...new Set([...senderIds, ...travelerIds])];
+
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, phone')
+        .in('user_id', allUserIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      const assignmentsWithProfiles = assignmentsData?.map((assignment: any) => ({
+        ...assignment,
+        sender_profile: profilesMap.get(assignment.sender_id) || { first_name: '', last_name: '', phone: '' },
+        traveler_profile: profilesMap.get(assignment.traveler_id) || { first_name: '', last_name: '', phone: '' }
+      })) || [];
+
+      setAssignments(assignmentsWithProfiles);
       
-      if (data && data.length > 0 && !selectedAssignment) {
-        setSelectedAssignment(data[0].id);
+      if (assignmentsWithProfiles && assignmentsWithProfiles.length > 0 && !selectedAssignment) {
+        setSelectedAssignment(assignmentsWithProfiles[0].id);
       }
     } catch (error) {
       console.error('Error loading assignments:', error);
@@ -216,12 +233,12 @@ export default function Tracking() {
                     }`}
                     onClick={() => setSelectedAssignment(assignment.id)}
                   >
-                    <h4 className="font-medium text-sm mb-1">
-                      {assignment.shipments.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {assignment.shipments.pickup_city} → {assignment.shipments.delivery_city}
-                    </p>
+                     <h4 className="font-medium text-sm mb-1">
+                       {assignment.shipment?.title}
+                     </h4>
+                     <p className="text-xs text-muted-foreground mb-2">
+                       {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
+                     </p>
                     <Badge variant="outline" className="text-xs">
                       {getStatusText(assignment)}
                     </Badge>
@@ -237,12 +254,12 @@ export default function Tracking() {
               <>
                 {/* Status Overview */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>{selectedAssignmentData.shipments.title}</CardTitle>
-                    <CardDescription>
-                      {selectedAssignmentData.shipments.pickup_city}, {selectedAssignmentData.shipments.pickup_country} → {selectedAssignmentData.shipments.delivery_city}, {selectedAssignmentData.shipments.delivery_country}
-                    </CardDescription>
-                  </CardHeader>
+                   <CardHeader>
+                     <CardTitle>{selectedAssignmentData.shipment?.title}</CardTitle>
+                     <CardDescription>
+                       {selectedAssignmentData.shipment?.pickup_city}, {selectedAssignmentData.shipment?.pickup_country} → {selectedAssignmentData.shipment?.delivery_city}, {selectedAssignmentData.shipment?.delivery_country}
+                     </CardDescription>
+                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
@@ -300,11 +317,11 @@ export default function Tracking() {
                           <span className="text-sm">{selectedAssignmentData.sender_profile.phone}</span>
                         </div>
                       )}
-                      <div className="pt-2">
-                        <p className="text-xs text-muted-foreground mb-1">Contact de collecte:</p>
-                        <p className="text-sm">{selectedAssignmentData.shipments.pickup_contact_name}</p>
-                        <p className="text-sm">{selectedAssignmentData.shipments.pickup_contact_phone}</p>
-                      </div>
+                       <div className="pt-2">
+                         <p className="text-xs text-muted-foreground mb-1">Contact de collecte:</p>
+                         <p className="text-sm">{selectedAssignmentData.shipment?.pickup_contact_name}</p>
+                         <p className="text-sm">{selectedAssignmentData.shipment?.pickup_contact_phone}</p>
+                       </div>
                     </CardContent>
                   </Card>
 
@@ -325,11 +342,11 @@ export default function Tracking() {
                           <span className="text-sm">{selectedAssignmentData.traveler_profile.phone}</span>
                         </div>
                       )}
-                      <div className="pt-2">
-                        <p className="text-xs text-muted-foreground mb-1">Contact de livraison:</p>
-                        <p className="text-sm">{selectedAssignmentData.shipments.delivery_contact_name}</p>
-                        <p className="text-sm">{selectedAssignmentData.shipments.delivery_contact_phone}</p>
-                      </div>
+                       <div className="pt-2">
+                         <p className="text-xs text-muted-foreground mb-1">Contact de livraison:</p>
+                         <p className="text-sm">{selectedAssignmentData.shipment?.delivery_contact_name}</p>
+                         <p className="text-sm">{selectedAssignmentData.shipment?.delivery_contact_phone}</p>
+                       </div>
                     </CardContent>
                   </Card>
                 </div>
