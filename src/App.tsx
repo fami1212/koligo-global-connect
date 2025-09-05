@@ -1,4 +1,3 @@
-import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,23 +5,25 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/AppLayout";
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import CreateShipment from "./pages/CreateShipment";
-import CreateTrip from "./pages/CreateTrip";
-import SearchTrips from "./pages/SearchTrips";
-import SearchShipments from "./pages/SearchShipments";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Tracking from "./pages/Tracking";
+import CreateShipment from "./pages/CreateShipment";
+import CreateTrip from "./pages/CreateTrip";
+import SearchShipments from "./pages/SearchShipments";
+import SearchTrips from "./pages/SearchTrips";
 import MyShipments from "./pages/MyShipments";
 import MyTrips from "./pages/MyTrips";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App: React.FC = () => {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -31,89 +32,115 @@ const App: React.FC = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route 
-                path="/dashboard" 
+
+              {/* Protected routes with layout */}
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/sender/create-shipment" 
+              <Route
+                path="/messages"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Messages />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Profile />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tracking"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Tracking />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Role-based protected routes with layout */}
+              <Route
+                path="/sender/create-shipment"
                 element={
                   <ProtectedRoute requiredRole="sender">
-                    <CreateShipment />
+                    <AppLayout>
+                      <CreateShipment />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/traveler/create-trip" 
+              <Route
+                path="/traveler/create-trip"
                 element={
                   <ProtectedRoute requiredRole="traveler">
-                    <CreateTrip />
+                    <AppLayout>
+                      <CreateTrip />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/search-trips" 
-                element={
-                  <ProtectedRoute requiredRole="sender">
-                    <SearchTrips />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/search-shipments" 
-                element={
-                  <ProtectedRoute requiredRole="traveler">
-                    <SearchShipments />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/messages" 
+              <Route
+                path="/search-shipments"
                 element={
                   <ProtectedRoute>
-                    <Messages />
+                    <AppLayout>
+                      <SearchShipments />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/profile" 
+              <Route
+                path="/search-trips"
                 element={
                   <ProtectedRoute>
-                    <Profile />
+                    <AppLayout>
+                      <SearchTrips />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/tracking" 
+              <Route
+                path="/my-shipments"
                 element={
                   <ProtectedRoute>
-                    <Tracking />
+                    <AppLayout>
+                      <MyShipments />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/my-shipments" 
+              <Route
+                path="/my-trips"
                 element={
-                  <ProtectedRoute requiredRole="sender">
-                    <MyShipments />
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <MyTrips />
+                    </AppLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/my-trips" 
-                element={
-                  <ProtectedRoute requiredRole="traveler">
-                    <MyTrips />
-                  </ProtectedRoute>
-                } 
-              />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+              {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
@@ -121,6 +148,6 @@ const App: React.FC = () => {
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

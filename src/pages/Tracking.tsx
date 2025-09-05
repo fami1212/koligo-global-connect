@@ -1,16 +1,30 @@
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { MapPin, Package, Truck, CheckCircle, Clock, User, Phone } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { InstantMessaging } from '@/components/InstantMessaging';
+import { 
+  MapPin, 
+  Clock, 
+  Package, 
+  Truck, 
+  Phone, 
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+  Navigation,
+  User
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 interface Assignment {
   id: string;
+  sender_id: string;
+  traveler_id: string;
   final_price: number;
   payment_status: string;
   pickup_completed_at: string;
@@ -55,30 +69,30 @@ interface TrackingEvent {
 
 export default function Tracking() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
+    if (user) {
+      loadAssignments();
     }
-    loadAssignments();
-  }, [user, navigate]);
+  }, [user]);
 
   useEffect(() => {
-    if (selectedAssignment) {
-      loadTrackingEvents(selectedAssignment);
+    if (selectedAssignment?.id) {
+      loadTrackingEvents(selectedAssignment.id);
     }
   }, [selectedAssignment]);
 
   const loadAssignments = async () => {
+    if (!user) return;
+    
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select(`
@@ -126,7 +140,7 @@ export default function Tracking() {
       setAssignments(assignmentsWithProfiles);
       
       if (assignmentsWithProfiles && assignmentsWithProfiles.length > 0 && !selectedAssignment) {
-        setSelectedAssignment(assignmentsWithProfiles[0].id);
+        setSelectedAssignment(assignmentsWithProfiles[0]);
       }
     } catch (error) {
       console.error('Error loading assignments:', error);
@@ -136,7 +150,7 @@ export default function Tracking() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -182,237 +196,144 @@ export default function Tracking() {
     }
   };
 
-  const selectedAssignmentData = assignments.find(a => a.id === selectedAssignment);
+  const openConversation = async (assignment: Assignment) => {
+    try {
+      // Check if conversation exists
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('assignment_id', assignment.id)
+        .single();
+
+      if (existingConversation) {
+        setActiveConversationId(existingConversation.id);
+      } else {
+        // Create new conversation
+        const { data: newConversation } = await supabase
+          .from('conversations')
+          .insert({
+            assignment_id: assignment.id,
+            sender_id: assignment.sender_id,
+            traveler_id: assignment.traveler_id,
+          })
+          .select()
+          .single();
+
+        if (newConversation) {
+          setActiveConversationId(newConversation.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error opening conversation:', error);
+    }
+  };
+
+  const selectedAssignmentData = selectedAssignment;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Suivi des livraisons
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Suivez vos colis en temps réel
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link to="/dashboard">
-              Retour au tableau de bord
-            </Link>
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Suivi des livraisons</h1>
+          <p className="text-muted-foreground mt-1">
+            Suivez l'état de vos colis et trajets en temps réel
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Assignments List */}
+        <div className="xl:col-span-2 space-y-4">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            </div>
+          ) : assignments.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-8 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Aucune livraison trouvée</p>
+              </CardContent>
+            </Card>
+          ) : (
+            assignments.map((assignment) => (
+                <Card 
+                  key={assignment.id} 
+                  className={`cursor-pointer transition-colors ${
+                    selectedAssignment?.id === assignment.id
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:bg-muted/50'
+                  }`}
+                  onClick={() => setSelectedAssignment(assignment)}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-base">
+                            {assignment.shipment?.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="ml-2">
+                          {getStatusText(assignment)}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Progression</span>
+                          <span className="font-medium">{getStatusProgress(assignment)}%</span>
+                        </div>
+                        <Progress value={getStatusProgress(assignment)} className="h-1.5" />
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {user?.id === assignment.sender_id ? 'Transporteur:' : 'Expéditeur:'}
+                          </span>
+                          <span>
+                            {user?.id === assignment.sender_id 
+                              ? assignment.traveler_profile.first_name
+                              : assignment.sender_profile.first_name}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            <Phone className="h-4 w-4 mr-1" />
+                            Appeler
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openConversation(assignment)}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Assignments List */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                Mes livraisons
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {loading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                </div>
-              ) : assignments.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Aucune livraison</p>
-                </div>
-              ) : (
-                assignments.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedAssignment === assignment.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:bg-muted/50'
-                    }`}
-                    onClick={() => setSelectedAssignment(assignment.id)}
-                  >
-                     <h4 className="font-medium text-sm mb-1">
-                       {assignment.shipment?.title}
-                     </h4>
-                     <p className="text-xs text-muted-foreground mb-2">
-                       {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
-                     </p>
-                    <Badge variant="outline" className="text-xs">
-                      {getStatusText(assignment)}
-                    </Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Tracking Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {selectedAssignmentData ? (
-              <>
-                {/* Status Overview */}
-                <Card>
-                   <CardHeader>
-                     <CardTitle>{selectedAssignmentData.shipment?.title}</CardTitle>
-                     <CardDescription>
-                       {selectedAssignmentData.shipment?.pickup_city}, {selectedAssignmentData.shipment?.pickup_country} → {selectedAssignmentData.shipment?.delivery_city}, {selectedAssignmentData.shipment?.delivery_country}
-                     </CardDescription>
-                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progression</span>
-                        <span>{getStatusProgress(selectedAssignmentData)}%</span>
-                      </div>
-                      <Progress value={getStatusProgress(selectedAssignmentData)} className="h-2" />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                      <div className="text-center">
-                        <div className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${
-                          selectedAssignmentData.payment_status === 'released' ? 'bg-success text-success-foreground' : 'bg-muted'
-                        }`}>
-                          <CheckCircle className="h-4 w-4" />
-                        </div>
-                        <p className="text-xs font-medium">Payé</p>
-                      </div>
-                      <div className="text-center">
-                        <div className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${
-                          selectedAssignmentData.pickup_completed_at ? 'bg-success text-success-foreground' : 'bg-muted'
-                        }`}>
-                          <Package className="h-4 w-4" />
-                        </div>
-                        <p className="text-xs font-medium">Collecté</p>
-                      </div>
-                      <div className="text-center">
-                        <div className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${
-                          selectedAssignmentData.delivery_completed_at ? 'bg-success text-success-foreground' : 'bg-muted'
-                        }`}>
-                          <CheckCircle className="h-4 w-4" />
-                        </div>
-                        <p className="text-xs font-medium">Livré</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Expéditeur</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {selectedAssignmentData.sender_profile.first_name} {selectedAssignmentData.sender_profile.last_name}
-                        </span>
-                      </div>
-                      {selectedAssignmentData.sender_profile.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{selectedAssignmentData.sender_profile.phone}</span>
-                        </div>
-                      )}
-                       <div className="pt-2">
-                         <p className="text-xs text-muted-foreground mb-1">Contact de collecte:</p>
-                         <p className="text-sm">{selectedAssignmentData.shipment?.pickup_contact_name}</p>
-                         <p className="text-sm">{selectedAssignmentData.shipment?.pickup_contact_phone}</p>
-                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Transporteur</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {selectedAssignmentData.traveler_profile.first_name} {selectedAssignmentData.traveler_profile.last_name}
-                        </span>
-                      </div>
-                      {selectedAssignmentData.traveler_profile.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{selectedAssignmentData.traveler_profile.phone}</span>
-                        </div>
-                      )}
-                       <div className="pt-2">
-                         <p className="text-xs text-muted-foreground mb-1">Contact de livraison:</p>
-                         <p className="text-sm">{selectedAssignmentData.shipment?.delivery_contact_name}</p>
-                         <p className="text-sm">{selectedAssignmentData.shipment?.delivery_contact_phone}</p>
-                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Tracking Events */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      Historique de suivi
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {trackingEvents.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>Aucun événement de suivi pour le moment</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {trackingEvents.map((event, index) => (
-                          <div key={event.id} className="flex gap-4">
-                            <div className="flex flex-col items-center">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                {getEventIcon(event.event_type)}
-                              </div>
-                              {index < trackingEvents.length - 1 && (
-                                <div className="w-px h-8 bg-border mt-2"></div>
-                              )}
-                            </div>
-                            <div className="flex-1 pb-4">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-medium text-sm">{event.description}</h4>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(event.created_at).toLocaleString('fr-FR')}
-                                </span>
-                              </div>
-                              {event.location && (
-                                <p className="text-sm text-muted-foreground">{event.location}</p>
-                              )}
-                              {event.photo_url && (
-                                <img 
-                                  src={event.photo_url} 
-                                  alt="Preuve de livraison"
-                                  className="mt-2 rounded-lg max-w-xs"
-                                />
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    Sélectionnez une livraison pour voir les détails
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        {/* Instant Messaging Panel */}
+        <div className="xl:col-span-1">
+          <InstantMessaging 
+            conversationId={activeConversationId || undefined}
+            className="sticky top-4 h-[600px]"
+          />
         </div>
       </div>
     </div>
