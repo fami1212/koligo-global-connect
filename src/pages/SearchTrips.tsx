@@ -75,7 +75,7 @@ export default function SearchTrips() {
       if (filters.max_price) {
         query = query.lte('price_per_kg', parseFloat(filters.max_price));
       }
-      if (filters.transport_type) {
+      if (filters.transport_type && filters.transport_type !== 'all') {
         query = query.eq('transport_type', filters.transport_type);
       }
 
@@ -229,7 +229,7 @@ export default function SearchTrips() {
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="car">Voiture</SelectItem>
                     <SelectItem value="train">Train</SelectItem>
                     <SelectItem value="plane">Avion</SelectItem>
