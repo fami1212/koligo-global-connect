@@ -9,10 +9,13 @@ import {
   Plus,
   BarChart3,
   Home,
-  Settings
+  Settings,
+  LogOut
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
+import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
 
 import {
   Sidebar,
@@ -40,6 +43,7 @@ export function AppSidebar() {
     { title: "Mes colis", url: "/my-shipments", icon: Package2 },
     { title: "Nouveau colis", url: "/sender/create-shipment", icon: Plus },
     { title: "Rechercher trajets", url: "/search-trips", icon: Search },
+    { title: "Mes demandes", url: "/reservations", icon: BarChart3 },
     { title: "Suivi", url: "/tracking", icon: MapPin },
     { title: "Messages", url: "/messages", icon: MessageCircle },
     { title: "Profil", url: "/profile", icon: User },
@@ -50,6 +54,7 @@ export function AppSidebar() {
     { title: "Mes trajets", url: "/my-trips", icon: Truck },
     { title: "Nouveau trajet", url: "/traveler/create-trip", icon: Plus },
     { title: "Rechercher colis", url: "/search-shipments", icon: Search },
+    { title: "Demandes reçues", url: "/reservations", icon: BarChart3 },
     { title: "Suivi", url: "/tracking", icon: MapPin },
     { title: "Messages", url: "/messages", icon: MessageCircle },
     { title: "Profil", url: "/profile", icon: User },
@@ -65,6 +70,7 @@ export function AppSidebar() {
       { title: "Mes colis", url: "/my-shipments", icon: Package2 },
       { title: "Mes trajets", url: "/my-trips", icon: Truck },
       { title: "Rechercher", url: "/search-trips", icon: Search },
+      { title: "Réservations", url: "/reservations", icon: BarChart3 },
       { title: "Suivi", url: "/tracking", icon: MapPin },
       { title: "Messages", url: "/messages", icon: MessageCircle },
       { title: "Profil", url: "/profile", icon: User },
@@ -148,7 +154,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4">
+      <SidebarFooter className="border-t border-border p-4 space-y-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -168,6 +174,20 @@ export function AppSidebar() {
             </div>
           )}
         </div>
+        {!collapsed && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full text-xs"
+            onClick={() => {
+              supabase.auth.signOut();
+              window.location.href = '/';
+            }}
+          >
+            <LogOut className="h-3 w-3 mr-2" />
+            Déconnexion
+          </Button>
+        )}
       </SidebarFooter>
     </Sidebar>
   )

@@ -135,13 +135,13 @@ export default function Profile() {
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(`${user.id}/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(`${user.id}/${fileName}`);
 
       const { error: updateError } = await supabase
         .from('profiles')

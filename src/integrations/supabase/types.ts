@@ -219,10 +219,13 @@ export type Database = {
       }
       match_requests: {
         Row: {
+          confirmed_at: string | null
           created_at: string
           estimated_price: number
+          final_price: number | null
           id: string
           message: string | null
+          notes: string | null
           sender_id: string
           shipment_id: string
           status: string | null
@@ -231,10 +234,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          confirmed_at?: string | null
           created_at?: string
           estimated_price: number
+          final_price?: number | null
           id?: string
           message?: string | null
+          notes?: string | null
           sender_id: string
           shipment_id: string
           status?: string | null
@@ -243,10 +249,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          confirmed_at?: string | null
           created_at?: string
           estimated_price?: number
+          final_price?: number | null
           id?: string
           message?: string | null
+          notes?: string | null
           sender_id?: string
           shipment_id?: string
           status?: string | null

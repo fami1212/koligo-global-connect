@@ -61,7 +61,8 @@ export default function SearchTrips() {
         .from('trips')
         .select('*')
         .eq('is_active', true)
-        .gte('departure_date', new Date().toISOString());
+        .gte('departure_date', new Date().toISOString())
+        .neq('traveler_id', user?.id || ''); // Don't show user's own trips
 
       if (filters.departure_city) {
         query = query.ilike('departure_city', `%${filters.departure_city}%`);
