@@ -90,6 +90,50 @@ export type Database = {
           },
         ]
       }
+      call_logs: {
+        Row: {
+          call_type: string
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          call_type?: string
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          call_type?: string
+          callee_id?: string
+          caller_id?: string
+          conversation_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           assignment_id: string
@@ -286,6 +330,8 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          image_type: string | null
+          image_url: string | null
           read_at: string | null
           sender_id: string
         }
@@ -294,6 +340,8 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          image_type?: string | null
+          image_url?: string | null
           read_at?: string | null
           sender_id: string
         }
@@ -302,6 +350,8 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          image_type?: string | null
+          image_url?: string | null
           read_at?: string | null
           sender_id?: string
         }

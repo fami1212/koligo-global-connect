@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar, MapPin, Package, Truck, User, Clock, Euro } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { BookingWorkflow } from '@/components/BookingWorkflow';
 
 interface Trip {
   id: string;
@@ -328,12 +330,17 @@ export default function SearchTrips() {
 
                     {/* Actions */}
                     <div className="flex flex-col gap-2">
-                      <Button 
-                        onClick={() => createMatchRequest(trip.id, trip.price_per_kg * 5)} 
-                        className="w-full"
-                      >
-                        Demander ce trajet
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="w-full">
+                            Réserver ce trajet
+                          </Button>
+                        </DialogTrigger>
+                        <BookingWorkflow 
+                          trip={trip} 
+                          onClose={() => {}} 
+                        />
+                      </Dialog>
                       <Button variant="outline" size="sm" className="w-full">
                         Voir les détails
                       </Button>
