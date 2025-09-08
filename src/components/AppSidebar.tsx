@@ -130,30 +130,33 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-primary/10 text-primary border-r-2 border-r-primary font-medium" 
-      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+      ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border-l-4 border-l-primary shadow-lg shadow-primary/10" 
+      : "hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-all duration-200 hover:shadow-md"
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-72"}>
-      <SidebarHeader className="border-b border-border p-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/90 to-secondary shrink-0 shadow-lg">
-            <Package2 className="h-6 w-6 text-primary-foreground" />
+    <Sidebar className={collapsed ? "w-16" : "w-80"} collapsible="icon">
+      <SidebarHeader className="border-b border-border/60 p-6">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-secondary shrink-0 shadow-lg shadow-primary/25">
+              <Package2 className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                 KoliGo
               </h2>
-              <p className="text-xs text-muted-foreground">Transport intelligent</p>
+              <p className="text-xs text-muted-foreground/80 font-medium">Transport intelligent</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-3 py-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase text-muted-foreground px-2">
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 px-3 py-2 font-semibold">
             {!collapsed && "Navigation"}
           </SidebarGroupLabel>
           
@@ -161,18 +164,20 @@ export function AppSidebar() {
             <SidebarMenu className="space-y-1">
               {getMenuItems().map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-10">
+                  <SidebarMenuButton asChild className="h-12 rounded-xl">
                      <NavLink 
                       to={item.url} 
                       end 
                       className={getNavCls}
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <item.icon className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="p-2 rounded-lg bg-background/50">
+                          <item.icon className="h-5 w-5 shrink-0" />
+                        </div>
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
                       </div>
                       {!collapsed && item.url === '/messages' && hasUnread && (
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                        <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full animate-pulse shadow-lg" />
                       )}
                     </NavLink>
                   </SidebarMenuButton>
@@ -211,24 +216,24 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 shrink-0 ring-2 ring-primary/20">
+      <SidebarFooter className="border-t border-border/60 p-6 space-y-4">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-12 w-12 shrink-0 ring-4 ring-primary/10 shadow-lg">
             <AvatarImage src={(profile as any)?.avatar_url} />
-            <AvatarFallback className="text-sm bg-gradient-to-br from-primary to-secondary text-primary-foreground">
+            <AvatarFallback className="text-sm bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground font-semibold">
               {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate">
+                <p className="text-sm font-semibold truncate">
                   {profile?.first_name || 'Utilisateur'}
                 </p>
                 <VerificationBadge isVerified={(profile as any)?.is_verified || false} />
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-xs h-5 gap-1">
+                <Badge variant="secondary" className="text-xs h-6 gap-1 px-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200">
                   <Sparkles className="h-3 w-3" />
                   {profile?.rating?.toFixed(1) || '0.0'}
                 </Badge>
@@ -240,13 +245,13 @@ export function AppSidebar() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="w-full text-xs text-muted-foreground hover:text-foreground justify-start"
+            className="w-full text-xs text-muted-foreground hover:text-foreground justify-start rounded-lg hover:bg-muted/70 transition-all duration-200"
             onClick={() => {
               supabase.auth.signOut();
               window.location.href = '/';
             }}
           >
-            <LogOut className="h-3 w-3 mr-2" />
+            <LogOut className="h-4 w-4 mr-2" />
             Déconnexion
           </Button>
         )}

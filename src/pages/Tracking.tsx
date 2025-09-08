@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { InstantMessaging } from '@/components/InstantMessaging';
+import { StatusTracker } from '@/components/StatusTracker';
 import { 
   MapPin, 
   Clock, 

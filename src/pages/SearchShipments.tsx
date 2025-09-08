@@ -39,6 +39,7 @@ export default function SearchShipments() {
   const { toast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [filters, setFilters] = useState({
     pickup_city: '',
     delivery_city: '',
@@ -121,6 +122,8 @@ export default function SearchShipments() {
 
   const createMatchRequest = async (shipmentId: string, estimatedPrice: number) => {
     try {
+      setSubmitting(true);
+      
       // First get a trip from the traveler to create the match request
       const { data: trips } = await supabase
         .from('trips')
@@ -148,7 +151,8 @@ export default function SearchShipments() {
           shipment_id: shipmentId,
           sender_id: shipment.sender_id,
           traveler_id: user?.id,
-          estimated_price: estimatedPrice
+          estimated_price: estimatedPrice,
+          message: `Offre pour transporter votre colis "${shipment.title}" de ${shipment.weight_kg}kg`
         });
 
       if (error) throw error;
@@ -164,6 +168,8 @@ export default function SearchShipments() {
         description: "Impossible d'envoyer l'offre",
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -342,8 +348,9 @@ export default function SearchShipments() {
                       <Button 
                         onClick={() => createMatchRequest(shipment.id, shipment.weight_kg * 8)} 
                         className="w-full"
+                        disabled={submitting}
                       >
-                        Proposer mes services
+                        {submitting ? 'Envoi...' : 'Proposer mes services'}
                       </Button>
                       <Button variant="outline" size="sm" className="w-full">
                         Voir les détails
