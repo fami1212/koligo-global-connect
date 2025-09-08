@@ -418,12 +418,16 @@ export type Database = {
           email: string
           first_name: string | null
           id: string
+          is_verified: boolean | null
           last_name: string | null
           phone: string | null
           rating: number | null
           total_reviews: number | null
           updated_at: string
           user_id: string
+          verification_approved_at: string | null
+          verification_approved_by: string | null
+          verification_requested_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -433,12 +437,16 @@ export type Database = {
           email: string
           first_name?: string | null
           id?: string
+          is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
           rating?: number | null
           total_reviews?: number | null
           updated_at?: string
           user_id: string
+          verification_approved_at?: string | null
+          verification_approved_by?: string | null
+          verification_requested_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -448,12 +456,16 @@ export type Database = {
           email?: string
           first_name?: string | null
           id?: string
+          is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
           rating?: number | null
           total_reviews?: number | null
           updated_at?: string
           user_id?: string
+          verification_approved_at?: string | null
+          verification_approved_by?: string | null
+          verification_requested_at?: string | null
         }
         Relationships: []
       }
@@ -660,11 +672,13 @@ export type Database = {
       }
       trips: {
         Row: {
+          arrival_actual: string | null
           arrival_city: string
           arrival_country: string
           arrival_date: string | null
           available_weight_kg: number
           created_at: string
+          departure_actual: string | null
           departure_city: string
           departure_country: string
           departure_date: string
@@ -674,16 +688,19 @@ export type Database = {
           max_volume_m3: number | null
           max_weight_kg: number
           price_per_kg: number
+          status: string | null
           transport_type: string
           traveler_id: string
           updated_at: string
         }
         Insert: {
+          arrival_actual?: string | null
           arrival_city: string
           arrival_country: string
           arrival_date?: string | null
           available_weight_kg: number
           created_at?: string
+          departure_actual?: string | null
           departure_city: string
           departure_country: string
           departure_date: string
@@ -693,16 +710,19 @@ export type Database = {
           max_volume_m3?: number | null
           max_weight_kg: number
           price_per_kg: number
+          status?: string | null
           transport_type: string
           traveler_id: string
           updated_at?: string
         }
         Update: {
+          arrival_actual?: string | null
           arrival_city?: string
           arrival_country?: string
           arrival_date?: string | null
           available_weight_kg?: number
           created_at?: string
+          departure_actual?: string | null
           departure_city?: string
           departure_country?: string
           departure_date?: string
@@ -712,6 +732,7 @@ export type Database = {
           max_volume_m3?: number | null
           max_weight_kg?: number
           price_per_kg?: number
+          status?: string | null
           transport_type?: string
           traveler_id?: string
           updated_at?: string
@@ -750,6 +771,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_trip_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
