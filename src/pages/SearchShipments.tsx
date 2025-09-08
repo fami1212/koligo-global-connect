@@ -29,6 +29,7 @@ interface Shipment {
     first_name: string;
     last_name: string;
     rating: number;
+    is_verified?: boolean;
   } | null;
 }
 
@@ -74,23 +75,36 @@ export default function SearchShipments() {
         query = query.gte('estimated_value', parseFloat(filters.min_value));
       }
 
-      const { data: shipmentsData, error } = await query.order('created_at', { ascending: false });
+      const { data: shipmentsData, error } = await query
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Get sender profiles
+      // Get sender profiles with verification status
       const senderIds = [...new Set(shipmentsData?.map(s => s.sender_id) || [])];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name, rating')
+        .select('user_id, first_name, last_name, rating, is_verified')
         .in('user_id', senderIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
+      // Sort shipments with verified users first
       const shipmentsWithProfiles = shipmentsData?.map(shipment => ({
         ...shipment,
-        profiles: profilesMap.get(shipment.sender_id) || { first_name: '', last_name: '', rating: 0 }
-      })) || [];
+        profiles: profilesMap.get(shipment.sender_id) || { 
+          first_name: '', 
+          last_name: '', 
+          rating: 0, 
+          is_verified: false 
+        }
+      }))?.sort((a, b) => {
+        // Verified users first
+        if (a.profiles?.is_verified && !b.profiles?.is_verified) return -1;
+        if (!a.profiles?.is_verified && b.profiles?.is_verified) return 1;
+        // Then by rating
+        return (b.profiles?.rating || 0) - (a.profiles?.rating || 0);
+      }) || [];
 
       setShipments(shipmentsWithProfiles);
     } catch (error) {
@@ -304,9 +318,16 @@ export default function SearchShipments() {
                         <span className="text-sm">
                           {shipment.profiles?.first_name} {shipment.profiles?.last_name}
                         </span>
-                        <Badge variant="outline" className="text-xs">
-                          ⭐ {shipment.profiles?.rating?.toFixed(1) || '0.0'}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs">
+                            ⭐ {shipment.profiles?.rating?.toFixed(1) || '0.0'}
+                          </Badge>
+                          {shipment.profiles?.is_verified && (
+                            <Badge className="text-xs bg-green-100 text-green-800 border-green-300">
+                              ✓ Vérifié
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />

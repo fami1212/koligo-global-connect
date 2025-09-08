@@ -6,6 +6,7 @@ import { Package, Truck, Plus, Star, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { VerificationBanner } from '@/components/VerificationBanner';
 
 interface DashboardStats {
   activeShipments: number;
@@ -88,6 +89,7 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
+      <VerificationBanner />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">

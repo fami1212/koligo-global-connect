@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   Package2, 
   Search, 
@@ -10,7 +10,8 @@ import {
   BarChart3,
   Home,
   Settings,
-  LogOut
+  LogOut,
+  Sparkles
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
@@ -30,13 +31,63 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { VerificationBadge } from "@/components/VerificationBanner"
 
 export function AppSidebar() {
   const { state } = useSidebar()
   const { user, profile, hasRole } = useAuth()
   const collapsed = state === "collapsed"
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [hasUnread, setHasUnread] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      loadUnreadMessages()
+      
+      // Subscribe to new messages
+      const channel = supabase
+        .channel('messages-channel')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          () => loadUnreadMessages()
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [user])
+
+  const loadUnreadMessages = async () => {
+    if (!user) return
+    
+    try {
+      const { data: conversations } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
+
+      if (!conversations) return
+
+      const conversationIds = conversations.map(c => c.id)
+      
+      const { data: unreadMessages } = await supabase
+        .from('messages')
+        .select('id')
+        .in('conversation_id', conversationIds)
+        .neq('sender_id', user.id)
+        .is('read_at', null)
+
+      const count = unreadMessages?.length || 0
+      setUnreadCount(count)
+      setHasUnread(count > 0)
+    } catch (error) {
+      console.error('Error loading unread messages:', error)
+    }
+  }
 
   const senderItems = [
     { title: "Tableau de bord", url: "/dashboard", icon: Home },
@@ -83,17 +134,18 @@ export function AppSidebar() {
       : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"}>
-      <SidebarHeader className="border-b border-border p-4">
+    <Sidebar className={collapsed ? "w-16" : "w-72"}>
+      <SidebarHeader className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-secondary shrink-0">
-            <Package2 className="h-5 w-5 text-primary-foreground" />
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/90 to-secondary shrink-0 shadow-lg">
+            <Package2 className="h-6 w-6 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 KoliGo
               </h2>
+              <p className="text-xs text-muted-foreground">Transport intelligent</p>
             </div>
           )}
         </div>
@@ -110,13 +162,18 @@ export function AppSidebar() {
               {getMenuItems().map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-10">
-                    <NavLink 
+                     <NavLink 
                       to={item.url} 
                       end 
                       className={getNavCls}
                     >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
+                      <div className="flex items-center gap-3 flex-1">
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </div>
+                      {!collapsed && item.url === '/messages' && hasUnread && (
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -154,21 +211,26 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4 space-y-3">
+      <SidebarFooter className="border-t border-border p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+          <Avatar className="h-10 w-10 shrink-0 ring-2 ring-primary/20">
+            <AvatarImage src={(profile as any)?.avatar_url} />
+            <AvatarFallback className="text-sm bg-gradient-to-br from-primary to-secondary text-primary-foreground">
               {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {profile?.first_name || 'Utilisateur'}
-              </p>
-              <div className="flex items-center gap-1">
-                <Badge variant="secondary" className="text-xs h-5">
-                  ★ {profile?.rating?.toFixed(1) || '0.0'}
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate">
+                  {profile?.first_name || 'Utilisateur'}
+                </p>
+                <VerificationBadge isVerified={(profile as any)?.is_verified || false} />
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="text-xs h-5 gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  {profile?.rating?.toFixed(1) || '0.0'}
                 </Badge>
               </div>
             </div>
@@ -176,9 +238,9 @@ export function AppSidebar() {
         </div>
         {!collapsed && (
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm" 
-            className="w-full text-xs"
+            className="w-full text-xs text-muted-foreground hover:text-foreground justify-start"
             onClick={() => {
               supabase.auth.signOut();
               window.location.href = '/';

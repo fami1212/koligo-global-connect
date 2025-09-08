@@ -31,6 +31,7 @@ interface Trip {
     first_name: string;
     last_name: string;
     rating: number;
+    is_verified?: boolean;
   } | null;
 }
 
@@ -82,23 +83,37 @@ export default function SearchTrips() {
         query = query.eq('transport_type', filters.transport_type);
       }
 
-      const { data: tripsData, error } = await query.order('departure_date', { ascending: true });
+      const { data: tripsData, error } = await query
+        .eq('is_active', true)
+        .order('departure_date', { ascending: true });
 
       if (error) throw error;
 
-      // Get traveler profiles
+      // Get traveler profiles with verification status
       const travelerIds = [...new Set(tripsData?.map(t => t.traveler_id) || [])];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name, rating')
+        .select('user_id, first_name, last_name, rating, is_verified')
         .in('user_id', travelerIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
+      // Sort trips with verified users first
       const tripsWithProfiles = tripsData?.map(trip => ({
         ...trip,
-        profiles: profilesMap.get(trip.traveler_id) || { first_name: '', last_name: '', rating: 0 }
-      })) || [];
+        profiles: profilesMap.get(trip.traveler_id) || { 
+          first_name: '', 
+          last_name: '', 
+          rating: 0, 
+          is_verified: false 
+        }
+      }))?.sort((a, b) => {
+        // Verified users first
+        if (a.profiles?.is_verified && !b.profiles?.is_verified) return -1;
+        if (!a.profiles?.is_verified && b.profiles?.is_verified) return 1;
+        // Then by rating
+        return (b.profiles?.rating || 0) - (a.profiles?.rating || 0);
+      }) || [];
 
       setTrips(tripsWithProfiles);
     } catch (error) {
@@ -322,9 +337,16 @@ export default function SearchTrips() {
                         <span className="text-sm">
                           {trip.profiles?.first_name} {trip.profiles?.last_name}
                         </span>
-                        <Badge variant="outline" className="text-xs">
-                          ⭐ {trip.profiles?.rating?.toFixed(1) || '0.0'}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs">
+                            ⭐ {trip.profiles?.rating?.toFixed(1) || '0.0'}
+                          </Badge>
+                          {trip.profiles?.is_verified && (
+                            <Badge className="text-xs bg-green-100 text-green-800 border-green-300">
+                              ✓ Vérifié
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 

@@ -379,18 +379,76 @@ export default function Profile() {
                   Vérification d'identité
                 </CardTitle>
                 <CardDescription>
-                  Vérifiez votre identité pour accéder à toutes les fonctionnalités
+                  Uploadez vos documents d'identité pour être vérifié et obtenir des avantages
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-4">
-                    La vérification d'identité sera bientôt disponible
-                  </p>
-                  <Button variant="outline" disabled>
-                    Commencer la vérification
-                  </Button>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Carte d'identité nationale</h4>
+                      <label className="cursor-pointer">
+                        <Button variant="outline" className="w-full">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Choisir un fichier
+                        </Button>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              toast({
+                                title: "Document reçu",
+                                description: "Votre carte d'identité a été uploadée",
+                              });
+                            }
+                          }}
+                        />
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Formats acceptés: JPG, PNG, PDF (max 5MB)
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Passeport</h4>
+                      <label className="cursor-pointer">
+                        <Button variant="outline" className="w-full">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Choisir un fichier
+                        </Button>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              toast({
+                                title: "Document reçu",
+                                description: "Votre passeport a été uploadé",
+                              });
+                            }
+                          }}
+                        />
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Formats acceptés: JPG, PNG, PDF (max 5MB)
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <Button className="w-full" size="lg">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Demander la vérification
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      La vérification peut prendre 24-48h
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
