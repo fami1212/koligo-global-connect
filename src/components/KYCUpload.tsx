@@ -173,10 +173,20 @@ export function KYCUpload() {
                   ))}
               </div>
             ) : (
-              <label className="cursor-pointer">
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadDocument(file, 'national_id');
+                  }}
+                  disabled={uploading === 'national_id'}
+                />
                 <Button 
                   variant="outline" 
-                  className="w-full" 
+                  className="w-full pointer-events-none" 
                   disabled={uploading === 'national_id'}
                 >
                   {uploading === 'national_id' ? (
@@ -191,17 +201,7 @@ export function KYCUpload() {
                     </>
                   )}
                 </Button>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) uploadDocument(file, 'national_id');
-                  }}
-                  disabled={uploading === 'national_id'}
-                />
-              </label>
+              </div>
             )}
             <p className="text-xs text-muted-foreground">
               Formats acceptés: JPG, PNG, PDF (max 5MB)
@@ -223,10 +223,20 @@ export function KYCUpload() {
                   ))}
               </div>
             ) : (
-              <label className="cursor-pointer">
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadDocument(file, 'passport');
+                  }}
+                  disabled={uploading === 'passport'}
+                />
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full pointer-events-none"
                   disabled={uploading === 'passport'}
                 >
                   {uploading === 'passport' ? (
@@ -241,17 +251,7 @@ export function KYCUpload() {
                     </>
                   )}
                 </Button>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) uploadDocument(file, 'passport');
-                  }}
-                  disabled={uploading === 'passport'}
-                />
-              </label>
+              </div>
             )}
             <p className="text-xs text-muted-foreground">
               Formats acceptés: JPG, PNG, PDF (max 5MB)

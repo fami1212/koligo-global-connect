@@ -83,11 +83,38 @@ export function VoiceVideoCall({
 
   const initializeCall = async () => {
     try {
-      // Create call log entry
+      // First check if conversation exists, if not create one
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('assignment_id', conversationId)
+        .maybeSingle();
+
+      let finalConversationId = conversationId;
+      
+      if (!conversation) {
+        // Create conversation if it doesn't exist
+        const { data: newConv, error: newConvError } = await supabase
+          .from('conversations')
+          .insert({
+            assignment_id: conversationId,
+            sender_id: user?.id,
+            traveler_id: otherUserId
+          })
+          .select('id')
+          .single();
+
+        if (newConvError) throw newConvError;
+        finalConversationId = newConv.id;
+      } else {
+        finalConversationId = conversation.id;
+      }
+
+      // Create call log entry with valid conversation ID
       const { data: callLog, error: callError } = await supabase
         .from('call_logs')
         .insert({
-          conversation_id: conversationId,
+          conversation_id: finalConversationId,
           caller_id: user?.id,
           callee_id: otherUserId,
           call_type: callType,

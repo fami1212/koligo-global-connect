@@ -47,24 +47,26 @@ export function CallButtons({ assignment, currentUserId }: CallButtonsProps) {
         variant="outline" 
         size="sm"
         onClick={() => startCall('audio')}
+        className="flex-1 sm:flex-none"
       >
         <Phone className="h-4 w-4 mr-1" />
-        Appeler
+        <span className="hidden sm:inline">Appeler</span>
       </Button>
       
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => startCall('video')}
+        className="flex-1 sm:flex-none"
       >
         <Video className="h-4 w-4 mr-1" />
-        Vidéo
+        <span className="hidden sm:inline">Vidéo</span>
       </Button>
 
       <VoiceVideoCall
         isOpen={isCallOpen}
         onClose={() => setIsCallOpen(false)}
-        conversationId={assignment.id} // Using assignment ID as conversation ID
+        conversationId={assignment.id}
         otherUserId={otherUserId}
         otherUserName={otherUserName}
         callType={callType}

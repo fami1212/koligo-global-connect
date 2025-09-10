@@ -120,39 +120,25 @@ export default function SearchShipments() {
     }
   };
 
-  const createMatchRequest = async (shipmentId: string, estimatedPrice: number) => {
+  const createOffer = async (shipmentId: string, estimatedPrice: number) => {
     try {
       setSubmitting(true);
       
-      // First get a trip from the traveler to create the match request
-      const { data: trips } = await supabase
-        .from('trips')
-        .select('id')
-        .eq('traveler_id', user?.id)
-        .eq('is_active', true)
-        .limit(1);
-
-      if (!trips || trips.length === 0) {
-        toast({
-          title: "Aucun trajet",
-          description: "Vous devez d'abord créer un trajet pour faire une offre",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const shipment = shipments.find(s => s.id === shipmentId);
       if (!shipment) return;
 
+      // Create an offer directly
       const { error } = await supabase
-        .from('match_requests')
+        .from('offers')
         .insert({
-          trip_id: trips[0].id,
           shipment_id: shipmentId,
           sender_id: shipment.sender_id,
           traveler_id: user?.id,
-          estimated_price: estimatedPrice,
-          message: `Offre pour transporter votre colis "${shipment.title}" de ${shipment.weight_kg}kg`
+          proposed_price: estimatedPrice,
+          pickup_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
+          delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // In 3 days
+          message: `Offre pour transporter votre colis "${shipment.title}" de ${shipment.weight_kg}kg`,
+          status: 'pending'
         });
 
       if (error) throw error;
@@ -161,8 +147,11 @@ export default function SearchShipments() {
         title: "Offre envoyée",
         description: "Votre offre de transport a été envoyée à l'expéditeur",
       });
+      
+      // Refresh shipments to remove the one we just made an offer on
+      loadShipments();
     } catch (error) {
-      console.error('Error creating match request:', error);
+      console.error('Error creating offer:', error);
       toast({
         title: "Erreur",
         description: "Impossible d'envoyer l'offre",
@@ -346,7 +335,7 @@ export default function SearchShipments() {
                     {/* Actions */}
                     <div className="flex flex-col gap-2">
                       <Button 
-                        onClick={() => createMatchRequest(shipment.id, shipment.weight_kg * 8)} 
+                        onClick={() => createOffer(shipment.id, shipment.weight_kg * 8)} 
                         className="w-full"
                         disabled={submitting}
                       >

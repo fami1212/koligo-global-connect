@@ -310,17 +310,20 @@ export default function Tracking() {
                           </span>
                         </div>
 
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-2">
                           <CallButtons assignment={assignment} currentUserId={user?.id} />
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => openConversation(assignment)}
+                            className="flex-1 sm:flex-none"
                           >
                             <MessageCircle className="h-4 w-4 mr-1" />
-                            Message
+                            <span className="hidden sm:inline">Message</span>
                           </Button>
-                          <ProblemReporter assignmentId={assignment.id} />
+                          <div className="flex-1 sm:flex-none">
+                            <ProblemReporter assignmentId={assignment.id} />
+                          </div>
                         </div>
                       </div>
                     </div>
