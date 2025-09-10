@@ -24,6 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { StatusSynchronizer } from '@/components/StatusSynchronizer';
 import { ProblemReporter } from '@/components/ProblemReporter';
 import { CallButtons } from '@/components/CallButtons';
+import { StatusUpdater } from '@/components/StatusUpdater';
 
 interface Assignment {
   id: string;
@@ -310,18 +311,20 @@ export default function Tracking() {
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
-                          <CallButtons assignment={assignment} currentUserId={user?.id} />
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CallButtons assignment={assignment} currentUserId={user?.id} />
+                          </div>
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => openConversation(assignment)}
-                            className="flex-1 sm:flex-none"
+                            className="flex-shrink-0 min-w-0"
                           >
-                            <MessageCircle className="h-4 w-4 mr-1" />
+                            <MessageCircle className="h-4 w-4 sm:mr-1" />
                             <span className="hidden sm:inline">Message</span>
                           </Button>
-                          <div className="flex-1 sm:flex-none">
+                          <div className="flex-shrink-0">
                             <ProblemReporter assignmentId={assignment.id} />
                           </div>
                         </div>
@@ -336,11 +339,18 @@ export default function Tracking() {
         {/* Status & Messaging Panel */}
         <div className="xl:col-span-1 space-y-6">
           {selectedAssignment && (
-            <StatusSynchronizer 
-              assignment={selectedAssignment}
-              userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
-              onStatusUpdate={loadAssignments}
-            />
+            <>
+              <StatusUpdater 
+                assignment={selectedAssignment}
+                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                onStatusUpdate={loadAssignments}
+              />
+              <StatusSynchronizer 
+                assignment={selectedAssignment}
+                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                onStatusUpdate={loadAssignments}
+              />
+            </>
           )}
           
           <InstantMessaging 

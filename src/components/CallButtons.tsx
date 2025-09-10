@@ -47,9 +47,9 @@ export function CallButtons({ assignment, currentUserId }: CallButtonsProps) {
         variant="outline" 
         size="sm"
         onClick={() => startCall('audio')}
-        className="flex-1 sm:flex-none"
+        className="flex-1 min-w-0"
       >
-        <Phone className="h-4 w-4 mr-1" />
+        <Phone className="h-4 w-4 sm:mr-1" />
         <span className="hidden sm:inline">Appeler</span>
       </Button>
       
@@ -57,9 +57,9 @@ export function CallButtons({ assignment, currentUserId }: CallButtonsProps) {
         variant="outline" 
         size="sm"
         onClick={() => startCall('video')}
-        className="flex-1 sm:flex-none"
+        className="flex-1 min-w-0"
       >
-        <Video className="h-4 w-4 mr-1" />
+        <Video className="h-4 w-4 sm:mr-1" />
         <span className="hidden sm:inline">Vidéo</span>
       </Button>
 

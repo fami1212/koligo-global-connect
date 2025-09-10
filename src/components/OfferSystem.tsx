@@ -127,12 +127,21 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
     try {
       setSubmitting(true);
       
+      // First get the shipment to get sender_id
+      const { data: shipmentData, error: shipmentError } = await supabase
+        .from('shipments')
+        .select('sender_id')
+        .eq('id', shipmentId)
+        .single();
+
+      if (shipmentError) throw shipmentError;
+      
       const { error } = await supabase
         .from('offers')
         .insert({
           shipment_id: shipmentId,
           traveler_id: user.id,
-          sender_id: '', // Will be filled by trigger based on shipment
+          sender_id: shipmentData.sender_id,
           proposed_price: parseFloat(offerData.proposed_price),
           pickup_date: offerData.pickup_date,
           delivery_date: offerData.delivery_date,

@@ -20,6 +20,7 @@ import SearchTrips from "./pages/SearchTrips";
 import MyShipments from "./pages/MyShipments";
 import MyTrips from "./pages/MyTrips";
 import Reservations from "./pages/Reservations";
+import Offers from "./pages/Offers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -146,6 +147,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Reservations />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/offers"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Offers />
                     </AppLayout>
                   </ProtectedRoute>
                 }
