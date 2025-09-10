@@ -41,11 +41,6 @@ interface ShipmentData {
   weight_kg: number;
   volume_m3: number;
   estimated_value: number;
-  pickup_address: string;
-  pickup_city: string;
-  pickup_country: string;
-  pickup_contact_name: string;
-  pickup_contact_phone: string;
   delivery_address: string;
   delivery_city: string;
   delivery_country: string;
@@ -65,11 +60,6 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
     weight_kg: 0,
     volume_m3: 0,
     estimated_value: 0,
-    pickup_address: '',
-    pickup_city: '',
-    pickup_country: '',
-    pickup_contact_name: '',
-    pickup_contact_phone: '',
     delivery_address: '',
     delivery_city: trip.arrival_city,
     delivery_country: trip.arrival_country,
@@ -78,7 +68,7 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
     special_instructions: ''
   });
 
-  const totalSteps = 4;
+  const totalSteps = 3;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleInputChange = (field: keyof ShipmentData, value: string | number) => {
@@ -93,12 +83,9 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
       case 1:
         return !!(shipmentData.title && shipmentData.description && shipmentData.weight_kg > 0);
       case 2:
-        return !!(shipmentData.pickup_address && shipmentData.pickup_city && 
-                 shipmentData.pickup_contact_name && shipmentData.pickup_contact_phone);
-      case 3:
         return !!(shipmentData.delivery_address && shipmentData.delivery_city && 
                  shipmentData.delivery_contact_name && shipmentData.delivery_contact_phone);
-      case 4:
+      case 3:
         return true;
       default:
         return false;
@@ -241,71 +228,6 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <MapPin className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <h3 className="text-xl font-semibold">Adresse de collecte</h3>
-              <p className="text-muted-foreground">Où récupérer le colis</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="pickup_address">Adresse *</Label>
-                <Input
-                  id="pickup_address"
-                  placeholder="123 Rue de la Paix"
-                  value={shipmentData.pickup_address}
-                  onChange={(e) => handleInputChange('pickup_address', e.target.value)}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="pickup_city">Ville *</Label>
-                  <Input
-                    id="pickup_city"
-                    placeholder="Paris"
-                    value={shipmentData.pickup_city}
-                    onChange={(e) => handleInputChange('pickup_city', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pickup_country">Pays *</Label>
-                  <Input
-                    id="pickup_country"
-                    placeholder="France"
-                    value={shipmentData.pickup_country}
-                    onChange={(e) => handleInputChange('pickup_country', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="pickup_contact_name">Nom du contact *</Label>
-                  <Input
-                    id="pickup_contact_name"
-                    placeholder="Jean Dupont"
-                    value={shipmentData.pickup_contact_name}
-                    onChange={(e) => handleInputChange('pickup_contact_name', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pickup_contact_phone">Téléphone *</Label>
-                  <Input
-                    id="pickup_contact_phone"
-                    placeholder="+33 1 23 45 67 89"
-                    value={shipmentData.pickup_contact_phone}
-                    onChange={(e) => handleInputChange('pickup_contact_phone', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
               <MapPin className="h-12 w-12 mx-auto mb-4 text-success" />
               <h3 className="text-xl font-semibold">Adresse de livraison</h3>
               <p className="text-muted-foreground">Où livrer le colis</p>
@@ -375,7 +297,7 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -433,15 +355,9 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
                       <p className="text-sm text-muted-foreground">Poids</p>
                       <p className="font-medium">{shipmentData.weight_kg} kg</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Collecte</p>
-                        <p className="text-sm">{shipmentData.pickup_city}, {shipmentData.pickup_country}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Livraison</p>
-                        <p className="text-sm">{shipmentData.delivery_city}, {shipmentData.delivery_country}</p>
-                      </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Livraison</p>
+                      <p className="text-sm">{shipmentData.delivery_city}, {shipmentData.delivery_country}</p>
                     </div>
                   </div>
                 </CardContent>

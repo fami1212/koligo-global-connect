@@ -813,6 +813,8 @@ export type Database = {
           is_active: boolean | null
           max_volume_m3: number | null
           max_weight_kg: number
+          pickup_address: string | null
+          pickup_time_limit: string
           price_per_kg: number
           status: string | null
           transport_type: string
@@ -835,6 +837,8 @@ export type Database = {
           is_active?: boolean | null
           max_volume_m3?: number | null
           max_weight_kg: number
+          pickup_address?: string | null
+          pickup_time_limit?: string
           price_per_kg: number
           status?: string | null
           transport_type: string
@@ -857,6 +861,8 @@ export type Database = {
           is_active?: boolean | null
           max_volume_m3?: number | null
           max_weight_kg?: number
+          pickup_address?: string | null
+          pickup_time_limit?: string
           price_per_kg?: number
           status?: string | null
           transport_type?: string
@@ -891,6 +897,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deactivate_expired_trips: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

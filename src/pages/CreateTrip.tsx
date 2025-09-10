@@ -40,6 +40,8 @@ export default function CreateTrip() {
       available_weight_kg: parseFloat(formData.get('maxWeight') as string),
       max_volume_m3: parseFloat(formData.get('maxVolume') as string) || null,
       price_per_kg: parseFloat(formData.get('pricePerKg') as string),
+      pickup_address: formData.get('pickupAddress') as string,
+      pickup_time_limit: formData.get('pickupTimeLimit') as string,
       description: formData.get('description') as string || null,
     };
 
@@ -135,6 +137,15 @@ export default function CreateTrip() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="pickupAddress">Adresse de collecte</Label>
+              <Input
+                id="pickupAddress"
+                name="pickupAddress"
+                required
+                placeholder="123 Rue de la Paix, 75001 Paris"
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -166,6 +177,19 @@ export default function CreateTrip() {
                   type="datetime-local"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pickupTimeLimit">Heure limite de récupération</Label>
+              <Input
+                id="pickupTimeLimit"
+                name="pickupTimeLimit"
+                type="time"
+                required
+                defaultValue="18:00"
+              />
+              <p className="text-sm text-muted-foreground">
+                Au-delà de cette heure, les réservations ne seront plus possibles
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="transportType">Mode de transport</Label>
