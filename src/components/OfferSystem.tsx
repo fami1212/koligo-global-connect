@@ -134,7 +134,24 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
         .eq('id', shipmentId)
         .single();
 
-      if (shipmentError) throw shipmentError;
+      if (shipmentError) {
+        console.error('Shipment error:', shipmentError);
+        throw new Error('Colis introuvable');
+      }
+
+      if (!shipmentData?.sender_id) {
+        throw new Error('Expéditeur introuvable');
+      }
+
+      // Validate dates
+      if (!offerData.proposed_price || !offerData.pickup_date || !offerData.delivery_date) {
+        throw new Error('Veuillez remplir tous les champs obligatoires');
+      }
+
+      const price = parseFloat(offerData.proposed_price);
+      if (isNaN(price) || price <= 0) {
+        throw new Error('Le prix doit être un nombre positif');
+      }
       
       const { error } = await supabase
         .from('offers')
@@ -142,13 +159,16 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
           shipment_id: shipmentId,
           traveler_id: user.id,
           sender_id: shipmentData.sender_id,
-          proposed_price: parseFloat(offerData.proposed_price),
+          proposed_price: price,
           pickup_date: offerData.pickup_date,
           delivery_date: offerData.delivery_date,
-          message: offerData.message,
+          message: offerData.message || null,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
 
       toast({
         title: "Offre envoyée",
@@ -164,9 +184,10 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
       });
     } catch (error) {
       console.error('Error creating offer:', error);
+      const errorMessage = error instanceof Error ? error.message : "Impossible d'envoyer l'offre";
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer l'offre",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

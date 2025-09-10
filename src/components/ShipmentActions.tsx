@@ -80,6 +80,34 @@ export function ShipmentActions({ shipment, onUpdate }: ShipmentActionsProps) {
   const handleDelete = async () => {
     try {
       setDeleting(true);
+      
+      // Check if there are any assignments for this shipment
+      const { data: assignments, error: assignmentError } = await supabase
+        .from('assignments')
+        .select('id')
+        .eq('shipment_id', shipment.id);
+
+      if (assignmentError) throw assignmentError;
+
+      if (assignments && assignments.length > 0) {
+        toast({
+          title: "Impossible de supprimer",
+          description: "Ce colis a des livraisons en cours. Vous ne pouvez pas le supprimer.",
+          variant: "destructive",
+        });
+        setDeleting(false);
+        return;
+      }
+
+      // Delete related offers first
+      const { error: offersError } = await supabase
+        .from('offers')
+        .delete()
+        .eq('shipment_id', shipment.id);
+
+      if (offersError) throw offersError;
+
+      // Delete the shipment
       const { error } = await supabase
         .from('shipments')
         .delete()
