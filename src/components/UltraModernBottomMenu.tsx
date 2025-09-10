@@ -80,8 +80,8 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
 
   return (
     <>
-      {/* Primary Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/40">
+      {/* Primary Bottom Navigation - Now for both mobile and desktop */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/40">
         <div className="flex items-center justify-around h-16 px-2">
           {primaryItems.map((item) => (
             <NavLink
@@ -226,7 +226,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
       </div>
 
       {/* Spacer for bottom navigation */}
-      <div className="md:hidden h-16" />
+      <div className="h-16" />
     </>
   )
 }
