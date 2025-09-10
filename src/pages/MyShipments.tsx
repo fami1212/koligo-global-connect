@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Package, Plus, Eye, Edit, MapPin, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { ShipmentActions } from '@/components/ShipmentActions';
 
 interface Shipment {
   id: string;
@@ -193,18 +194,18 @@ export default function MyShipments() {
                     Créé le {new Date(shipment.created_at).toLocaleDateString('fr-FR')}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-3 w-3 mr-1" />
-                      Voir
-                    </Button>
-                    {shipment.status === 'pending' && (
+                  {shipment.status === 'pending' && (
+                    <ShipmentActions shipment={shipment} onUpdate={loadShipments} />
+                  )}
+                  
+                  {shipment.status !== 'pending' && (
+                    <div className="flex gap-2 pt-2">
                       <Button variant="outline" size="sm" className="flex-1">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Modifier
+                        <Eye className="h-3 w-3 mr-1" />
+                        Voir détails
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

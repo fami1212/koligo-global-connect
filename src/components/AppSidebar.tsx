@@ -134,8 +134,8 @@ export function AppSidebar() {
       : "hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-all duration-200 hover:shadow-md"
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-80"} collapsible="icon">
-      <SidebarHeader className="border-b border-border/60 p-6">
+    <Sidebar className={`${collapsed ? "w-16" : "w-72"} hidden md:flex transition-all duration-300 ease-in-out border-r border-border/40 bg-gradient-to-b from-card via-background to-muted/20`} collapsible="icon">
+      <SidebarHeader className="border-b border-border/40 p-6 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-secondary shrink-0 shadow-lg shadow-primary/25">

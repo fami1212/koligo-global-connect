@@ -19,8 +19,11 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { StatusSynchronizer } from '@/components/StatusSynchronizer';
+import { ProblemReporter } from '@/components/ProblemReporter';
+import { VoiceVideoCall } from '@/components/VoiceVideoCall';
 
 interface Assignment {
   id: string;
@@ -307,11 +310,8 @@ export default function Tracking() {
                           </span>
                         </div>
 
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Phone className="h-4 w-4 mr-1" />
-                            Appeler
-                          </Button>
+                        <div className="flex gap-1">
+                          <VoiceVideoCall assignment={assignment} />
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -320,6 +320,7 @@ export default function Tracking() {
                             <MessageCircle className="h-4 w-4 mr-1" />
                             Message
                           </Button>
+                          <ProblemReporter assignmentId={assignment.id} />
                         </div>
                       </div>
                     </div>
@@ -329,11 +330,19 @@ export default function Tracking() {
             )}
         </div>
 
-        {/* Instant Messaging Panel */}
-        <div className="xl:col-span-1">
+        {/* Status & Messaging Panel */}
+        <div className="xl:col-span-1 space-y-6">
+          {selectedAssignment && (
+            <StatusSynchronizer 
+              assignment={selectedAssignment}
+              userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+              onStatusUpdate={loadAssignments}
+            />
+          )}
+          
           <InstantMessaging 
             conversationId={activeConversationId || undefined}
-            className="sticky top-4 h-[600px]"
+            className="h-[400px]"
           />
         </div>
       </div>

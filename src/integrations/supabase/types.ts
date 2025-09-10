@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_resource_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_resource_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_resource_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       assignments: {
         Row: {
           commission_amount: number | null
@@ -365,6 +395,54 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          created_at: string
+          delivery_date: string
+          expires_at: string
+          id: string
+          message: string | null
+          pickup_date: string
+          proposed_price: number
+          sender_id: string
+          shipment_id: string
+          status: string
+          traveler_id: string
+          trip_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_date: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          pickup_date: string
+          proposed_price: number
+          sender_id: string
+          shipment_id: string
+          status?: string
+          traveler_id: string
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_date?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          pickup_date?: string
+          proposed_price?: number
+          sender_id?: string
+          shipment_id?: string
+          status?: string
+          traveler_id?: string
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -408,6 +486,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      problem_reports: {
+        Row: {
+          assignment_id: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          priority: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

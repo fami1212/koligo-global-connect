@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface KYCDocument {
   id: string;
@@ -98,6 +98,10 @@ export function KYCUpload() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadDocuments();
+  }, [user]);
 
   const requestVerification = async () => {
     if (!user) return;

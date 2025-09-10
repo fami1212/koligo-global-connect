@@ -27,28 +27,24 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex">
-          <AppSidebar />
-        </div>
+        <AppSidebar />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Desktop Header with Sidebar Toggle */}
-          <header className="hidden md:flex h-14 items-center border-b border-border px-4 bg-background/95 backdrop-blur-md">
-            <SidebarTrigger className="mr-4">
+          <header className="hidden md:flex h-16 items-center border-b border-border/40 px-6 bg-gradient-to-r from-background to-muted/20 backdrop-blur-md sticky top-0 z-40">
+            <SidebarTrigger className="mr-4 p-2 hover:bg-muted/60 rounded-lg transition-colors">
               <Menu className="h-5 w-5" />
             </SidebarTrigger>
             
             <div className="flex-1" />
-            
-            {/* You can add additional header content here */}
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-auto">
-            <div className="container mx-auto p-4 md:p-6 pb-20 md:pb-6">
+          <main className="flex-1 overflow-auto bg-gradient-to-br from-background via-muted/10 to-background">
+            <div className="container mx-auto p-4 md:p-8 pb-20 md:pb-8 max-w-7xl">
               {children}
             </div>
           </main>
