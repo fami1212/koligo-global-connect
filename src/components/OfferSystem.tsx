@@ -80,21 +80,22 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
       
       const { data: offersData, error } = await supabase
         .from('offers')
-        .select(`
-          *,
-          shipments!inner (
-            title,
-            pickup_city,
-            delivery_city,
-            weight_kg
-          )
-        `)
+        .select('*')
         .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
+      if (error) throw error;
+
+      // Get shipment details separately
+      const shipmentIds = [...new Set(offersData?.map(o => o.shipment_id) || [])];
+      const { data: shipmentsData } = await supabase
+        .from('shipments')
+        .select('id, title, pickup_city, delivery_city, weight_kg')
+        .in('id', shipmentIds);
+
       console.log('Offers query result:', { offersData, error });
 
-      if (error) throw error;
+      const shipmentsMap = new Map(shipmentsData?.map(s => [s.id, s]) || []);
 
       // Get profiles for offers
       const userIds = [...new Set([
@@ -111,7 +112,7 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
 
       const offersWithProfiles = offersData?.map(offer => ({
         ...offer,
-        shipment: offer.shipments,
+        shipment: shipmentsMap.get(offer.shipment_id),
         traveler_profile: profilesMap.get(offer.traveler_id),
         sender_profile: profilesMap.get(offer.sender_id)
       })) || [];

@@ -202,12 +202,20 @@ export function InstantMessaging({ conversationId, otherUserId, className }: Ins
                     )}>
                       <p className="text-sm">{message.content}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(message.created_at).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
+                     <div className="flex items-center gap-2">
+                       <p className="text-xs text-muted-foreground">
+                         {new Date(message.created_at).toLocaleTimeString('fr-FR', {
+                           hour: '2-digit',
+                           minute: '2-digit'
+                         })}
+                       </p>
+                       {message.sender_id === user?.id && !message.read_at && (
+                         <div className="w-2 h-2 bg-green-500 rounded-full" />
+                       )}
+                       {message.sender_id === user?.id && message.read_at && (
+                         <div className="w-2 h-2 bg-green-500 rounded-full opacity-50" />
+                       )}
+                     </div>
                   </div>
                 </div>
               ))

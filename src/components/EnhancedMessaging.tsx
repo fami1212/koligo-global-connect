@@ -361,9 +361,7 @@ export function EnhancedMessaging() {
                         </AvatarFallback>
                       </Avatar>
                       {conv.unread_count && conv.unread_count > 0 && (
-                        <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                          {conv.unread_count}
-                        </Badge>
+                        <div className="w-2 h-2 bg-green-500 rounded-full absolute -top-1 -right-1"></div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -378,7 +376,13 @@ export function EnhancedMessaging() {
                         )}
                       </div>
                       {conv.last_message && (
-                        <p className="text-xs text-muted-foreground truncate mt-1">
+                        <p className={cn(
+                          "text-xs truncate mt-1",
+                          conv.unread_count && conv.unread_count > 0 && conv.last_message.sender_id !== user?.id
+                            ? "text-green-600 font-medium"
+                            : "text-muted-foreground"
+                        )}>
+                          {conv.last_message.sender_id === user?.id ? 'Vous: ' : ''}
                           {conv.last_message.content}
                         </p>
                       )}

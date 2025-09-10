@@ -247,14 +247,7 @@ export default function Tracking() {
           </div>
         </div>
 
-        <Tabs defaultValue="tracking" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="tracking">Suivi temps réel</TabsTrigger>
-            <TabsTrigger value="my-deliveries">Mes livraisons</TabsTrigger>
-            <TabsTrigger value="status-updates">Gestion statuts</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="tracking" className="space-y-4">
+        <div className="space-y-4">
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Assignments List */}
@@ -368,16 +361,7 @@ export default function Tracking() {
                 />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="my-deliveries" className="space-y-4">
-            <DeliveryStatusTracker mode="view" />
-          </TabsContent>
-
-          <TabsContent value="status-updates" className="space-y-4">
-            <DeliveryStatusTracker mode="update" />
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
