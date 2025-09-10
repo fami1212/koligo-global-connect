@@ -82,7 +82,7 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
         .from('offers')
         .select(`
           *,
-          shipment:shipments (
+          shipments!inner (
             title,
             pickup_city,
             delivery_city,
@@ -111,6 +111,7 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
 
       const offersWithProfiles = offersData?.map(offer => ({
         ...offer,
+        shipment: offer.shipments,
         traveler_profile: profilesMap.get(offer.traveler_id),
         sender_profile: profilesMap.get(offer.sender_id)
       })) || [];

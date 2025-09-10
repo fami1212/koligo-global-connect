@@ -181,8 +181,8 @@ export function AppSidebar() {
                         </div>
                         {!collapsed && <span className="font-medium">{item.title}</span>}
                       </div>
-                      {!collapsed && item.url === '/messages' && hasUnread && (
-                        <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full animate-pulse shadow-lg" />
+                      {item.url === '/messages' && hasUnread && (
+                        <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
                       )}
                     </NavLink>
                   </SidebarMenuButton>

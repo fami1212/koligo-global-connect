@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Package, Truck, Clock, CheckCircle, XCircle, MessageCircle, Euro } from 'lucide-react';
+import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -328,7 +329,7 @@ export default function Reservations() {
         </div>
 
         <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="pending">
               En attente ({pendingRequests.length})
             </TabsTrigger>
@@ -338,6 +339,11 @@ export default function Reservations() {
             <TabsTrigger value="rejected">
               Refusées ({rejectedRequests.length})
             </TabsTrigger>
+            {hasRole('traveler') && (
+              <TabsTrigger value="deliveries">
+                Mes livraisons
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="pending" className="space-y-4">
@@ -384,6 +390,12 @@ export default function Reservations() {
               ))
             )}
           </TabsContent>
+
+          {hasRole('traveler') && (
+            <TabsContent value="deliveries" className="space-y-4">
+              <DeliveryStatusTracker mode="update" />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

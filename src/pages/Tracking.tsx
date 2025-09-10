@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { InstantMessaging } from '@/components/InstantMessaging';
 import { StatusTracker } from '@/components/StatusTracker';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   MapPin, 
   Clock, 
@@ -25,6 +26,7 @@ import { StatusSynchronizer } from '@/components/StatusSynchronizer';
 import { ProblemReporter } from '@/components/ProblemReporter';
 import { CallButtons } from '@/components/CallButtons';
 import { StatusUpdater } from '@/components/StatusUpdater';
+import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 
 interface Assignment {
   id: string;
@@ -233,131 +235,149 @@ export default function Tracking() {
     }
   };
 
-  const selectedAssignmentData = selectedAssignment;
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Suivi des livraisons</h1>
-          <p className="text-muted-foreground mt-1">
-            Suivez l'état de vos colis et trajets en temps réel
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Suivi des livraisons</h1>
+            <p className="text-muted-foreground mt-1">
+              Suivez l'état de vos colis et trajets en temps réel
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Assignments List */}
-        <div className="xl:col-span-2 space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <Tabs defaultValue="tracking" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="tracking">Suivi temps réel</TabsTrigger>
+            <TabsTrigger value="my-deliveries">Mes livraisons</TabsTrigger>
+            <TabsTrigger value="status-updates">Gestion statuts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tracking" className="space-y-4">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              {/* Assignments List */}
+              <div className="xl:col-span-2 space-y-4">
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  </div>
+                ) : assignments.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-8 text-muted-foreground">
+                      <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Aucune livraison trouvée</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  assignments.map((assignment) => (
+                      <Card 
+                        key={assignment.id} 
+                        className={`cursor-pointer transition-colors ${
+                          selectedAssignment?.id === assignment.id
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => setSelectedAssignment(assignment)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-semibold text-base">
+                                  {assignment.shipment?.title}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="ml-2">
+                                {getStatusText(assignment)}
+                              </Badge>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Progression</span>
+                                <span className="font-medium">{getStatusProgress(assignment)}%</span>
+                              </div>
+                              <Progress value={getStatusProgress(assignment)} className="h-1.5" />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-sm">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  {user?.id === assignment.sender_id ? 'Transporteur:' : 'Expéditeur:'}
+                                </span>
+                                <span>
+                                  {user?.id === assignment.sender_id 
+                                    ? assignment.traveler_profile.first_name
+                                    : assignment.sender_profile.first_name}
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-1 sm:gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <CallButtons assignment={assignment} currentUserId={user?.id} />
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => openConversation(assignment)}
+                                  className="flex-shrink-0 min-w-0"
+                                >
+                                  <MessageCircle className="h-4 w-4 sm:mr-1" />
+                                  <span className="hidden sm:inline">Message</span>
+                                </Button>
+                                <div className="flex-shrink-0">
+                                  <ProblemReporter assignmentId={assignment.id} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+              </div>
+
+              {/* Status & Messaging Panel */}
+              <div className="xl:col-span-1 space-y-6">
+                {selectedAssignment && (
+                  <>
+                    <StatusUpdater 
+                      assignment={selectedAssignment}
+                      userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                      onStatusUpdate={loadAssignments}
+                    />
+                    <StatusSynchronizer 
+                      assignment={selectedAssignment}
+                      userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                      onStatusUpdate={loadAssignments}
+                    />
+                  </>
+                )}
+                
+                <InstantMessaging 
+                  conversationId={activeConversationId || undefined}
+                  className="h-[400px]"
+                />
+              </div>
             </div>
-          ) : assignments.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Aucune livraison trouvée</p>
-              </CardContent>
-            </Card>
-          ) : (
-            assignments.map((assignment) => (
-                <Card 
-                  key={assignment.id} 
-                  className={`cursor-pointer transition-colors ${
-                    selectedAssignment?.id === assignment.id
-                      ? 'border-primary bg-primary/5'
-                      : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => setSelectedAssignment(assignment)}
-                >
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-base">
-                            {assignment.shipment?.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="ml-2">
-                          {getStatusText(assignment)}
-                        </Badge>
-                      </div>
+          </TabsContent>
 
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">Progression</span>
-                          <span className="font-medium">{getStatusProgress(assignment)}%</span>
-                        </div>
-                        <Progress value={getStatusProgress(assignment)} className="h-1.5" />
-                      </div>
+          <TabsContent value="my-deliveries" className="space-y-4">
+            <DeliveryStatusTracker mode="view" />
+          </TabsContent>
 
-                      <Separator />
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            {user?.id === assignment.sender_id ? 'Transporteur:' : 'Expéditeur:'}
-                          </span>
-                          <span>
-                            {user?.id === assignment.sender_id 
-                              ? assignment.traveler_profile.first_name
-                              : assignment.sender_profile.first_name}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1 sm:gap-2">
-                          <div className="flex-1 min-w-0">
-                            <CallButtons assignment={assignment} currentUserId={user?.id} />
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openConversation(assignment)}
-                            className="flex-shrink-0 min-w-0"
-                          >
-                            <MessageCircle className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Message</span>
-                          </Button>
-                          <div className="flex-shrink-0">
-                            <ProblemReporter assignmentId={assignment.id} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-        </div>
-
-        {/* Status & Messaging Panel */}
-        <div className="xl:col-span-1 space-y-6">
-          {selectedAssignment && (
-            <>
-              <StatusUpdater 
-                assignment={selectedAssignment}
-                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
-                onStatusUpdate={loadAssignments}
-              />
-              <StatusSynchronizer 
-                assignment={selectedAssignment}
-                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
-                onStatusUpdate={loadAssignments}
-              />
-            </>
-          )}
-          
-          <InstantMessaging 
-            conversationId={activeConversationId || undefined}
-            className="h-[400px]"
-          />
-        </div>
+          <TabsContent value="status-updates" className="space-y-4">
+            <DeliveryStatusTracker mode="update" />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
