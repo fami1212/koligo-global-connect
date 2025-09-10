@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { EnhancedMessaging } from '@/components/EnhancedMessaging';
+import WhatsAppMessaging from '@/components/WhatsAppMessaging';
 
 export default function Messages() {
   const { user } = useAuth();
@@ -34,7 +34,7 @@ export default function Messages() {
           </Button>
         </div>
 
-        <EnhancedMessaging />
+        <WhatsAppMessaging />
       </div>
     </div>
   );

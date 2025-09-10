@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/AppSidebar"
+import { UltraModernSidebar } from "@/components/UltraModernSidebar"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { useAuth } from "@/contexts/AuthContext"
 import { Navigate } from "react-router-dom"
@@ -29,7 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         {/* Desktop Sidebar */}
-        <AppSidebar />
+        <UltraModernSidebar />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">

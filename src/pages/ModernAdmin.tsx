@@ -128,7 +128,7 @@ export default function ModernAdmin() {
         .from('kyc_documents')
         .select(`
           *,
-          user_profile:profiles!user_id (
+          profiles!user_id (
             first_name,
             last_name,
             email,
@@ -146,7 +146,7 @@ export default function ModernAdmin() {
         .from('problem_reports')
         .select(`
           *,
-          user_profile:profiles!user_id (
+          profiles!user_id (
             first_name,
             last_name,
             email,
@@ -164,11 +164,11 @@ export default function ModernAdmin() {
 
       setKycDocuments((kycData || []).map((doc: any) => ({
         ...doc,
-        user_profile: doc.user_profile || { first_name: '', last_name: '', email: '', avatar_url: '', phone: '', rating: 0 }
+        user_profile: doc.profiles || { first_name: '', last_name: '', email: '', avatar_url: '', phone: '', rating: 0 }
       })));
       setProblemReports((reportsData || []).map((report: any) => ({
         ...report,
-        user_profile: report.user_profile || { first_name: '', last_name: '', email: '', avatar_url: '' }
+        user_profile: report.profiles || { first_name: '', last_name: '', email: '', avatar_url: '' }
       })));
       
       // Calculate stats

@@ -15,7 +15,7 @@ import Profile from "./pages/Profile";
 import Tracking from "./pages/Tracking";
 import CreateShipment from "./pages/CreateShipment";
 import CreateTrip from "./pages/CreateTrip";
-import ModernTracking from "./pages/ModernTracking";
+import UltraModernTracking from "./pages/UltraModernTracking";
 import ModernAdmin from "./pages/ModernAdmin";
 import SearchTrips from "./pages/SearchTrips";
 import MyShipments from "./pages/MyShipments";
@@ -74,13 +74,12 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Tracking />
+                      <UltraModernTracking />
                     </AppLayout>
                   </ProtectedRoute>
                 }
               />
 
-              {/* Role-based protected routes with layout */}
               <Route
                 path="/sender/create-shipment"
                 element={
@@ -97,16 +96,6 @@ function App() {
                   <ProtectedRoute requiredRole="traveler">
                     <AppLayout>
                       <CreateTrip />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tracking"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <ModernTracking />
                     </AppLayout>
                   </ProtectedRoute>
                 }
