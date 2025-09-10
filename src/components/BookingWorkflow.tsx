@@ -113,12 +113,17 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
 
     setLoading(true);
     try {
-      // Create shipment
+      // Create shipment with pickup info from the trip
       const { data: shipment, error: shipmentError } = await supabase
         .from('shipments')
         .insert({
           ...shipmentData,
-          sender_id: user.id
+          sender_id: user.id,
+          pickup_address: trip.departure_city + ', ' + trip.departure_country, // Use trip departure as pickup
+          pickup_city: trip.departure_city,
+          pickup_country: trip.departure_country,
+          pickup_contact_name: trip.profiles?.first_name + ' ' + trip.profiles?.last_name,
+          pickup_contact_phone: 'À définir avec le transporteur'
         })
         .select()
         .single();
