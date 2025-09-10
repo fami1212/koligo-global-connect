@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { StatusSynchronizer } from '@/components/StatusSynchronizer';
 import { ProblemReporter } from '@/components/ProblemReporter';
-import { VoiceVideoCall } from '@/components/VoiceVideoCall';
+import { CallButtons } from '@/components/CallButtons';
 
 interface Assignment {
   id: string;
@@ -311,7 +311,7 @@ export default function Tracking() {
                         </div>
 
                         <div className="flex gap-1">
-                          <VoiceVideoCall assignment={assignment} />
+                          <CallButtons assignment={assignment} currentUserId={user?.id} />
                           <Button 
                             variant="outline" 
                             size="sm"
