@@ -281,13 +281,13 @@ export function UltraModernSidebar() {
     <>
       {/* Collapsed Sidebar Toggle */}
       {isCollapsed && (
-        <div className="hidden lg:flex lg:w-16 lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 lg:border-r lg:border-border/40">
+        <div className="hidden lg:flex lg:w-16 lg:flex-col lg:fixed lg:inset-y-0 lg:z-40 lg:border-r lg:border-border/40">
           <NavContent collapsed />
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(false)}
-            className="absolute -right-3 top-4 h-6 w-6 p-0 bg-background border rounded-full shadow-md hover:shadow-lg"
+            className="absolute -right-3 top-4 h-6 w-6 p-0 bg-background border rounded-full shadow-md hover:shadow-lg z-50"
           >
             <ChevronRight className="h-3 w-3" />
           </Button>
@@ -296,7 +296,7 @@ export function UltraModernSidebar() {
 
       {/* Full Desktop Sidebar */}
       {!isCollapsed && (
-        <div className="hidden lg:flex lg:w-80 lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 lg:border-r lg:border-border/40">
+        <div className="hidden lg:flex lg:w-80 lg:flex-col lg:fixed lg:inset-y-0 lg:z-40 lg:border-r lg:border-border/40">
           <NavContent />
         </div>
       )}

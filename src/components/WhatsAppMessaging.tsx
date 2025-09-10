@@ -390,13 +390,16 @@ export default function WhatsAppMessaging() {
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className={cn(
+                        "text-sm truncate",
+                        conversation.unread_count > 0 
+                          ? "text-foreground font-medium" 
+                          : "text-muted-foreground"
+                      )}>
                         {conversation.last_message?.content || 'Aucun message'}
                       </p>
                       {conversation.unread_count > 0 && (
-                        <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
-                          {conversation.unread_count}
-                        </Badge>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse ml-2"></div>
                       )}
                     </div>
                   </div>

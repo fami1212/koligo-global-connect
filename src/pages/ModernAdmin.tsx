@@ -128,7 +128,7 @@ export default function ModernAdmin() {
         .from('kyc_documents')
         .select(`
           *,
-          profiles!user_id (
+          profiles!kyc_documents_user_id_fkey (
             first_name,
             last_name,
             email,
@@ -146,7 +146,7 @@ export default function ModernAdmin() {
         .from('problem_reports')
         .select(`
           *,
-          profiles!user_id (
+          profiles!problem_reports_user_id_fkey (
             first_name,
             last_name,
             email,

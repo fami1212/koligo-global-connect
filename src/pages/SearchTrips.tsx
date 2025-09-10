@@ -24,6 +24,7 @@ interface Trip {
   available_weight_kg: number;
   max_weight_kg: number;
   price_per_kg: number;
+  currency?: string;
   transport_type: string;
   description: string;
   traveler_id: string;
@@ -329,7 +330,7 @@ export default function SearchTrips() {
                       <div className="flex items-center gap-2">
                         <Euro className="h-4 w-4 text-success" />
                         <span className="text-sm font-semibold">
-                          {trip.price_per_kg}€/kg
+                          {trip.price_per_kg} {trip.currency || 'EUR'}/kg
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
