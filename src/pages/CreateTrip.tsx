@@ -245,17 +245,37 @@ export default function CreateTrip() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pricePerKg">Prix par kg (€)</Label>
-              <Input
-                id="pricePerKg"
-                name="pricePerKg"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                placeholder="5.00"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pricePerKg">Prix par kg</Label>
+                <Input
+                  id="pricePerKg"
+                  name="pricePerKg"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  placeholder="5.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency">Devise</Label>
+                <Select name="currency" defaultValue="EUR">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir la devise" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">€ - Euro</SelectItem>
+                    <SelectItem value="USD">$ - Dollar US</SelectItem>
+                    <SelectItem value="GBP">£ - Livre Sterling</SelectItem>
+                    <SelectItem value="CHF">CHF - Franc Suisse</SelectItem>
+                    <SelectItem value="CAD">CAD - Dollar Canadien</SelectItem>
+                    <SelectItem value="CFA">CFA - Franc CFA</SelectItem>
+                    <SelectItem value="MAD">MAD - Dirham Marocain</SelectItem>
+                    <SelectItem value="TND">TND - Dinar Tunisien</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>

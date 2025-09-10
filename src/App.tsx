@@ -15,7 +15,8 @@ import Profile from "./pages/Profile";
 import Tracking from "./pages/Tracking";
 import CreateShipment from "./pages/CreateShipment";
 import CreateTrip from "./pages/CreateTrip";
-import SearchShipments from "./pages/SearchShipments";
+import ModernTracking from "./pages/ModernTracking";
+import ModernAdmin from "./pages/ModernAdmin";
 import SearchTrips from "./pages/SearchTrips";
 import MyShipments from "./pages/MyShipments";
 import MyTrips from "./pages/MyTrips";
@@ -101,11 +102,21 @@ function App() {
                 }
               />
               <Route
-                path="/search-shipments"
+                path="/tracking"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <SearchShipments />
+                      <ModernTracking />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ModernAdmin />
                     </AppLayout>
                   </ProtectedRoute>
                 }
