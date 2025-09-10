@@ -63,16 +63,21 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
   });
 
   useEffect(() => {
-    if (mode === 'manage') {
+    if (mode === 'manage' && user) {
       loadOffers();
     }
   }, [mode, user]);
 
   const loadOffers = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found');
+      return;
+    }
 
     try {
+      console.log('Loading offers for user:', user.id);
       setLoading(true);
+      
       const { data: offersData, error } = await supabase
         .from('offers')
         .select(`
@@ -86,6 +91,8 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
         `)
         .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
+
+      console.log('Offers query result:', { offersData, error });
 
       if (error) throw error;
 
@@ -108,6 +115,7 @@ export function OfferSystem({ shipmentId, mode }: OfferSystemProps) {
         sender_profile: profilesMap.get(offer.sender_id)
       })) || [];
 
+      console.log('Final offers with profiles:', offersWithProfiles);
       setOffers(offersWithProfiles);
     } catch (error) {
       console.error('Error loading offers:', error);
