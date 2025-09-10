@@ -247,7 +247,6 @@ export default function Tracking() {
           </div>
         </div>
 
-        <div className="space-y-4">
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Assignments List */}
@@ -361,7 +360,6 @@ export default function Tracking() {
                 />
               </div>
             </div>
-        </div>
       </div>
     </div>
   );
