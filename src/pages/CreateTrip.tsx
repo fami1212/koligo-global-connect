@@ -18,6 +18,7 @@ export default function CreateTrip() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [transportType, setTransportType] = useState('');
+  const [currency, setCurrency] = useState('EUR');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +41,7 @@ export default function CreateTrip() {
       available_weight_kg: parseFloat(formData.get('maxWeight') as string),
       max_volume_m3: parseFloat(formData.get('maxVolume') as string) || null,
       price_per_kg: parseFloat(formData.get('pricePerKg') as string),
+      currency: currency,
       pickup_address: formData.get('pickupAddress') as string,
       pickup_time_limit: formData.get('pickupTimeLimit') as string,
       description: formData.get('description') as string || null,
@@ -260,7 +262,11 @@ export default function CreateTrip() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currency">Devise</Label>
-                <Select name="currency" defaultValue="EUR">
+                <Select 
+                  value={currency} 
+                  onValueChange={setCurrency}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choisir la devise" />
                   </SelectTrigger>

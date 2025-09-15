@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/assets/gp_connect-removebg-preview.png";
 
 const ModernHeader = () => {
   const navigate = useNavigate();
@@ -37,14 +38,15 @@ const ModernHeader = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+        
+        {/* Logo à la place de GP Connect */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-            <span className="text-primary-foreground font-bold text-lg">GP</span>
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            GP Connect
-          </h1>
+          <img 
+            src={Logo} 
+            alt="GP Connect Logo" 
+            className="h-22 w-24 object-contain" 
+          />
         </div>
 
         <nav className="hidden lg:flex items-center gap-6">

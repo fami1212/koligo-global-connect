@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react"
+import { SidebarProvider } from "@/components/ui/sidebar" // <-- adapte le chemin
+import { AppSidebar } from "@/components/AppSidebar"
 import { UltraModernBottomMenu } from "@/components/UltraModernBottomMenu"
 import { useAuth } from "@/contexts/AuthContext"
 import { Navigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { useState, useEffect } from "react"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -16,13 +18,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     if (user) {
       loadUnreadMessages()
-      
-      // Subscribe to new messages
+
       const channel = supabase
-        .channel('messages-channel')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages' },
-          () => loadUnreadMessages()
+        .channel("messages-channel")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () =>
+          loadUnreadMessages()
         )
         .subscribe()
 
@@ -34,28 +34,28 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const loadUnreadMessages = async () => {
     if (!user) return
-    
+
     try {
       const { data: conversations } = await supabase
-        .from('conversations')
-        .select('id')
+        .from("conversations")
+        .select("id")
         .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
 
       if (!conversations) return
 
       const conversationIds = conversations.map(c => c.id)
-      
+
       const { data: unreadMessages } = await supabase
-        .from('messages')
-        .select('id')
-        .in('conversation_id', conversationIds)
-        .neq('sender_id', user.id)
-        .is('read_at', null)
+        .from("messages")
+        .select("id")
+        .in("conversation_id", conversationIds)
+        .neq("sender_id", user.id)
+        .is("read_at", null)
 
       const count = unreadMessages?.length || 0
       setUnreadCount(count)
     } catch (error) {
-      console.error('Error loading unread messages:', error)
+      console.error("Error loading unread messages:", error)
     }
   }
 
@@ -72,16 +72,27 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-background">
-      {/* Page Content */}
-      <main className="flex-1 overflow-auto bg-gradient-to-br from-background via-muted/10 to-background">
-        <div className="container mx-auto p-4 md:p-8 pb-20 max-w-7xl">
-          {children}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        {/* Sidebar (Desktop only) */}
+        <div className="hidden md:flex">
+          <AppSidebar />
         </div>
-      </main>
 
-      {/* Ultra Modern Bottom Menu for Both Mobile and Desktop */}
-      <UltraModernBottomMenu unreadCount={unreadCount} />
-    </div>
+        {/* Main content */}
+        <div className="flex-1 flex flex-col">
+          <main className="flex-1 overflow-auto bg-gradient-to-br from-background via-muted/10 to-background">
+            <div className="container mx-auto p-4 md:p-8 pb-20 max-w-7xl">
+              {children}
+            </div>
+          </main>
+
+          {/* Bottom menu (Mobile only) */}
+          <div className="md:hidden">
+            <UltraModernBottomMenu unreadCount={unreadCount} />
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   )
 }

@@ -24,7 +24,7 @@ interface Trip {
   available_weight_kg: number;
   max_weight_kg: number;
   price_per_kg: number;
-  currency?: string;
+  currency: string;
   transport_type: string;
   description: string;
   traveler_id: string;
@@ -129,48 +129,50 @@ export default function SearchTrips() {
     }
   };
 
-  const createMatchRequest = async (tripId: string, estimatedPrice: number) => {
-    try {
-      // First get a shipment from the sender to create the match request
-      const { data: shipments } = await supabase
-        .from('shipments')
-        .select('id')
-        .eq('sender_id', user?.id)
-        .eq('status', 'pending')
-        .limit(1);
+  const getCurrencySymbol = (currencyCode: string) => {
+    const currencySymbols: { [key: string]: string } = {
+      EUR: '€',
+      USD: '$',
+      GBP: '£',
+      CHF: 'CHF',
+      CAD: 'CAD',
+      CFA: 'CFA',
+      MAD: 'MAD',
+      TND: 'TND'
+    };
+    return currencySymbols[currencyCode] || currencyCode;
+  };
 
-      if (!shipments || shipments.length === 0) {
-        toast({
-          title: "Aucun colis",
-          description: "Vous devez d'abord créer un colis pour faire une demande",
-          variant: "destructive",
-        });
-        return;
-      }
+  const formatPrice = (price: number, currency: string) => {
+    return `${price.toFixed(2)} ${getCurrencySymbol(currency)}/kg`;
+  };
 
-      const { error } = await supabase
-        .from('match_requests')
-        .insert({
-          trip_id: tripId,
-          shipment_id: shipments[0].id,
-          sender_id: user?.id,
-          traveler_id: trips.find(t => t.id === tripId)?.traveler_id || '',
-          estimated_price: estimatedPrice
-        });
+  const calculateTotalPrice = (weight: number, pricePerKg: number) => {
+    return weight * pricePerKg;
+  };
 
-      if (error) throw error;
+  const formatTotalPrice = (weight: number, pricePerKg: number, currency: string) => {
+    const total = calculateTotalPrice(weight, pricePerKg);
+    return `${total.toFixed(2)} ${getCurrencySymbol(currency)}`;
+  };
 
-      toast({
-        title: "Demande envoyée",
-        description: "Votre demande de transport a été envoyée au transporteur",
-      });
-    } catch (error) {
-      console.error('Error creating match request:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'envoyer la demande",
-        variant: "destructive",
-      });
+  const getTransportIcon = (type: string) => {
+    switch (type) {
+      case 'car': return '🚗';
+      case 'train': return '🚆';
+      case 'plane': return '✈️';
+      case 'bus': return '🚌';
+      default: return '🚛';
+    }
+  };
+
+  const getTransportText = (type: string) => {
+    switch (type) {
+      case 'car': return 'Voiture';
+      case 'train': return 'Train';
+      case 'plane': return 'Avion';
+      case 'bus': return 'Bus';
+      default: return type;
     }
   };
 
@@ -295,7 +297,7 @@ export default function SearchTrips() {
                         <div className="flex-1 flex items-center">
                           <div className="h-px bg-border flex-1"></div>
                           <Badge variant="secondary" className="mx-2">
-                            {trip.transport_type}
+                            {getTransportText(trip.transport_type)}
                           </Badge>
                           <div className="h-px bg-border flex-1"></div>
                         </div>
@@ -320,7 +322,7 @@ export default function SearchTrips() {
                     </div>
 
                     {/* Details */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <span className="text-sm">
@@ -330,43 +332,54 @@ export default function SearchTrips() {
                       <div className="flex items-center gap-2">
                         <Euro className="h-4 w-4 text-success" />
                         <span className="text-sm font-semibold">
-                          {trip.price_per_kg} {trip.currency || 'EUR'}/kg
+                          {formatPrice(trip.price_per_kg, trip.currency)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-accent" />
-                        <span className="text-sm">
-                          {trip.profiles?.first_name} {trip.profiles?.last_name}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="text-xs">
-                            ⭐ {trip.profiles?.rating?.toFixed(1) || '0.0'}
-                          </Badge>
-                          {trip.profiles?.is_verified && (
-                            <Badge className="text-xs bg-green-100 text-green-800 border-green-300">
-                              ✓ Vérifié
-                            </Badge>
-                          )}
-                        </div>
+                      <div className="bg-muted p-2 rounded-md">
+                        <p className="text-xs text-muted-foreground">Exemple pour 5kg:</p>
+                        <p className="text-sm font-semibold">
+                          {formatTotalPrice(5, trip.price_per_kg, trip.currency)}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="w-full">
-                            Réserver ce trajet
-                          </Button>
-                        </DialogTrigger>
-                        <BookingWorkflow 
-                          trip={trip} 
-                          onClose={() => {}} 
-                        />
-                      </Dialog>
-                      <Button variant="outline" size="sm" className="w-full">
-                        Voir les détails
-                      </Button>
+                    {/* Traveler Info & Actions */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-accent" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {trip.profiles?.first_name} {trip.profiles?.last_name}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              ⭐ {trip.profiles?.rating?.toFixed(1) || '0.0'}
+                            </Badge>
+                            {trip.profiles?.is_verified && (
+                              <Badge className="text-xs bg-green-100 text-green-800 border-green-300">
+                                ✓ Vérifié
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button className="w-full">
+                              Réserver ce trajet
+                            </Button>
+                          </DialogTrigger>
+                          <BookingWorkflow 
+                            trip={trip} 
+                            onClose={() => {}} 
+                          />
+                        </Dialog>
+                        <Button variant="outline" size="sm" className="w-full">
+                          Voir les détails
+                        </Button>
+                      </div>
                     </div>
                   </div>
 

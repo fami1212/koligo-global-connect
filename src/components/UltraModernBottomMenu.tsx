@@ -36,7 +36,7 @@ interface NavItem {
 export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) {
   const { user, profile, hasRole } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
-
+  const { signOut } = useAuth();
   const getAllNavItems = (): NavItem[] => {
     const items: NavItem[] = [
       { title: "Tableau de bord", url: "/dashboard", icon: Home },
@@ -90,8 +90,8 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 relative",
-                  isActive 
-                    ? "text-primary bg-primary/10 shadow-sm" 
+                  isActive
+                    ? "text-primary bg-primary/10 shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )
               }
@@ -107,12 +107,12 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
               )}
             </NavLink>
           ))}
-          
+
           {/* More Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg min-w-0 flex-1 hover:bg-muted/50"
               >
@@ -129,7 +129,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
               <div className="p-6 space-y-6">
                 {/* Handle */}
                 <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto -mt-3"></div>
-                
+
                 {/* Header */}
                 <div className="text-center">
                   <h3 className="text-xl font-bold">Menu complet</h3>
@@ -198,20 +198,20 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Actions rapides</h4>
                   <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start gap-3 h-12"
                       onClick={() => setIsOpen(false)}
                     >
                       <Settings className="h-5 w-5" />
                       Paramètres
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start gap-3 h-12 text-destructive hover:text-destructive"
                       onClick={() => {
-                        setIsOpen(false)
-                        // Handle logout
+                        setIsOpen(false);
+                        signOut(); // Ajouter l'appel à signOut
                       }}
                     >
                       <LogOut className="h-5 w-5" />

@@ -21,6 +21,7 @@ interface Trip {
   departure_date: string;
   available_weight_kg: number;
   price_per_kg: number;
+  currency: string;
   transport_type: string;
   traveler_id: string;
   profiles?: {
@@ -71,6 +72,24 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
   const totalSteps = 3;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
+  const getCurrencySymbol = (currencyCode: string) => {
+    const currencySymbols: { [key: string]: string } = {
+      EUR: '€',
+      USD: '$',
+      GBP: '£',
+      CHF: 'CHF',
+      CAD: 'CAD',
+      CFA: 'CFA',
+      MAD: 'MAD',
+      TND: 'TND'
+    };
+    return currencySymbols[currencyCode] || currencyCode;
+  };
+
+  const formatPrice = (price: number, currency: string) => {
+    return `${price.toFixed(2)} ${getCurrencySymbol(currency)}`;
+  };
+
   const handleInputChange = (field: keyof ShipmentData, value: string | number) => {
     setShipmentData(prev => ({
       ...prev,
@@ -119,7 +138,7 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
         .insert({
           ...shipmentData,
           sender_id: user.id,
-          pickup_address: trip.departure_city + ', ' + trip.departure_country, // Use trip departure as pickup
+          pickup_address: trip.departure_city + ', ' + trip.departure_country,
           pickup_city: trip.departure_city,
           pickup_country: trip.departure_country,
           pickup_contact_name: trip.profiles?.first_name + ' ' + trip.profiles?.last_name,
@@ -216,13 +235,19 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="value">Valeur estimée (€)</Label>
-                  <Input
-                    id="value"
-                    type="number"
-                    value={shipmentData.estimated_value}
-                    onChange={(e) => handleInputChange('estimated_value', parseFloat(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="value">Valeur estimée</Label>
+                  <div className="flex items-center">
+                    <Input
+                      id="value"
+                      type="number"
+                      value={shipmentData.estimated_value}
+                      onChange={(e) => handleInputChange('estimated_value', parseFloat(e.target.value) || 0)}
+                      className="flex-1"
+                    />
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      {getCurrencySymbol(trip.currency)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -303,6 +328,8 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
         );
 
       case 3:
+        const estimatedPrice = calculateEstimatedPrice();
+        
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -335,8 +362,8 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
                       <p className="font-medium">{trip.profiles?.first_name} {trip.profiles?.last_name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Prix estimé</p>
-                      <p className="font-medium text-success">{calculateEstimatedPrice().toFixed(2)}€</p>
+                      <p className="text-sm text-muted-foreground">Prix par kg</p>
+                      <p className="font-medium">{formatPrice(trip.price_per_kg, trip.currency)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -361,9 +388,49 @@ export function BookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
                       <p className="font-medium">{shipmentData.weight_kg} kg</p>
                     </div>
                     <div>
+                      <p className="text-sm text-muted-foreground">Valeur estimée</p>
+                      <p className="font-medium">
+                        {shipmentData.estimated_value > 0 
+                          ? formatPrice(shipmentData.estimated_value, trip.currency)
+                          : 'Non spécifiée'
+                        }
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-muted-foreground">Livraison</p>
                       <p className="text-sm">{shipmentData.delivery_city}, {shipmentData.delivery_country}</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Price Summary */}
+              <Card className="bg-success/10 border-success/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-success">
+                    <Euro className="h-5 w-5" />
+                    Estimation du prix
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Prix par kg:</span>
+                      <span>{formatPrice(trip.price_per_kg, trip.currency)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Poids du colis:</span>
+                      <span>{shipmentData.weight_kg} kg</span>
+                    </div>
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between font-semibold text-lg">
+                        <span>Total estimé:</span>
+                        <span className="text-success">{formatPrice(estimatedPrice, trip.currency)}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      * Prix final à confirmer par le transporteur
+                    </p>
                   </div>
                 </CardContent>
               </Card>

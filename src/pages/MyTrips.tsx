@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Truck, Plus, Eye, Edit, MapPin, Calendar, Package } from 'lucide-react';
+import { Truck, Plus, Eye, Edit, MapPin, Calendar, Package, Trash2, Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -20,10 +20,12 @@ interface Trip {
   available_weight_kg: number;
   max_weight_kg: number;
   price_per_kg: number;
+  currency: string;
   transport_type: string;
   description: string;
   is_active: boolean;
   created_at: string;
+  pickup_time_limit: string;
 }
 
 export default function MyTrips() {
@@ -32,6 +34,7 @@ export default function MyTrips() {
   const { toast } = useToast();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -93,6 +96,95 @@ export default function MyTrips() {
     }
   };
 
+  const deleteTrip = async (tripId: string) => {
+    try {
+      setDeletingTripId(tripId);
+      
+      // Vérification supplémentaire pour s'assurer que l'utilisateur est bien le propriétaire
+      const { error } = await supabase
+        .from('trips')
+        .delete()
+        .eq('id', tripId)
+        .eq('traveler_id', user?.id); // Double vérification de l'ownership
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+
+      // Mise à jour automatique de la liste
+      setTrips(prev => prev.filter(trip => trip.id !== tripId));
+
+      toast({
+        title: "Trajet supprimé",
+        description: "Votre trajet a été supprimé avec succès",
+      });
+    } catch (error: any) {
+      console.error('Error deleting trip:', error);
+      
+      // Message d'erreur plus détaillé
+      let errorMessage = "Impossible de supprimer le trajet";
+      if (error.code === '42501') {
+        errorMessage = "Vous n'avez pas l'autorisation de supprimer ce trajet";
+      } else if (error.code === '23503') {
+        errorMessage = "Impossible de supprimer le trajet car il contient des réservations";
+      }
+
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingTripId(null);
+    }
+  };
+
+  const confirmDelete = (trip: Trip) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le trajet de ${trip.departure_city} à ${trip.arrival_city} ? Cette action est irréversible.`)) {
+      deleteTrip(trip.id);
+    }
+  };
+
+  const isPickupTimePassed = (departureDate: string, pickupTimeLimit: string) => {
+    const now = new Date();
+    const departure = new Date(departureDate);
+    const [hours, minutes] = pickupTimeLimit.split(':').map(Number);
+    
+    // Définir l'heure limite de récupération
+    const pickupDeadline = new Date(departure);
+    pickupDeadline.setHours(hours, minutes, 0, 0);
+    
+    return now > pickupDeadline;
+  };
+
+  const getTripStatus = (trip: Trip) => {
+    if (isPickupTimePassed(trip.departure_date, trip.pickup_time_limit)) {
+      return 'expired';
+    }
+    return trip.is_active ? 'active' : 'inactive';
+  };
+
+  const getStatusBadge = (trip: Trip) => {
+    const status = getTripStatus(trip);
+    
+    switch (status) {
+      case 'expired':
+        return (
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Heure dépassée
+          </Badge>
+        );
+      case 'active':
+        return <Badge variant="default">Actif</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Inactif</Badge>;
+      default:
+        return <Badge variant="secondary">Inactif</Badge>;
+    }
+  };
+
   const getTransportIcon = (type: string) => {
     switch (type) {
       case 'car':
@@ -121,6 +213,29 @@ export default function MyTrips() {
       default:
         return type;
     }
+  };
+
+  const getCurrencySymbol = (currencyCode: string) => {
+    const currencySymbols: { [key: string]: string } = {
+      EUR: '€',
+      USD: '$',
+      GBP: '£',
+      CHF: 'CHF',
+      CAD: 'CAD',
+      CFA: 'CFA',
+      MAD: 'MAD',
+      TND: 'TND'
+    };
+    return currencySymbols[currencyCode] || currencyCode;
+  };
+
+  const formatPrice = (price: number, currency: string) => {
+    return `${price} ${getCurrencySymbol(currency)}/kg`;
+  };
+
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}h${minutes}`;
   };
 
   return (
@@ -169,100 +284,130 @@ export default function MyTrips() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => (
-              <Card key={trip.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <span>{getTransportIcon(trip.transport_type)}</span>
-                        {trip.departure_city} → {trip.arrival_city}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {getTransportText(trip.transport_type)}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={trip.is_active}
-                        onCheckedChange={(checked) => toggleTripStatus(trip.id, checked)}
-                      />
-                      <Badge variant={trip.is_active ? 'default' : 'secondary'}>
-                        {trip.is_active ? 'Actif' : 'Inactif'}
+            {trips.map((trip) => {
+              const status = getTripStatus(trip);
+              const isExpired = status === 'expired';
+              
+              return (
+                <Card key={trip.id} className="hover:shadow-lg transition-shadow relative">
+                  {isExpired && (
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="destructive" className="text-xs">
+                        Réservations fermées
                       </Badge>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span>
-                        {trip.departure_city}, {trip.departure_country}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-accent" />
-                      <span>
-                        {trip.arrival_city}, {trip.arrival_country}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Départ</span>
-                      <p className="font-medium">
-                        {new Date(trip.departure_date).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                    {trip.arrival_date && (
+                  )}
+                  
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-muted-foreground">Arrivée</span>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <span>{getTransportIcon(trip.transport_type)}</span>
+                          {trip.departure_city} → {trip.arrival_city}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {getTransportText(trip.transport_type)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={trip.is_active && !isExpired}
+                          onCheckedChange={(checked) => !isExpired && toggleTripStatus(trip.id, checked)}
+                          disabled={isExpired}
+                        />
+                        {getStatusBadge(trip)}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span>
+                          {trip.departure_city}, {trip.departure_country}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-accent" />
+                        <span>
+                          {trip.arrival_city}, {trip.arrival_country}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Départ</span>
                         <p className="font-medium">
-                          {new Date(trip.arrival_date).toLocaleDateString('fr-FR')}
+                          {new Date(trip.departure_date).toLocaleDateString('fr-FR')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Récup. avant {formatTime(trip.pickup_time_limit)}
                         </p>
                       </div>
+                      {trip.arrival_date && (
+                        <div>
+                          <span className="text-muted-foreground">Arrivée</span>
+                          <p className="font-medium">
+                            {new Date(trip.arrival_date).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-primary" />
+                        <span className="text-sm">
+                          {trip.available_weight_kg}kg / {trip.max_weight_kg}kg disponible
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Prix: </span>
+                        <span className="font-semibold text-success">
+                          {formatPrice(trip.price_per_kg, trip.currency)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {trip.description && (
+                      <div className="text-sm">
+                        <p className="text-muted-foreground line-clamp-2">{trip.description}</p>
+                      </div>
                     )}
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-primary" />
-                      <span className="text-sm">
-                        {trip.available_weight_kg}kg / {trip.max_weight_kg}kg disponible
-                      </span>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      Créé le {new Date(trip.created_at).toLocaleDateString('fr-FR')}
                     </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Prix: </span>
-                      <span className="font-semibold text-success">{trip.price_per_kg}€/kg</span>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Eye className="h-3 w-3 mr-1" />
+                        Voir
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Edit className="h-3 w-3 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => confirmDelete(trip)}
+                        disabled={deletingTripId === trip.id}
+                      >
+                        {deletingTripId === trip.id ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-destructive" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </Button>
                     </div>
-                  </div>
-
-                  {trip.description && (
-                    <div className="text-sm">
-                      <p className="text-muted-foreground line-clamp-2">{trip.description}</p>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    Créé le {new Date(trip.created_at).toLocaleDateString('fr-FR')}
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-3 w-3 mr-1" />
-                      Voir
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Modifier
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
