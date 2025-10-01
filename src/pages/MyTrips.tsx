@@ -54,7 +54,13 @@ export default function MyTrips() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTrips(data || []);
+      
+      const tripsWithCurrency = (data || []).map((trip: any) => ({
+        ...trip,
+        currency: trip.currency || 'EUR'
+      }));
+      
+      setTrips(tripsWithCurrency);
     } catch (error) {
       console.error('Error loading trips:', error);
       toast({
@@ -100,19 +106,17 @@ export default function MyTrips() {
     try {
       setDeletingTripId(tripId);
       
-      // Vérification supplémentaire pour s'assurer que l'utilisateur est bien le propriétaire
       const { error } = await supabase
         .from('trips')
         .delete()
         .eq('id', tripId)
-        .eq('traveler_id', user?.id); // Double vérification de l'ownership
+        .eq('traveler_id', user?.id);
 
       if (error) {
         console.error('Supabase delete error:', error);
         throw error;
       }
 
-      // Mise à jour automatique de la liste
       setTrips(prev => prev.filter(trip => trip.id !== tripId));
 
       toast({
@@ -122,7 +126,6 @@ export default function MyTrips() {
     } catch (error: any) {
       console.error('Error deleting trip:', error);
       
-      // Message d'erreur plus détaillé
       let errorMessage = "Impossible de supprimer le trajet";
       if (error.code === '42501') {
         errorMessage = "Vous n'avez pas l'autorisation de supprimer ce trajet";
@@ -151,7 +154,6 @@ export default function MyTrips() {
     const departure = new Date(departureDate);
     const [hours, minutes] = pickupTimeLimit.split(':').map(Number);
     
-    // Définir l'heure limite de récupération
     const pickupDeadline = new Date(departure);
     pickupDeadline.setHours(hours, minutes, 0, 0);
     
@@ -365,7 +367,7 @@ export default function MyTrips() {
                       <div className="text-sm">
                         <span className="text-muted-foreground">Prix: </span>
                         <span className="font-semibold text-success">
-                          {formatPrice(trip.price_per_kg, trip.currency)}
+                          {formatPrice(trip.price_per_kg, trip.currency || 'EUR')}
                         </span>
                       </div>
                     </div>

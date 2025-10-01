@@ -66,7 +66,7 @@ export default function SearchTrips() {
         .select('*')
         .eq('is_active', true)
         .gte('departure_date', new Date().toISOString())
-        .neq('traveler_id', user?.id || ''); // Don't show user's own trips
+        .neq('traveler_id', user?.id || '');
 
       if (filters.departure_city) {
         query = query.ilike('departure_city', `%${filters.departure_city}%`);
@@ -90,8 +90,7 @@ export default function SearchTrips() {
 
       if (error) throw error;
 
-      // Get traveler profiles with verification status
-      const travelerIds = [...new Set(tripsData?.map(t => t.traveler_id) || [])];
+      const travelerIds = [...new Set((tripsData || []).map(t => t.traveler_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, rating, is_verified')
@@ -99,22 +98,20 @@ export default function SearchTrips() {
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
-      // Sort trips with verified users first
-      const tripsWithProfiles = tripsData?.map(trip => ({
+      const tripsWithProfiles = (tripsData || []).map((trip: any) => ({
         ...trip,
+        currency: trip.currency || 'EUR',
         profiles: profilesMap.get(trip.traveler_id) || { 
           first_name: '', 
           last_name: '', 
           rating: 0, 
           is_verified: false 
         }
-      }))?.sort((a, b) => {
-        // Verified users first
+      })).sort((a: any, b: any) => {
         if (a.profiles?.is_verified && !b.profiles?.is_verified) return -1;
         if (!a.profiles?.is_verified && b.profiles?.is_verified) return 1;
-        // Then by rating
         return (b.profiles?.rating || 0) - (a.profiles?.rating || 0);
-      }) || [];
+      });
 
       setTrips(tripsWithProfiles);
     } catch (error) {

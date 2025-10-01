@@ -2,11 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { 
   Send, 
   Image as ImageIcon, 
@@ -16,8 +14,7 @@ import {
   Search,
   ArrowLeft,
   Check,
-  CheckCheck,
-  Clock
+  CheckCheck
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +37,7 @@ interface Conversation {
     content: string;
     created_at: string;
     sender_id: string;
+    read_at: string | null;
   } | null;
   unread_count: number;
 }
@@ -54,7 +52,11 @@ interface Message {
   created_at: string;
 }
 
-export default function WhatsAppMessaging() {
+interface WhatsAppMessagingProps {
+  preSelectedConversationId?: string;
+}
+
+export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAppMessagingProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -79,15 +81,14 @@ export default function WhatsAppMessaging() {
     if (user) {
       loadConversations();
       
-      // Subscribe to new messages
       const channel = supabase
         .channel('messages-realtime')
         .on('postgres_changes', 
           { event: 'INSERT', schema: 'public', table: 'messages' },
           (payload) => {
-            const newMessage = payload.new as Message;
-            setMessages(prev => [...prev, newMessage]);
-            loadConversations(); // Refresh conversation list
+            const newMsg = payload.new as Message;
+            setMessages(prev => [...prev, newMsg]);
+            loadConversations();
           }
         )
         .subscribe();
@@ -108,6 +109,13 @@ export default function WhatsAppMessaging() {
     }
   }, [selectedConversation]);
 
+  useEffect(() => {
+    if (preSelectedConversationId && conversations.length > 0) {
+      const conv = conversations.find(c => c.id === preSelectedConversationId);
+      if (conv) setSelectedConversation(conv);
+    }
+  }, [preSelectedConversationId, conversations]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -120,39 +128,43 @@ export default function WhatsAppMessaging() {
       
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          assignment:assignments!assignment_id (
-            shipment:shipments (title)
-          )
-        `)
+        .select('*')
         .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      // Get other user profiles and last messages
+      // Remove duplicates based on combination of users
+      const uniqueConversations = new Map();
+      
+      for (const conv of conversationsData || []) {
+        const otherUserId = conv.sender_id === user.id ? conv.traveler_id : conv.sender_id;
+        const key = [user.id, otherUserId].sort().join('-');
+        
+        if (!uniqueConversations.has(key) || 
+            new Date(conv.updated_at) > new Date(uniqueConversations.get(key).updated_at)) {
+          uniqueConversations.set(key, conv);
+        }
+      }
+
       const conversationsWithDetails = await Promise.all(
-        (conversationsData || []).map(async (conv) => {
+        Array.from(uniqueConversations.values()).map(async (conv) => {
           const otherUserId = conv.sender_id === user.id ? conv.traveler_id : conv.sender_id;
           
-          // Get other user profile
           const { data: profileData } = await supabase
             .from('profiles')
             .select('user_id, first_name, last_name, avatar_url, is_verified')
             .eq('user_id', otherUserId)
             .single();
 
-          // Get last message
           const { data: lastMessageData } = await supabase
             .from('messages')
-            .select('content, created_at, sender_id')
+            .select('content, created_at, sender_id, read_at')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
-          // Get unread count
           const { data: unreadData } = await supabase
             .from('messages')
             .select('id')
@@ -206,7 +218,6 @@ export default function WhatsAppMessaging() {
 
       setMessages(messagesData || []);
       
-      // Mark messages as read
       await supabase
         .from('messages')
         .update({ read_at: new Date().toISOString() })
@@ -322,25 +333,25 @@ export default function WhatsAppMessaging() {
 
   if (loading) {
     return (
-      <div className="h-[600px] flex items-center justify-center">
+      <div className="h-[calc(100vh-200px)] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-[600px] bg-background border rounded-lg overflow-hidden flex">
+    <div className="h-[calc(100vh-200px)] bg-background border rounded-lg overflow-hidden flex flex-col md:flex-row">
       {/* Conversations List */}
       <div className={cn(
-        "border-r transition-all duration-300",
-        isMobile && selectedConversation ? "w-0 overflow-hidden" : "w-80"
+        "border-r transition-all duration-300 flex flex-col",
+        isMobile && selectedConversation ? "hidden" : "w-full md:w-80"
       )}>
         <div className="p-4 border-b bg-muted/30">
           <h2 className="text-lg font-semibold mb-3">Messages</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Rechercher une conversation..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -348,7 +359,7 @@ export default function WhatsAppMessaging() {
           </div>
         </div>
         
-        <ScrollArea className="h-[calc(600px-120px)]">
+        <ScrollArea className="flex-1">
           {filteredConversations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Aucune conversation</p>
@@ -392,13 +403,13 @@ export default function WhatsAppMessaging() {
                     <div className="flex items-center justify-between">
                       <p className={cn(
                         "text-sm truncate",
-                        conversation.unread_count > 0 
-                          ? "text-foreground font-medium" 
+                        conversation.unread_count > 0 && conversation.last_message?.sender_id !== user?.id
+                          ? "text-primary font-semibold" 
                           : "text-muted-foreground"
                       )}>
                         {conversation.last_message?.content || 'Aucun message'}
                       </p>
-                      {conversation.unread_count > 0 && (
+                      {conversation.unread_count > 0 && conversation.last_message?.sender_id !== user?.id && (
                         <div className="w-2 h-2 bg-primary rounded-full animate-pulse ml-2"></div>
                       )}
                     </div>
@@ -482,7 +493,7 @@ export default function WhatsAppMessaging() {
                             className="rounded-lg mb-2 max-w-full"
                           />
                         )}
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm break-words">{message.content}</p>
                         <div className={cn(
                           "flex items-center justify-end gap-1 mt-1",
                           isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
@@ -500,14 +511,14 @@ export default function WhatsAppMessaging() {
               </div>
             </ScrollArea>
 
-            {/* Message Input */}
-            <div className="p-4 border-t">
+            {/* Input */}
+            <div className="p-4 border-t bg-muted/30">
               <div className="flex items-center gap-2">
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  ref={fileInputRef}
                   className="hidden"
+                  accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) uploadImage(file);
@@ -517,31 +528,22 @@ export default function WhatsAppMessaging() {
                   variant="ghost"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={sending}
                 >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
-                
                 <Input
-                  placeholder="Tapez votre message..."
+                  placeholder="Tapez un message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  disabled={sending}
-                  className="flex-1 rounded-full"
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  className="flex-1"
                 />
-                
                 <Button
                   onClick={sendMessage}
                   disabled={!newMessage.trim() || sending}
                   size="sm"
-                  className="rounded-full px-4"
                 >
-                  {sending ? (
-                    <Clock className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -549,11 +551,8 @@ export default function WhatsAppMessaging() {
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Send className="h-8 w-8" />
-              </div>
-              <p className="text-lg font-medium">Sélectionnez une conversation</p>
-              <p className="text-sm">Choisissez une conversation pour commencer à discuter</p>
+              <p className="text-lg">Sélectionnez une conversation</p>
+              <p className="text-sm">pour commencer à discuter</p>
             </div>
           </div>
         )}
