@@ -535,10 +535,16 @@ export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAp
                   placeholder="Tapez un message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
                   className="flex-1"
                 />
                 <Button
+                  type="button"
                   onClick={sendMessage}
                   disabled={!newMessage.trim() || sending}
                   size="sm"

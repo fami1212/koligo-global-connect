@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import WhatsAppMessaging from '@/components/WhatsAppMessaging';
 
 export default function Messages() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preSelectedConversationId = searchParams.get('c') || searchParams.get('conversationId') || undefined;
 
   useEffect(() => {
     if (!user) {
@@ -34,7 +36,7 @@ export default function Messages() {
           </Button>
         </div>
 
-        <WhatsAppMessaging />
+        <WhatsAppMessaging preSelectedConversationId={preSelectedConversationId} />
       </div>
     </div>
   );

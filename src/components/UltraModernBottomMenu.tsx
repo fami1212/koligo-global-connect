@@ -98,12 +98,8 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
             >
               <item.icon className="h-5 w-5 shrink-0" />
               <span className="text-xs font-medium truncate">{item.title.split(' ')[0]}</span>
-              {item.badge && item.badge > 0 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                  <span className="text-white text-xs font-bold">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                </div>
+              {item.title === 'Messages' && item.badge && item.badge > 0 && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
               )}
             </NavLink>
           ))}
@@ -181,10 +177,8 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
                         </div>
                         <div className="flex-1">
                           <span className="font-medium text-sm">{item.title}</span>
-                          {item.badge && item.badge > 0 && (
-                            <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                              {item.badge > 99 ? '99+' : item.badge}
-                            </Badge>
+                          {item.title === 'Messages' && item.badge && item.badge > 0 && (
+                            <span className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive align-middle" />
                           )}
                         </div>
                       </NavLink>

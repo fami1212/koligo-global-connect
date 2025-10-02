@@ -180,7 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message,
         variant: "destructive",
       });
+      return;
     }
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setRoles([]);
+    window.location.href = '/';
   };
 
   const hasRole = (role: string) => {

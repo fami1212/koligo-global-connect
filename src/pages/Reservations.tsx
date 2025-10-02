@@ -284,11 +284,9 @@ export default function Reservations() {
 
           <div className="flex justify-between items-center pt-2 text-xs text-muted-foreground">
             <span>Créé le {new Date(request.created_at).toLocaleDateString('fr-FR')}</span>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/messages">
-                <MessageCircle className="h-3 w-3 mr-1" />
-                Message
-              </Link>
+            <Button variant="ghost" size="sm" onClick={() => openConversation(request)}>
+              <MessageCircle className="h-3 w-3 mr-1" />
+              Message
             </Button>
           </div>
         </CardContent>

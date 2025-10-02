@@ -141,12 +141,10 @@ export function AppSidebar() {
                         {!collapsed && <span>{item.title}</span>}
                       </div>
                       {item.badge && item.badge > 0 && (
-                        <Badge
-                          variant="destructive"
-                          className="ml-2 h-6 min-w-[1.5rem] flex items-center justify-center text-xs rounded-full animate-bounce"
-                        >
-                          {item.badge > 99 ? "99+" : item.badge}
-                        </Badge>
+                        <span
+                          className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive"
+                          aria-label="Nouveaux messages"
+                        />
                       )}
                     </NavLink>
                   </SidebarMenuButton>

@@ -123,63 +123,68 @@ export default function ModernAdmin() {
     try {
       setLoading(true);
       
-      // Load KYC documents
-      const { data: kycData, error: kycError } = await supabase
+      // Load KYC documents (manual join without FK)
+      const { data: kycRows, error: kycError } = await supabase
         .from('kyc_documents')
-        .select(`
-          *,
-          profiles!kyc_documents_user_id_fkey (
-            first_name,
-            last_name,
-            email,
-            avatar_url,
-            phone,
-            rating
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (kycError) throw kycError;
 
-      // Load problem reports
-      const { data: reportsData, error: reportsError } = await supabase
+      // Fetch profiles for KYC users
+      const kycUserIds = Array.from(new Set((kycRows || []).map((d: any) => d.user_id)));
+      let kycProfilesMap = new Map<string, any>();
+      if (kycUserIds.length > 0) {
+        const { data: kycProfiles, error: kycProfilesError } = await supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, email, avatar_url, phone, rating')
+          .in('user_id', kycUserIds);
+        if (kycProfilesError) throw kycProfilesError;
+        kycProfilesMap = new Map((kycProfiles || []).map((p: any) => [p.user_id, p]));
+      }
+
+      // Load problem reports (manual join without FK)
+      const { data: reportsRows, error: reportsError } = await supabase
         .from('problem_reports')
-        .select(`
-          *,
-          profiles!problem_reports_user_id_fkey (
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (reportsError) throw reportsError;
+
+      const reportUserIds = Array.from(new Set((reportsRows || []).map((r: any) => r.user_id)));
+      let reportProfilesMap = new Map<string, any>();
+      if (reportUserIds.length > 0) {
+        const { data: reportProfiles, error: reportProfilesError } = await supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, email, avatar_url')
+          .in('user_id', reportUserIds);
+        if (reportProfilesError) throw reportProfilesError;
+        reportProfilesMap = new Map((reportProfiles || []).map((p: any) => [p.user_id, p]));
+      }
 
       // Load stats
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('is_verified');
 
-      setKycDocuments((kycData || []).map((doc: any) => ({
+      setKycDocuments((kycRows || []).map((doc: any) => ({
         ...doc,
-        user_profile: doc.profiles || { first_name: '', last_name: '', email: '', avatar_url: '', phone: '', rating: 0 }
+        user_profile: kycProfilesMap.get(doc.user_id) || { first_name: '', last_name: '', email: '', avatar_url: '', phone: '', rating: 0 }
       })));
-      setProblemReports((reportsData || []).map((report: any) => ({
+      setProblemReports((reportsRows || []).map((report: any) => ({
         ...report,
-        user_profile: report.profiles || { first_name: '', last_name: '', email: '', avatar_url: '' }
+        user_profile: reportProfilesMap.get(report.user_id) || { first_name: '', last_name: '', email: '', avatar_url: '' }
       })));
       
       // Calculate stats
       const totalUsers = profilesData?.length || 0;
-      const verifiedUsers = profilesData?.filter(p => p.is_verified).length || 0;
-      const totalKYC = kycData?.length || 0;
-      const pendingKYC = kycData?.filter(doc => doc.status === 'pending').length || 0;
-      const approvedKYC = kycData?.filter(doc => doc.status === 'approved').length || 0;
-      const totalReports = reportsData?.length || 0;
-      const openReports = reportsData?.filter(report => report.status === 'open').length || 0;
-      const resolvedReports = reportsData?.filter(report => report.status === 'resolved').length || 0;
+      const verifiedUsers = profilesData?.filter((p: any) => p.is_verified).length || 0;
+      const totalKYC = kycRows?.length || 0;
+      const pendingKYC = (kycRows || []).filter((doc: any) => doc.status === 'pending').length || 0;
+      const approvedKYC = (kycRows || []).filter((doc: any) => doc.status === 'approved').length || 0;
+      const totalReports = reportsRows?.length || 0;
+      const openReports = (reportsRows || []).filter((report: any) => report.status === 'open').length || 0;
+      const resolvedReports = (reportsRows || []).filter((report: any) => report.status === 'resolved').length || 0;
 
       setStats({
         totalKYC,
