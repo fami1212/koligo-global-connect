@@ -193,6 +193,37 @@ export default function Reservations() {
     }
   };
 
+  const openConversation = async (request: MatchRequest) => {
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(
+          `and(sender_id.eq.${request.sender_id},traveler_id.eq.${request.traveler_id}),and(sender_id.eq.${request.traveler_id},traveler_id.eq.${request.sender_id})`
+        )
+        .limit(1);
+
+      if (error) throw error;
+
+      const conversation = data && data[0];
+      if (conversation) {
+        navigate(`/messages?conversationId=${conversation.id}`);
+      } else {
+        toast({
+          title: "Aucune discussion",
+          description: "La conversation n'existe pas encore. Elle sera créée après la confirmation d'une mission.",
+        });
+      }
+    } catch (e) {
+      console.error('Error opening conversation:', e);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ouvrir la conversation",
+        variant: "destructive",
+      });
+    }
+  };
+
   const RequestCard = ({ request }: { request: MatchRequest }) => {
     const [finalPrice, setFinalPrice] = useState(request.final_price || request.estimated_price);
     const isTraveler = hasRole('traveler');

@@ -38,7 +38,7 @@ interface NavItem {
 }
 
 export function UltraModernSidebar() {
-  const { user, profile, hasRole } = useAuth()
+  const { user, profile, hasRole, signOut } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -135,8 +135,7 @@ export function UltraModernSidebar() {
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
+    await signOut()
   }
 
   const NavContent = ({ collapsed = false }: { collapsed?: boolean }) => (
@@ -200,17 +199,13 @@ export function UltraModernSidebar() {
                       <item.icon className="h-4 w-4" />
                     </div>
                     {!collapsed && <span className="flex-1">{item.title}</span>}
-                    {!collapsed && item.badge && item.badge > 0 && (
-                      <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs animate-pulse">
-                        {item.badge > 99 ? '99+' : item.badge}
-                      </Badge>
+                    {/* Dot indicator for new messages instead of count */}
+                    {item.badge && item.badge > 0 && (
+                      <span className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive" aria-label="Nouveaux messages" />
                     )}
+                    {/* Dot indicator for collapsed new messages */}
                     {collapsed && item.badge && item.badge > 0 && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">
-                          {item.badge > 9 ? '9+' : item.badge}
-                        </span>
-                      </div>
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
                     )}
                   </NavLink>
                 </TooltipTrigger>
@@ -372,11 +367,9 @@ export function UltraModernSidebar() {
                       </div>
                       <div className="flex-1">
                         <span className="text-sm font-medium">{item.title}</span>
-                        {item.badge && item.badge > 0 && (
-                          <Badge variant="destructive" className="ml-2 h-4 w-4 p-0 flex items-center justify-center text-xs">
-                            {item.badge}
-                          </Badge>
-                        )}
+                         {item.badge && item.badge > 0 && (
+                           <span className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive align-middle" />
+                         )}
                       </div>
                     </NavLink>
                   ))}

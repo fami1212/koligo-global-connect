@@ -208,6 +208,41 @@ export default function ModernAdmin() {
     }
   };
 
+  const openKycDocument = async (document: KYCDocument) => {
+    try {
+      const url = document.document_url || '';
+      // Try to extract path after bucket name
+      const marker = '/kyc-documents/';
+      let path = '';
+      const idx = url.indexOf(marker);
+      if (idx !== -1) {
+        path = url.substring(idx + marker.length);
+      } else {
+        // If we stored the path directly
+        path = url;
+      }
+
+      if (!path) {
+        throw new Error('Chemin de fichier introuvable');
+      }
+
+      const { data, error } = await supabase.storage
+        .from('kyc-documents')
+        .createSignedUrl(path, 3600);
+
+      if (error) throw error;
+
+      window.open(data.signedUrl, '_blank');
+    } catch (e) {
+      console.error('Error opening KYC document:', e);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'ouvrir le document",
+        variant: 'destructive',
+      });
+    }
+  };
+
   const updateKYCStatus = async (status: 'approved' | 'rejected') => {
     if (!selectedDocument) return;
 
@@ -567,11 +602,11 @@ export default function ModernAdmin() {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(document.document_url, '_blank')}
-                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openKycDocument(document)}
+                          >
                           <Eye className="h-4 w-4 mr-1" />
                           Voir
                         </Button>

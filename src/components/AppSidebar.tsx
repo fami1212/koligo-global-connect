@@ -26,7 +26,7 @@ interface NavItem {
 
 export function AppSidebar() {
   const { state } = useSidebar()
-  const { user, profile, hasRole } = useAuth()
+  const { user, profile, hasRole, signOut } = useAuth()
   const collapsed = state === "collapsed"
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -184,8 +184,7 @@ export function AppSidebar() {
             size="sm"
             className="w-full mt-3 text-xs text-muted-foreground hover:text-red-600 justify-start rounded-lg hover:bg-red-50"
             onClick={() => {
-              supabase.auth.signOut()
-              window.location.href = "/"
+              signOut();
             }}
           >
             <LogOut className="h-4 w-4 mr-2" />

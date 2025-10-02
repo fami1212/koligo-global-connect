@@ -44,18 +44,15 @@ export function KYCUpload() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('kyc-documents')
-        .getPublicUrl(fileName);
+      // Save document record to database with storage path
+      const storagePath = fileName;
 
-      // Save document record to database
       const { error: dbError } = await supabase
         .from('kyc_documents')
         .insert({
           user_id: user.id,
           document_type: documentType,
-          document_url: publicUrl,
+          document_url: storagePath,
           status: 'pending'
         });
 
