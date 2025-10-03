@@ -205,15 +205,23 @@ export default function Reservations() {
 
       if (error) throw error;
 
-      const conversation = data && data[0];
-      if (conversation) {
-        navigate(`/messages?conversationId=${conversation.id}`);
-      } else {
-        toast({
-          title: "Aucune discussion",
-          description: "La conversation n'existe pas encore. Elle sera créée après la confirmation d'une mission.",
-        });
+      let conversationId = data && data[0]?.id;
+
+      if (!conversationId) {
+        const { data: created, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            sender_id: request.sender_id,
+            traveler_id: request.traveler_id,
+            assignment_id: null
+          })
+          .select('id')
+          .single();
+        if (createError) throw createError;
+        conversationId = created.id;
       }
+
+      navigate(`/messages?conversationId=${conversationId}`);
     } catch (e) {
       console.error('Error opening conversation:', e);
       toast({

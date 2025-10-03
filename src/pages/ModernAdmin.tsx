@@ -66,6 +66,10 @@ interface ProblemReport {
     email: string;
     avatar_url: string;
   };
+  // Enriched fields for admin context
+  assignment?: { id: string; sender_id: string; traveler_id: string } | null;
+  sender_profile?: { first_name: string; last_name: string } | null;
+  traveler_profile?: { first_name: string; last_name: string } | null;
 }
 
 interface Stats {
@@ -151,15 +155,33 @@ export default function ModernAdmin() {
 
       if (reportsError) throw reportsError;
 
-      const reportUserIds = Array.from(new Set((reportsRows || []).map((r: any) => r.user_id)));
-      let reportProfilesMap = new Map<string, any>();
-      if (reportUserIds.length > 0) {
-        const { data: reportProfiles, error: reportProfilesError } = await supabase
+      // Join assignments to know both parties
+      const reportAssignmentIds = Array.from(new Set((reportsRows || []).map((r: any) => r.assignment_id).filter(Boolean)));
+      let assignmentsMap = new Map<string, any>();
+      if (reportAssignmentIds.length > 0) {
+        const { data: assignmentRows, error: assignError } = await supabase
+          .from('assignments')
+          .select('id, sender_id, traveler_id')
+          .in('id', reportAssignmentIds);
+        if (assignError) throw assignError;
+        assignmentsMap = new Map((assignmentRows || []).map((a: any) => [a.id, a]));
+      }
+
+      // Fetch profiles for all involved users (reporters + both parties in assignments)
+      const involvedIds = new Set<string>();
+      (reportsRows || []).forEach((r: any) => {
+        if (r.user_id) involvedIds.add(r.user_id);
+        const a = r.assignment_id ? assignmentsMap.get(r.assignment_id) : null;
+        if (a) { involvedIds.add(a.sender_id); involvedIds.add(a.traveler_id); }
+      });
+      let allProfilesMap = new Map<string, any>();
+      if (involvedIds.size > 0) {
+        const { data: allProfiles, error: allProfilesError } = await supabase
           .from('profiles')
           .select('user_id, first_name, last_name, email, avatar_url')
-          .in('user_id', reportUserIds);
-        if (reportProfilesError) throw reportProfilesError;
-        reportProfilesMap = new Map((reportProfiles || []).map((p: any) => [p.user_id, p]));
+          .in('user_id', Array.from(involvedIds));
+        if (allProfilesError) throw allProfilesError;
+        allProfilesMap = new Map((allProfiles || []).map((p: any) => [p.user_id, p]));
       }
 
       // Load stats
@@ -171,10 +193,17 @@ export default function ModernAdmin() {
         ...doc,
         user_profile: kycProfilesMap.get(doc.user_id) || { first_name: '', last_name: '', email: '', avatar_url: '', phone: '', rating: 0 }
       })));
-      setProblemReports((reportsRows || []).map((report: any) => ({
-        ...report,
-        user_profile: reportProfilesMap.get(report.user_id) || { first_name: '', last_name: '', email: '', avatar_url: '' }
-      })));
+
+      setProblemReports((reportsRows || []).map((report: any) => {
+        const a = report.assignment_id ? assignmentsMap.get(report.assignment_id) : null;
+        return {
+          ...report,
+          user_profile: allProfilesMap.get(report.user_id) || { first_name: '', last_name: '', email: '', avatar_url: '' },
+          assignment: a || null,
+          sender_profile: a ? allProfilesMap.get(a.sender_id) : null,
+          traveler_profile: a ? allProfilesMap.get(a.traveler_id) : null,
+        };
+      }));
       
       // Calculate stats
       const totalUsers = profilesData?.length || 0;
@@ -779,9 +808,19 @@ export default function ModernAdmin() {
                               <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                   <DialogTitle>{report.title}</DialogTitle>
-                                  <DialogDescription>
-                                    Signalement de {report.user_profile.first_name} {report.user_profile.last_name}
-                                  </DialogDescription>
+                                   <DialogDescription>
+                                     Signalement de {report.user_profile.first_name} {report.user_profile.last_name}
+                                     {report.assignment && (
+                                       <>
+                                         <br />
+                                         Mission liée: {report.assignment.id}
+                                         <br />
+                                         Parties: 
+                                         {report.sender_profile ? ` Expéditeur: ${report.sender_profile.first_name} ${report.sender_profile.last_name}` : ''}
+                                         {report.traveler_profile ? ` | Voyageur: ${report.traveler_profile.first_name} ${report.traveler_profile.last_name}` : ''}
+                                       </>
+                                     )}
+                                   </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div>

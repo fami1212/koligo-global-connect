@@ -26,6 +26,7 @@ interface ProfileData {
   avatar_url: string;
   rating: number;
   total_reviews: number;
+  is_verified?: boolean;
 }
 
 interface Review {
@@ -232,6 +233,11 @@ export default function Profile() {
                         <Star className="h-3 w-3" />
                         {profileData.rating.toFixed(1)} ({profileData.total_reviews} avis)
                       </Badge>
+                      {profileData.is_verified && (
+                        <Badge variant="secondary" className="gap-1">
+                          ✓ Vérifié
+                        </Badge>
+                      )}
                       {profileData.city && (
                         <Badge variant="secondary" className="gap-1">
                           <MapPin className="h-3 w-3" />

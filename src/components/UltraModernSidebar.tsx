@@ -331,11 +331,7 @@ export function UltraModernSidebar() {
               <item.icon className="h-5 w-5 shrink-0" />
               <span className="text-xs truncate font-medium">{item.title}</span>
               {item.badge && item.badge > 0 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center animate-pulse">
-                  <span className="text-white text-xs font-bold">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                </div>
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" aria-label="Nouveaux messages" />
               )}
             </NavLink>
           ))}

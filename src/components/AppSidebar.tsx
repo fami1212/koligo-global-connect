@@ -166,7 +166,12 @@ export function AppSidebar() {
           </Avatar>
           {!collapsed && (
             <div className="flex-1">
-              <p className="text-sm font-semibold">{profile?.first_name || "Utilisateur"}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold">{profile?.first_name || "Utilisateur"}</p>
+                {(profile as any)?.is_verified && (
+                  <span className="inline-block w-3 h-3 rounded-full bg-green-500" aria-label="Profil vérifié" />
+                )}
+              </div>
               <Badge
                 variant="secondary"
                 className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200 mt-1"

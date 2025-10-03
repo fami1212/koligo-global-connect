@@ -262,19 +262,18 @@ export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAp
 
     try {
       setSending(true);
-      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      
+      const filePath = `${selectedConversation.id}/${user.id}-${Date.now()}.${fileExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from('message-images')
-        .upload(fileName, file);
+        .upload(filePath, file, { contentType: file.type, upsert: false });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
         .from('message-images')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       const { error: messageError } = await supabase
         .from('messages')
@@ -283,10 +282,13 @@ export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAp
           sender_id: user.id,
           content: '📷 Image',
           image_url: urlData.publicUrl,
-          image_type: 'user_upload'
+          image_type: file.type || 'user_upload'
         });
 
       if (messageError) throw messageError;
+
+      // Reset file input to allow re-uploading the same file name
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({

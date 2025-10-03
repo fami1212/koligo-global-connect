@@ -173,20 +173,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Erreur de déconnexion",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error && !/Auth session missing/i.test(error.message)) {
+        throw error;
+      }
+    } catch (err: any) {
+      // Ignore "Auth session missing" and proceed to clear local state
+      if (!/Auth session missing/i.test(err?.message || '')) {
+        toast({
+          title: "Erreur de déconnexion",
+          description: err?.message || 'Une erreur est survenue',
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setRoles([]);
+      window.location.href = '/';
     }
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setRoles([]);
-    window.location.href = '/';
   };
 
   const hasRole = (role: string) => {
