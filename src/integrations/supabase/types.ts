@@ -289,7 +289,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kyc_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       match_requests: {
         Row: {
@@ -804,6 +812,7 @@ export type Database = {
           arrival_date: string | null
           available_weight_kg: number
           created_at: string
+          currency: string
           departure_actual: string | null
           departure_city: string
           departure_country: string
@@ -828,6 +837,7 @@ export type Database = {
           arrival_date?: string | null
           available_weight_kg: number
           created_at?: string
+          currency?: string
           departure_actual?: string | null
           departure_city: string
           departure_country: string
@@ -852,6 +862,7 @@ export type Database = {
           arrival_date?: string | null
           available_weight_kg?: number
           created_at?: string
+          currency?: string
           departure_actual?: string | null
           departure_city?: string
           departure_country?: string
