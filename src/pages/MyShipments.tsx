@@ -194,18 +194,7 @@ export default function MyShipments() {
                     Créé le {new Date(shipment.created_at).toLocaleDateString('fr-FR')}
                   </div>
 
-                  {shipment.status === 'pending' && (
-                    <ShipmentActions shipment={shipment} onUpdate={loadShipments} />
-                  )}
-                  
-                  {shipment.status !== 'pending' && (
-                    <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="h-3 w-3 mr-1" />
-                        Voir détails
-                      </Button>
-                    </div>
-                  )}
+                  <ShipmentActions shipment={shipment} onUpdate={loadShipments} />
                 </CardContent>
               </Card>
             ))}

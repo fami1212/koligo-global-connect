@@ -81,24 +81,6 @@ export function ShipmentActions({ shipment, onUpdate }: ShipmentActionsProps) {
     try {
       setDeleting(true);
       
-      // Check if there are any assignments for this shipment
-      const { data: assignments, error: assignmentError } = await supabase
-        .from('assignments')
-        .select('id')
-        .eq('shipment_id', shipment.id);
-
-      if (assignmentError) throw assignmentError;
-
-      if (assignments && assignments.length > 0) {
-        toast({
-          title: "Impossible de supprimer",
-          description: "Ce colis a des livraisons en cours. Vous ne pouvez pas le supprimer.",
-          variant: "destructive",
-        });
-        setDeleting(false);
-        return;
-      }
-
       // Delete related offers first
       const { error: offersError } = await supabase
         .from('offers')
@@ -107,13 +89,25 @@ export function ShipmentActions({ shipment, onUpdate }: ShipmentActionsProps) {
 
       if (offersError) throw offersError;
 
-      // Delete the shipment
+      // Delete the shipment (RLS policy ensures only delivered shipments can be deleted)
       const { error } = await supabase
         .from('shipments')
         .delete()
         .eq('id', shipment.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('policy')) {
+          toast({
+            title: "Impossible de supprimer",
+            description: "Vous ne pouvez supprimer que les colis livrés dont le trajet est terminé.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        setDeleting(false);
+        return;
+      }
 
       toast({
         title: "Colis supprimé",
