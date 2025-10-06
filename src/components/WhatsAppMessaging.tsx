@@ -214,17 +214,28 @@ export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAp
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading messages:', error);
+        throw error;
+      }
 
+      console.log(`[WhatsApp] Loaded ${messagesData?.length || 0} messages for conversation ${conversationId}`);
       setMessages(messagesData || []);
       
-      await supabase
+      // Mark messages as read
+      const { error: updateError } = await supabase
         .from('messages')
         .update({ read_at: new Date().toISOString() })
         .eq('conversation_id', conversationId)
-        .neq('sender_id', user?.id || '');
+        .neq('sender_id', user?.id || '')
+        .is('read_at', null);
+
+      if (updateError) {
+        console.error('Error marking messages as read:', updateError);
+      }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('Error in loadMessages:', error);
+      setMessages([]);
     }
   };
 

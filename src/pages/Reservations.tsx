@@ -195,28 +195,41 @@ export default function Reservations() {
 
   const openConversation = async (request: MatchRequest) => {
     try {
+      // Check if assignment exists for this request
+      const { data: assignmentData } = await supabase
+        .from('assignments')
+        .select('id')
+        .eq('match_request_id', request.id)
+        .maybeSingle();
+
+      const assignmentId = assignmentData?.id || null;
+
+      // Check if a conversation already exists between these users
       const { data, error } = await supabase
         .from('conversations')
         .select('id')
         .or(
           `and(sender_id.eq.${request.sender_id},traveler_id.eq.${request.traveler_id}),and(sender_id.eq.${request.traveler_id},traveler_id.eq.${request.sender_id})`
         )
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
 
-      let conversationId = data && data[0]?.id;
+      let conversationId = data?.id;
 
       if (!conversationId) {
+        // Create new conversation
         const { data: created, error: createError } = await supabase
           .from('conversations')
           .insert({
             sender_id: request.sender_id,
             traveler_id: request.traveler_id,
-            assignment_id: null
+            assignment_id: assignmentId
           })
           .select('id')
           .single();
+        
         if (createError) throw createError;
         conversationId = created.id;
       }

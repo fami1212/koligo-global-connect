@@ -110,7 +110,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-16" : "w-72"} hidden md:flex transition-all duration-500 border-r border-border/20 bg-white/30 backdrop-blur-xl shadow-lg`}
+      className={`${collapsed ? "w-16" : "w-72"} hidden md:flex transition-all duration-500 border-r border-border/20 bg-gradient-to-b from-blue-50/40 via-white/50 to-green-50/40 backdrop-blur-xl shadow-lg`}
       collapsible="icon"
     >
       {/* HEADER */}
@@ -133,18 +133,26 @@ export function AppSidebar() {
               {getNavItems().map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-11 rounded-xl">
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-200 to-green-200 text-blue-700">
-                          <item.icon className="h-5 w-5 shrink-0" />
-                        </div>
-                        {!collapsed && <span>{item.title}</span>}
-                      </div>
-                      {item.badge && item.badge > 0 && (
-                        <span
-                          className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive"
-                          aria-label="Nouveaux messages"
-                        />
+                     <NavLink to={item.url} end className={getNavCls}>
+                      {({ isActive }) => (
+                        <>
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className={`p-2 rounded-lg transition-colors ${
+                              isActive 
+                                ? "bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-md" 
+                                : "bg-gradient-to-br from-blue-200 to-green-200 text-blue-700"
+                            }`}>
+                              <item.icon className="h-5 w-5 shrink-0" />
+                            </div>
+                            {!collapsed && <span>{item.title}</span>}
+                          </div>
+                          {item.badge && item.badge > 0 && (
+                            <span
+                              className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive animate-pulse"
+                              aria-label="Nouveaux messages"
+                            />
+                          )}
+                        </>
                       )}
                     </NavLink>
                   </SidebarMenuButton>
@@ -169,7 +177,12 @@ export function AppSidebar() {
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold">{profile?.first_name || "Utilisateur"}</p>
                 {(profile as any)?.is_verified && (
-                  <span className="inline-block w-3 h-3 rounded-full bg-green-500" aria-label="Profil vérifié" />
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300">
+                    <svg className="w-3 h-3 text-green-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs text-green-700 font-semibold">Vérifié</span>
+                  </div>
                 )}
               </div>
               <Badge

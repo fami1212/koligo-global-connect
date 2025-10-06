@@ -82,6 +82,9 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
   const updateStatus = async (eventType: 'pickup' | 'delivery') => {
     if (!user) return;
 
+    // Create a stable key to prevent re-renders during submission
+    const submissionKey = `${assignment.id}-${eventType}-${Date.now()}`;
+
     try {
       setLoading(true);
       
@@ -140,9 +143,11 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, eventType: 'pickup' | 'delivery') => {
     const file = e.target.files?.[0];
     if (file) {
+      // Immediately stop propagation to prevent re-render loops
+      e.stopPropagation();
       setEventData(prev => ({ ...prev, photo: file }));
     }
   };
@@ -231,7 +236,10 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="pickup-location"
                       placeholder="Adresse ou description du lieu"
                       value={eventData.location}
-                      onChange={(e) => setEventData(prev => ({ ...prev, location: e.target.value }))}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setEventData(prev => ({ ...prev, location: e.target.value }));
+                      }}
                     />
                   </div>
                   <div>
@@ -240,7 +248,10 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="pickup-description"
                       placeholder="Commentaires sur la collecte..."
                       value={eventData.description}
-                      onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setEventData(prev => ({ ...prev, description: e.target.value }));
+                      }}
                     />
                   </div>
                   <div>
@@ -249,7 +260,7 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="pickup-photo"
                       type="file"
                       accept="image/*"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'pickup')}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -291,7 +302,10 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="delivery-location"
                       placeholder="Adresse ou description du lieu"
                       value={eventData.location}
-                      onChange={(e) => setEventData(prev => ({ ...prev, location: e.target.value }))}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setEventData(prev => ({ ...prev, location: e.target.value }));
+                      }}
                     />
                   </div>
                   <div>
@@ -300,7 +314,10 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="delivery-description"
                       placeholder="Commentaires sur la livraison..."
                       value={eventData.description}
-                      onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setEventData(prev => ({ ...prev, description: e.target.value }));
+                      }}
                     />
                   </div>
                   <div>
@@ -309,7 +326,7 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                       id="delivery-photo"
                       type="file"
                       accept="image/*"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'delivery')}
                     />
                   </div>
                   <div className="flex gap-2">
