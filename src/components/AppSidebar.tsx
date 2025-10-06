@@ -105,20 +105,23 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-gradient-to-r from-blue-500/20 via-green-400/20 to-orange-400/20 text-blue-600 font-semibold shadow-md scale-[1.02]"
-      : "hover:bg-white/20 hover:backdrop-blur-lg text-muted-foreground hover:text-foreground transition-all duration-300"
+      ? "bg-sidebar-accent text-sidebar-primary font-semibold shadow-sm border-l-4 border-primary"
+      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-primary transition-all duration-200"
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-16" : "w-72"} hidden md:flex transition-all duration-500 border-r border-border/20 bg-gradient-to-b from-blue-50/40 via-white/50 to-green-50/40 backdrop-blur-xl shadow-lg`}
+      className={`${collapsed ? "w-16" : "w-72"} hidden md:flex transition-all duration-300 border-r border-sidebar-border bg-sidebar shadow-xl`}
       collapsible="icon"
     >
       {/* HEADER */}
-      <SidebarHeader className="border-b border-border/30 p-4 bg-gradient-to-r from-blue-100/60 via-green-100/60 to-orange-100/60 backdrop-blur-md">
+      <SidebarHeader className="border-b border-sidebar-border p-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="flex items-center gap-3">
-          <img src={Logo} alt="GP Connect" className="h-9 w-auto object-contain drop-shadow-md" />
+          <div className="relative">
+            <img src={Logo} alt="GP Connect" className="h-10 w-auto object-contain drop-shadow-lg" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl rounded-full -z-10" />
+          </div>
           {!collapsed && (
-            <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-green-600 to-orange-600 bg-clip-text text-transparent">
+            <h2 className="text-lg font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
               GP Connect
             </h2>
           )}
@@ -126,31 +129,34 @@ export function AppSidebar() {
       </SidebarHeader>
 
       {/* MENU */}
-      <SidebarContent className="px-3 py-2">
+      <SidebarContent className="px-2 py-4">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-1">
               {getNavItems().map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-11 rounded-xl">
+                  <SidebarMenuButton asChild className="h-12 rounded-lg group">
                      <NavLink to={item.url} end className={getNavCls}>
                       {({ isActive }) => (
                         <>
                           <div className="flex items-center gap-3 flex-1">
-                            <div className={`p-2 rounded-lg transition-colors ${
+                            <div className={`p-2.5 rounded-lg transition-all duration-200 ${
                               isActive 
-                                ? "bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-md" 
-                                : "bg-gradient-to-br from-blue-200 to-green-200 text-blue-700"
+                                ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-md scale-110" 
+                                : "bg-sidebar-accent text-sidebar-foreground group-hover:scale-105 group-hover:bg-gradient-to-br group-hover:from-primary/10 group-hover:to-secondary/10"
                             }`}>
                               <item.icon className="h-5 w-5 shrink-0" />
                             </div>
-                            {!collapsed && <span>{item.title}</span>}
+                            {!collapsed && (
+                              <span className="font-medium transition-all duration-200">{item.title}</span>
+                            )}
                           </div>
                           {item.badge && item.badge > 0 && (
-                            <span
-                              className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive animate-pulse"
-                              aria-label="Nouveaux messages"
-                            />
+                            <div className="flex items-center">
+                              <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground animate-pulse shadow-sm">
+                                {item.badge}
+                              </span>
+                            </div>
                           )}
                         </>
                       )}
@@ -164,33 +170,35 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* FOOTER */}
-      <SidebarFooter className="border-t border-border/30 p-4 bg-white/40 backdrop-blur-lg">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 ring-2 ring-blue-200 shadow-md">
+      <SidebarFooter className="border-t border-sidebar-border p-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 backdrop-blur-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar className="h-12 w-12 ring-2 ring-primary/20 shadow-lg transition-all duration-200 hover:ring-primary/40 hover:scale-105">
             <AvatarImage src={(profile as any)?.avatar_url} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white font-bold">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-lg">
               {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold">{profile?.first_name || "Utilisateur"}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                  {profile?.first_name || "Utilisateur"}
+                </p>
                 {(profile as any)?.is_verified && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300">
-                    <svg className="w-3 h-3 text-green-700" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/10 border border-success/30 shrink-0">
+                    <svg className="w-3 h-3 text-success" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-xs text-green-700 font-semibold">Vérifié</span>
+                    <span className="text-xs text-success font-medium">Vérifié</span>
                   </div>
                 )}
               </div>
               <Badge
                 variant="secondary"
-                className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200 mt-1"
+                className="bg-warning/10 text-warning-foreground border-warning/30 hover:bg-warning/20 transition-colors"
               >
-                <Star className="h-3 w-3 mr-1" />
-                {profile?.rating?.toFixed(1) || "0.0"}
+                <Star className="h-3 w-3 mr-1 fill-current" />
+                <span className="font-semibold">{profile?.rating?.toFixed(1) || "0.0"}</span>
               </Badge>
             </div>
           )}
@@ -200,12 +208,12 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full mt-3 text-xs text-muted-foreground hover:text-red-600 justify-start rounded-lg hover:bg-red-50"
+            className="w-full text-sm text-muted-foreground hover:text-destructive justify-start rounded-lg hover:bg-destructive/10 transition-all duration-200 group"
             onClick={() => {
               signOut();
             }}
           >
-            <LogOut className="h-4 w-4 mr-2" />
+            <LogOut className="h-4 w-4 mr-2 group-hover:animate-bounce-gentle" />
             Déconnexion
           </Button>
         )}
