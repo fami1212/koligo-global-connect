@@ -54,7 +54,7 @@ export function DeliveryStatusTracker({ assignmentId, mode }: DeliveryStatusTrac
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  
   const [statusUpdate, setStatusUpdate] = useState({
     event_type: '',
     description: '',
@@ -235,8 +235,6 @@ export function DeliveryStatusTracker({ assignmentId, mode }: DeliveryStatusTrac
         description: "L'événement a été ajouté au suivi",
       });
 
-      setStatusUpdate({ event_type: '', description: '', location: '' });
-      setShowUpdateDialog(false);
     } catch (error) {
       console.error('Error adding event:', error);
       toast({
@@ -266,6 +264,11 @@ export function DeliveryStatusTracker({ assignmentId, mode }: DeliveryStatusTrac
 
   const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
     const status = getDeliveryStatus(assignment);
+    const [open, setOpen] = useState(false);
+    const handleAdd = async () => {
+      await addCustomEvent();
+      setOpen(false);
+    };
     
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -335,10 +338,10 @@ export function DeliveryStatusTracker({ assignmentId, mode }: DeliveryStatusTrac
                 </Button>
               )}
 
-              <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+              <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    onClick={() => setSelectedAssignment(assignment)}
+                    onClick={() => { setSelectedAssignment(assignment); setOpen(true); }}
                     size="sm" 
                     variant="secondary"
                   >
@@ -383,10 +386,10 @@ export function DeliveryStatusTracker({ assignmentId, mode }: DeliveryStatusTrac
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button onClick={addCustomEvent} className="flex-1">
+                      <Button onClick={handleAdd} className="flex-1">
                         Ajouter
                       </Button>
-                      <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
+                      <Button variant="outline" onClick={() => setOpen(false)}>
                         Annuler
                       </Button>
                     </div>

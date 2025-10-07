@@ -115,7 +115,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       {/* HEADER */}
-      <SidebarHeader className="border-b border-sidebar-border p-6 relative overflow-hidden">
+      <SidebarHeader className="border-b border-sidebar-border p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 opacity-50" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
         
@@ -140,13 +140,13 @@ export function AppSidebar() {
       </SidebarHeader>
 
       {/* MENU */}
-      <SidebarContent className="px-3 py-6">
+      <SidebarContent className="px-3 py-4 overflow-y-auto no-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-1">
               {getNavItems().map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-14 rounded-xl group overflow-hidden">
+                  <SidebarMenuButton asChild className="h-12 rounded-xl group overflow-hidden">
                      <NavLink to={item.url} end className={getNavCls}>
                       {({ isActive }) => (
                         <>
