@@ -44,7 +44,15 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
   const [loading, setLoading] = useState(false);
   const [showPickupDialog, setShowPickupDialog] = useState(false);
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
-  const [eventData, setEventData] = useState({
+  
+  // Separate states for pickup and delivery to prevent cross-contamination
+  const [pickupData, setPickupData] = useState({
+    location: '',
+    description: '',
+    photo: null as File | null
+  });
+  
+  const [deliveryData, setDeliveryData] = useState({
     location: '',
     description: '',
     photo: null as File | null
@@ -82,15 +90,14 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
   const updateStatus = async (eventType: 'pickup' | 'delivery') => {
     if (!user) return;
 
-    // Create a stable key to prevent re-renders during submission
-    const submissionKey = `${assignment.id}-${eventType}-${Date.now()}`;
+    const currentData = eventType === 'pickup' ? pickupData : deliveryData;
 
     try {
       setLoading(true);
       
       let photoUrl = null;
-      if (eventData.photo) {
-        photoUrl = await uploadPhoto(eventData.photo);
+      if (currentData.photo) {
+        photoUrl = await uploadPhoto(currentData.photo);
       }
 
       // Create tracking event
@@ -99,8 +106,8 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
         .insert({
           assignment_id: assignment.id,
           event_type: eventType,
-          description: eventData.description,
-          location: eventData.location,
+          description: currentData.description,
+          location: currentData.location,
           photo_url: photoUrl,
           created_by: user.id,
         });
@@ -124,10 +131,12 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
         description: "Le statut a été mis à jour avec succès",
       });
 
-      setEventData({ location: '', description: '', photo: null });
+      // Reset only the relevant data
       if (eventType === 'pickup') {
+        setPickupData({ location: '', description: '', photo: null });
         setShowPickupDialog(false);
       } else {
+        setDeliveryData({ location: '', description: '', photo: null });
         setShowDeliveryDialog(false);
       }
       onStatusUpdate();
@@ -146,9 +155,11 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, eventType: 'pickup' | 'delivery') => {
     const file = e.target.files?.[0];
     if (file) {
-      // Immediately stop propagation to prevent re-render loops
-      e.stopPropagation();
-      setEventData(prev => ({ ...prev, photo: file }));
+      if (eventType === 'pickup') {
+        setPickupData(prev => ({ ...prev, photo: file }));
+      } else {
+        setDeliveryData(prev => ({ ...prev, photo: file }));
+      }
     }
   };
 
@@ -235,11 +246,8 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                     <Input
                       id="pickup-location"
                       placeholder="Adresse ou description du lieu"
-                      value={eventData.location}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setEventData(prev => ({ ...prev, location: e.target.value }));
-                      }}
+                      value={pickupData.location}
+                      onChange={(e) => setPickupData(prev => ({ ...prev, location: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -247,11 +255,8 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                     <Textarea
                       id="pickup-description"
                       placeholder="Commentaires sur la collecte..."
-                      value={eventData.description}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setEventData(prev => ({ ...prev, description: e.target.value }));
-                      }}
+                      value={pickupData.description}
+                      onChange={(e) => setPickupData(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -301,11 +306,8 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                     <Input
                       id="delivery-location"
                       placeholder="Adresse ou description du lieu"
-                      value={eventData.location}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setEventData(prev => ({ ...prev, location: e.target.value }));
-                      }}
+                      value={deliveryData.location}
+                      onChange={(e) => setDeliveryData(prev => ({ ...prev, location: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -313,11 +315,8 @@ export function StatusUpdater({ assignment, userRole, onStatusUpdate }: StatusUp
                     <Textarea
                       id="delivery-description"
                       placeholder="Commentaires sur la livraison..."
-                      value={eventData.description}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setEventData(prev => ({ ...prev, description: e.target.value }));
-                      }}
+                      value={deliveryData.description}
+                      onChange={(e) => setDeliveryData(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
                   <div>

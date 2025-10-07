@@ -3,6 +3,7 @@ import {
   Package2, Search, Truck, MessageCircle, User, MapPin, Plus,
   Shield, Home, LogOut, Sparkles, Star
 } from "lucide-react"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/integrations/supabase/client"
@@ -105,8 +106,8 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-sidebar-accent text-sidebar-primary font-semibold shadow-sm border-l-4 border-primary"
-      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-primary transition-all duration-200"
+      ? "relative bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent text-sidebar-primary font-semibold shadow-lg border-l-4 border-primary before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-transparent before:rounded-r-lg"
+      : "text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-primary hover:shadow-md transition-all duration-300 hover:translate-x-1"
 
   return (
     <Sidebar
@@ -114,48 +115,66 @@ export function AppSidebar() {
       collapsible="icon"
     >
       {/* HEADER */}
-      <SidebarHeader className="border-b border-sidebar-border p-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <img src={Logo} alt="GP Connect" className="h-10 w-auto object-contain drop-shadow-lg" />
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl rounded-full -z-10" />
+      <SidebarHeader className="border-b border-sidebar-border p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
+        
+        <div className="relative flex items-center gap-3">
+          <div className="relative group">
+            <div className="absolute -inset-2 bg-gradient-to-r from-primary via-secondary to-accent opacity-30 blur-xl rounded-full transition-all duration-500 group-hover:opacity-50 group-hover:blur-2xl" />
+            <img 
+              src={Logo} 
+              alt="GP Connect" 
+              className="relative h-12 w-auto object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110" 
+            />
           </div>
           {!collapsed && (
-            <h2 className="text-lg font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
-              GP Connect
-            </h2>
+            <div className="flex flex-col">
+              <h2 className="text-xl font-extrabold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in tracking-tight">
+                GP Connect
+              </h2>
+              <p className="text-xs text-muted-foreground font-medium">Livraison collaborative</p>
+            </div>
           )}
         </div>
       </SidebarHeader>
 
       {/* MENU */}
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-3 py-6">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-2">
               {getNavItems().map(item => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12 rounded-lg group">
+                  <SidebarMenuButton asChild className="h-14 rounded-xl group overflow-hidden">
                      <NavLink to={item.url} end className={getNavCls}>
                       {({ isActive }) => (
                         <>
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className={`p-2.5 rounded-lg transition-all duration-200 ${
+                          <div className="flex items-center gap-4 flex-1 relative z-10">
+                            <div className={`relative p-3 rounded-xl transition-all duration-300 ${
                               isActive 
-                                ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-md scale-110" 
-                                : "bg-sidebar-accent text-sidebar-foreground group-hover:scale-105 group-hover:bg-gradient-to-br group-hover:from-primary/10 group-hover:to-secondary/10"
+                                ? "bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground shadow-xl scale-110" 
+                                : "bg-sidebar-accent/50 text-sidebar-foreground group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-primary/20 group-hover:to-secondary/20 group-hover:shadow-lg"
                             }`}>
-                              <item.icon className="h-5 w-5 shrink-0" />
+                              {isActive && (
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary opacity-20 blur-md rounded-xl" />
+                              )}
+                              <item.icon className={`h-5 w-5 shrink-0 relative z-10 transition-transform duration-300 ${isActive ? 'animate-pulse' : ''}`} />
                             </div>
                             {!collapsed && (
-                              <span className="font-medium transition-all duration-200">{item.title}</span>
+                              <span className={`font-semibold transition-all duration-300 ${isActive ? 'text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text' : ''}`}>
+                                {item.title}
+                              </span>
                             )}
                           </div>
                           {item.badge && item.badge > 0 && (
-                            <div className="flex items-center">
-                              <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground animate-pulse shadow-sm">
-                                {item.badge}
-                              </span>
+                            <div className="flex items-center relative z-10">
+                              <div className="relative">
+                                <div className="absolute inset-0 bg-destructive/30 blur-lg rounded-full animate-pulse" />
+                                <span className="relative ml-2 px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-destructive to-destructive/80 text-destructive-foreground shadow-lg ring-2 ring-destructive/20">
+                                  {item.badge}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </>
@@ -170,35 +189,47 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* FOOTER */}
-      <SidebarFooter className="border-t border-sidebar-border p-4 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 backdrop-blur-sm">
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar className="h-12 w-12 ring-2 ring-primary/20 shadow-lg transition-all duration-200 hover:ring-primary/40 hover:scale-105">
-            <AvatarImage src={(profile as any)?.avatar_url} />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-lg">
-              {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
+      <SidebarFooter className="border-t border-sidebar-border p-5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-secondary/5 to-transparent" />
+        
+        {/* Theme Toggle */}
+        {!collapsed && (
+          <div className="relative mb-4 flex justify-center">
+            <ThemeToggle />
+          </div>
+        )}
+        
+        <div className="relative flex items-center gap-4 mb-4">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-br from-primary via-secondary to-accent opacity-30 blur-md rounded-full transition-all duration-300 group-hover:opacity-50 group-hover:blur-lg" />
+            <Avatar className="relative h-14 w-14 ring-2 ring-primary/30 shadow-xl transition-all duration-300 hover:ring-primary/50 hover:scale-110 hover:shadow-2xl">
+              <AvatarImage src={(profile as any)?.avatar_url} />
+              <AvatarFallback className="bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground font-bold text-xl">
+                {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-1">
-                <p className="text-sm font-semibold text-sidebar-foreground truncate">
+              <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-sm font-bold text-sidebar-foreground truncate">
                   {profile?.first_name || "Utilisateur"}
                 </p>
                 {(profile as any)?.is_verified && (
-                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/10 border border-success/30 shrink-0">
-                    <svg className="w-3 h-3 text-success" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-success/20 to-success/10 border border-success/40 shrink-0 shadow-sm">
+                    <svg className="w-3.5 h-3.5 text-success drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span className="text-xs text-success font-medium">Vérifié</span>
+                    <span className="text-xs text-success font-bold">Vérifié</span>
                   </div>
                 )}
               </div>
               <Badge
                 variant="secondary"
-                className="bg-warning/10 text-warning-foreground border-warning/30 hover:bg-warning/20 transition-colors"
+                className="bg-gradient-to-r from-warning/20 to-warning/10 text-warning-foreground border-warning/40 hover:from-warning/30 hover:to-warning/20 transition-all duration-300 shadow-sm"
               >
-                <Star className="h-3 w-3 mr-1 fill-current" />
-                <span className="font-semibold">{profile?.rating?.toFixed(1) || "0.0"}</span>
+                <Star className="h-3.5 w-3.5 mr-1.5 fill-current drop-shadow-sm" />
+                <span className="font-bold">{profile?.rating?.toFixed(1) || "0.0"}</span>
               </Badge>
             </div>
           )}
@@ -208,13 +239,14 @@ export function AppSidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full text-sm text-muted-foreground hover:text-destructive justify-start rounded-lg hover:bg-destructive/10 transition-all duration-200 group"
+            className="relative w-full text-sm text-muted-foreground hover:text-destructive justify-start rounded-xl hover:bg-destructive/15 transition-all duration-300 group overflow-hidden shadow-sm hover:shadow-lg"
             onClick={() => {
               signOut();
             }}
           >
-            <LogOut className="h-4 w-4 mr-2 group-hover:animate-bounce-gentle" />
-            Déconnexion
+            <div className="absolute inset-0 bg-gradient-to-r from-destructive/0 via-destructive/5 to-destructive/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <LogOut className="relative h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+            <span className="relative font-medium">Déconnexion</span>
           </Button>
         )}
       </SidebarFooter>
