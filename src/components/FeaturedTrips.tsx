@@ -2,68 +2,72 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Calendar, Package, Star, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const FeaturedTrips = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Sample trips data
-  const featuredTrips = [
-    {
-      id: 1,
-      departure_city: "Paris",
-      departure_country: "France",
-      arrival_city: "Tokyo",
-      arrival_country: "Japon",
-      departure_date: "2024-12-15",
-      max_weight: 5,
-      price_per_kg: 25,
-      currency: "EUR",
-      traveler: {
-        name: "Marie L.",
-        rating: 4.9,
-        trips_count: 23,
-        avatar: null
-      }
+  // Fetch real trips from database
+  const { data: featuredTrips, isLoading } = useQuery({
+    queryKey: ['featured-trips'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('trips')
+        .select(`
+          id,
+          departure_city,
+          departure_country,
+          arrival_city,
+          arrival_country,
+          departure_date,
+          max_weight_kg,
+          price_per_kg,
+          currency,
+          traveler_id,
+          profiles!trips_traveler_id_fkey (
+            first_name,
+            last_name,
+            rating,
+            avatar_url
+          )
+        `)
+        .eq('is_active', true)
+        .gte('departure_date', new Date().toISOString())
+        .order('departure_date', { ascending: true })
+        .limit(6);
+
+      if (error) throw error;
+
+      return data?.map(trip => {
+        const profile = trip.profiles as any;
+        return {
+          id: trip.id,
+          departure_city: trip.departure_city,
+          departure_country: trip.departure_country,
+          arrival_city: trip.arrival_city,
+          arrival_country: trip.arrival_country,
+          departure_date: trip.departure_date,
+          max_weight: trip.max_weight_kg,
+          price_per_kg: trip.price_per_kg,
+          currency: trip.currency,
+          traveler: {
+            name: profile?.first_name && profile?.last_name 
+              ? `${profile.first_name} ${profile.last_name.charAt(0)}.`
+              : 'Voyageur',
+            rating: profile?.rating || 0,
+            trips_count: 0,
+            avatar: profile?.avatar_url
+          }
+        };
+      }) || [];
     },
-    {
-      id: 2,
-      departure_city: "London",
-      departure_country: "Royaume-Uni",
-      arrival_city: "New York",
-      arrival_country: "États-Unis",
-      departure_date: "2024-12-18",
-      max_weight: 8,
-      price_per_kg: 20,
-      currency: "USD",
-      traveler: {
-        name: "John S.",
-        rating: 4.8,
-        trips_count: 31,
-        avatar: null
-      }
-    },
-    {
-      id: 3,
-      departure_city: "Madrid",
-      departure_country: "Espagne",
-      arrival_city: "Buenos Aires",
-      arrival_country: "Argentine",
-      departure_date: "2024-12-20",
-      max_weight: 3,
-      price_per_kg: 30,
-      currency: "EUR",
-      traveler: {
-        name: "Carlos M.",
-        rating: 5.0,
-        trips_count: 15,
-        avatar: null
-      }
-    }
-  ];
+  });
 
   const handleSearchTrips = () => {
     if (!user) {
@@ -73,11 +77,11 @@ const FeaturedTrips = () => {
     }
   };
 
-  const handleReserveTrip = (tripId: number) => {
+  const handleReserveTrip = (tripId: string) => {
     if (!user) {
       navigate('/auth');
     } else {
-      navigate('/reservations');
+      navigate('/search-trips');
     }
   };
 
@@ -104,7 +108,29 @@ const FeaturedTrips = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {featuredTrips.map((trip) => (
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="border-border/40">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))
+          ) : featuredTrips && featuredTrips.length > 0 ? (
+            featuredTrips.map((trip) => (
             <Card key={trip.id} className="group hover:shadow-xl transition-all duration-300 border-border/40 hover:border-primary/20 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3 mb-4">
@@ -174,7 +200,13 @@ const FeaturedTrips = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground mb-4">Aucun trajet disponible pour le moment</p>
+              <Button onClick={handleSearchTrips}>Explorer tous les trajets</Button>
+            </div>
+          )}
         </div>
 
         <div className="text-center">
