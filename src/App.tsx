@@ -9,7 +9,7 @@ import { AppLayout } from "@/components/AppLayout";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import ModernDashboard from "./pages/ModernDashboard";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Tracking from "./pages/Tracking";
@@ -44,7 +44,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Dashboard />
+                      <ModernDashboard />
                     </AppLayout>
                   </ProtectedRoute>
                 }

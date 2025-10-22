@@ -154,35 +154,45 @@ export function VerificationBanner() {
             
             <div className="flex flex-wrap gap-3">
               <div>
-                <label className="cursor-pointer">
-                  <Button variant="outline" size="sm" disabled={uploading} className="bg-white">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Carte Nationale
-                  </Button>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => uploadDocument(e, 'national_id')}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
+                <input
+                  id="national-id-upload"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => uploadDocument(e, 'national_id')}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={uploading} 
+                  className="bg-white"
+                  onClick={() => document.getElementById('national-id-upload')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Carte Nationale
+                </Button>
               </div>
               
               <div>
-                <label className="cursor-pointer">
-                  <Button variant="outline" size="sm" disabled={uploading} className="bg-white">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Passeport
-                  </Button>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => uploadDocument(e, 'passport')}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
+                <input
+                  id="passport-upload"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => uploadDocument(e, 'passport')}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={uploading} 
+                  className="bg-white"
+                  onClick={() => document.getElementById('passport-upload')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Passeport
+                </Button>
               </div>
               
               {verificationStatus.has_kyc_documents && (
