@@ -21,6 +21,12 @@ import SearchTrips from "./pages/SearchTrips";
 import MyShipments from "./pages/MyShipments";
 import MyTrips from "./pages/MyTrips";
 import Reservations from "./pages/Reservations";
+import Reviews from "./pages/Reviews";
+import ProofOfDelivery from "./pages/ProofOfDelivery";
+import Notifications from "./pages/Notifications";
+import AdminKYC from "./pages/AdminKYC";
+import Disputes from "./pages/Disputes";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -146,6 +152,66 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Reservations />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reviews"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Reviews />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/proof-of-delivery"
+                element={
+                  <ProtectedRoute requiredRole="traveler">
+                    <AppLayout>
+                      <ProofOfDelivery />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Notifications />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/kyc"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout>
+                      <AdminKYC />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/disputes"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Disputes />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/support"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Support />
                     </AppLayout>
                   </ProtectedRoute>
                 }

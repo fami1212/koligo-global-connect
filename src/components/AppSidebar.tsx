@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import {
   Package2, Search, Truck, MessageCircle, User, MapPin, Plus,
-  Shield, Home, LogOut, Sparkles, Star
+  Shield, Home, LogOut, Sparkles, Star, Bell, AlertCircle, HelpCircle, Camera
 } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { NavLink } from "react-router-dom"
@@ -94,11 +94,22 @@ export function AppSidebar() {
       { title: "Réservations", url: "/reservations", icon: Sparkles },
       { title: "Suivi", url: "/tracking", icon: MapPin },
       { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
+      { title: "Notifications", url: "/notifications", icon: Bell },
+      { title: "Avis", url: "/reviews", icon: Star },
+      { title: "Litiges", url: "/disputes", icon: AlertCircle },
+      { title: "Support", url: "/support", icon: HelpCircle },
       { title: "Profil", url: "/profile", icon: User },
     )
 
+    if (hasRole("traveler")) {
+      items.push({ title: "Preuve livraison", url: "/proof-of-delivery", icon: Camera })
+    }
+
     if (hasRole("admin")) {
-      items.push({ title: "Administration", url: "/admin", icon: Shield })
+      items.push(
+        { title: "Administration", url: "/admin", icon: Shield },
+        { title: "KYC Admin", url: "/admin/kyc", icon: Shield }
+      )
     }
 
     return items
