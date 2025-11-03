@@ -87,6 +87,7 @@ export function AppSidebar() {
       items.push(
         { title: "Mes trajets", url: "/my-trips", icon: Truck },
         { title: "Nouveau trajet", url: "/traveler/create-trip", icon: Plus },
+        { title: "Rechercher colis", url: "/search-shipments", icon: Search },
       )
     }
 
@@ -98,12 +99,13 @@ export function AppSidebar() {
       { title: "Avis", url: "/reviews", icon: Star },
       { title: "Litiges", url: "/disputes", icon: AlertCircle },
       { title: "Support", url: "/support", icon: HelpCircle },
-      { title: "Profil", url: "/profile", icon: User },
     )
 
     if (hasRole("traveler")) {
       items.push({ title: "Preuve livraison", url: "/proof-of-delivery", icon: Camera })
     }
+
+    items.push({ title: "Profil", url: "/profile", icon: User })
 
     if (hasRole("admin")) {
       items.push(

@@ -8,7 +8,13 @@ import {
   Package2,
   Truck,
   MessageCircle,
-  ChevronUp
+  ChevronUp,
+  Sparkles,
+  Bell,
+  Star,
+  AlertCircle,
+  HelpCircle,
+  Camera
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
@@ -29,7 +35,7 @@ export function MobileBottomNav() {
   const mainNavItems = [
     { title: "Accueil", url: "/dashboard", icon: Home },
     { title: "Recherche", url: hasRole('sender') ? "/search-trips" : "/search-shipments", icon: Search },
-    { title: "Suivi", url: "/tracking", icon: MapPin },
+    { title: "Messages", url: "/messages", icon: MessageCircle },
     { title: "Profil", url: "/profile", icon: User },
   ]
 
@@ -41,8 +47,14 @@ export function MobileBottomNav() {
     ...(hasRole('traveler') ? [
       { title: "Mes trajets", url: "/my-trips", icon: Truck },
       { title: "Nouveau trajet", url: "/traveler/create-trip", icon: Plus },
+      { title: "Preuve livraison", url: "/proof-of-delivery", icon: Camera },
     ] : []),
-    { title: "Messages", url: "/messages", icon: MessageCircle },
+    { title: "Réservations", url: "/reservations", icon: Sparkles },
+    { title: "Suivi", url: "/tracking", icon: MapPin },
+    { title: "Notifications", url: "/notifications", icon: Bell },
+    { title: "Avis", url: "/reviews", icon: Star },
+    { title: "Litiges", url: "/disputes", icon: AlertCircle },
+    { title: "Support", url: "/support", icon: HelpCircle },
   ]
 
   return (
