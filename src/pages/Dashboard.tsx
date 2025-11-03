@@ -2,17 +2,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Truck, Plus, Star, MapPin, Calendar } from 'lucide-react';
+import { Package, Truck, Plus, Star, MapPin, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { VerificationBanner } from '@/components/VerificationBanner';
+import { VerificationStatusCard } from '@/components/VerificationStatusCard';
 
 interface DashboardStats {
   activeShipments: number;
   activeTrips: number;
   completedDeliveries: number;
   totalEarnings: number;
+}
+
+interface VerificationStatus {
+  is_verified: boolean;
+  verification_requested_at: string | null;
+  has_kyc_documents: boolean;
 }
 
 export default function Dashboard() {
@@ -24,12 +30,36 @@ export default function Dashboard() {
     totalEarnings: 0
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
 
   useEffect(() => {
     if (user) {
       loadDashboardData();
+      loadVerificationStatus();
     }
   }, [user]);
+
+  const loadVerificationStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const profileData = profile as any;
+      
+      const { data: kycDocs } = await supabase
+        .from('kyc_documents')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      setVerificationStatus({
+        is_verified: profileData?.is_verified || false,
+        verification_requested_at: profileData?.verification_requested_at,
+        has_kyc_documents: (kycDocs?.length || 0) > 0
+      });
+    } catch (error) {
+      console.error('Error loading verification status:', error);
+    }
+  };
 
   const loadDashboardData = async () => {
     if (!user) return;
@@ -88,24 +118,39 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <VerificationBanner />
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
             Bonjour {profile?.first_name || 'utilisateur'} 👋
           </h1>
           <p className="text-muted-foreground mt-1">
-            Voici un aperçu de votre activité KoliGo
+            Voici un aperçu de votre activité sur la plateforme
           </p>
         </div>
-        <div className="flex gap-2">
-          <Badge variant="secondary" className="gap-1">
-            <Star className="h-3 w-3" />
-            {profile?.rating.toFixed(1) || '0.0'}
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="gap-1.5 px-3 py-1.5">
+            <Star className="h-4 w-4 fill-warning text-warning" />
+            <span className="font-semibold">{profile?.rating?.toFixed(1) || '0.0'}</span>
           </Badge>
+          {(profile as any)?.is_verified && (
+            <Badge className="gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700">
+              <Shield className="h-4 w-4" />
+              Vérifié
+            </Badge>
+          )}
         </div>
       </div>
+
+      {/* Verification Status Card */}
+      {verificationStatus && (
+        <VerificationStatusCard
+          isVerified={verificationStatus.is_verified}
+          verificationRequestedAt={verificationStatus.verification_requested_at}
+          hasKYCDocuments={verificationStatus.has_kyc_documents}
+        />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

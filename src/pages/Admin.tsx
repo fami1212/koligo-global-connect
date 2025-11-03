@@ -3,26 +3,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Shield, 
-  Users, 
-  FileText, 
-  AlertTriangle, 
-  Check, 
-  X, 
-  Eye,
-  Search,
-  Filter,
-  UserCheck,
-  Clock
-} from 'lucide-react';
+import { Shield, ArrowLeft, Users, FileCheck, AlertTriangle, Scale } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AdminStats } from '@/components/admin/AdminStats';
+import { KYCSection } from '@/components/admin/KYCSection';
 
 interface KYCDocument {
   id: string;
@@ -47,6 +33,17 @@ interface ProblemReport {
   user_profile: any;
 }
 
+interface Dispute {
+  id: string;
+  complainant_id: string;
+  respondent_id: string;
+  assignment_id: string;
+  type: string;
+  status: string;
+  description: string;
+  created_at: string;
+}
+
 export default function Admin() {
   const { user, hasRole } = useAuth();
   const navigate = useNavigate();
@@ -54,8 +51,11 @@ export default function Admin() {
   
   const [kycDocuments, setKycDocuments] = useState<KYCDocument[]>([]);
   const [problemReports, setProblemReports] = useState<ProblemReport[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const [kycFilter, setKycFilter] = useState('pending');
+  const [reportsFilter, setReportsFilter] = useState('open');
 
   useEffect(() => {
     if (!user) {
@@ -78,36 +78,61 @@ export default function Admin() {
       // Load KYC documents
       const { data: kycData, error: kycError } = await supabase
         .from('kyc_documents')
-        .select(`
-          *,
-          user_profile:profiles!user_id (
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (kycError) throw kycError;
 
+      // Load profiles for KYC documents
+      const userIds = [...new Set(kycData?.map(doc => doc.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, email, avatar_url')
+        .in('user_id', userIds);
+
+      const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const enrichedKyc = kycData?.map(doc => ({
+        ...doc,
+        user_profile: profilesMap.get(doc.user_id)
+      })) || [];
+
       // Load problem reports
       const { data: reportsData, error: reportsError } = await supabase
         .from('problem_reports')
-        .select(`
-          *,
-          user_profile:profiles!user_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (reportsError) throw reportsError;
 
-      setKycDocuments(kycData || []);
-      setProblemReports(reportsData || []);
+      const reportUserIds = [...new Set(reportsData?.map(r => r.user_id) || [])];
+      const { data: reportProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, email')
+        .in('user_id', reportUserIds);
+
+      const reportProfilesMap = new Map(reportProfiles?.map(p => [p.user_id, p]) || []);
+      const enrichedReports = reportsData?.map(report => ({
+        ...report,
+        user_profile: reportProfilesMap.get(report.user_id)
+      })) || [];
+
+      // Load disputes
+      const { data: disputesData, error: disputesError } = await supabase
+        .from('disputes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (disputesError) throw disputesError;
+
+      // Load total users count
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      setKycDocuments(enrichedKyc);
+      setProblemReports(enrichedReports);
+      setDisputes(disputesData || []);
+      setTotalUsers(count || 0);
     } catch (error) {
       console.error('Error loading admin data:', error);
       toast({
@@ -150,9 +175,9 @@ export default function Admin() {
       }
 
       toast({
-        title: status === 'approved' ? "Document approuvé" : "Document rejeté",
+        title: status === 'approved' ? "Document approuvé ✓" : "Document rejeté",
         description: status === 'approved' 
-          ? "L'utilisateur est maintenant vérifié"
+          ? "L'utilisateur est maintenant vérifié avec un badge de confiance"
           : "Le document a été rejeté",
       });
 
@@ -167,370 +192,164 @@ export default function Admin() {
     }
   };
 
-  const updateReportStatus = async (reportId: string, status: string, resolutionNotes?: string) => {
-    try {
-      const { error } = await supabase
-        .from('problem_reports')
-        .update({
-          status,
-          resolution_notes: resolutionNotes,
-          resolved_at: status === 'resolved' ? new Date().toISOString() : null,
-          resolved_by: status === 'resolved' ? user?.id : null
-        })
-        .eq('id', reportId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Signalement mis à jour",
-        description: "Le statut du signalement a été mis à jour",
-      });
-
-      loadData();
-    } catch (error) {
-      console.error('Error updating report status:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le signalement",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800"><Check className="h-3 w-3 mr-1" />Approuvé</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive"><X className="h-3 w-3 mr-1" />Rejeté</Badge>;
-      case 'resolved':
-        return <Badge className="bg-green-100 text-green-800"><Check className="h-3 w-3 mr-1" />Résolu</Badge>;
-      case 'open':
-        return <Badge variant="outline"><AlertTriangle className="h-3 w-3 mr-1" />Ouvert</Badge>;
-      default:
-        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />En attente</Badge>;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'border-l-red-500 bg-red-50';
-      case 'high':
-        return 'border-l-orange-500 bg-orange-50';
-      case 'medium':
-        return 'border-l-yellow-500 bg-yellow-50';
-      default:
-        return 'border-l-gray-500 bg-gray-50';
-    }
-  };
-
-  const filteredKYC = kycDocuments.filter(doc => 
-    filter === 'all' || doc.status === filter
-  );
-
-  const filteredReports = problemReports.filter(report => 
-    filter === 'all' || report.status === filter
-  );
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
+  const kycPending = kycDocuments.filter(d => d.status === 'pending').length;
+  const kycApproved = kycDocuments.filter(d => d.status === 'approved').length;
+  const reportsOpen = problemReports.filter(r => r.status === 'open').length;
+  const disputesOpen = disputes.filter(d => d.status === 'open').length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              <Shield className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Shield className="h-8 w-8 text-primary" />
+              </div>
               Administration
             </h1>
             <p className="text-muted-foreground mt-1">
-              Gestion des vérifications et signalements
+              Centre de contrôle et de gestion de la plateforme
             </p>
           </div>
           <Button asChild variant="outline">
-            <Link to="/dashboard">Retour au tableau de bord</Link>
+            <Link to="/dashboard">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Link>
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{kycDocuments.length}</p>
-                  <p className="text-sm text-muted-foreground">Documents KYC</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Stats */}
+        <AdminStats
+          kycPending={kycPending}
+          kycApproved={kycApproved}
+          kycTotal={kycDocuments.length}
+          reportsOpen={reportsOpen}
+          reportsTotal={problemReports.length}
+          disputesOpen={disputesOpen}
+          disputesTotal={disputes.length}
+          totalUsers={totalUsers}
+        />
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {kycDocuments.filter(doc => doc.status === 'pending').length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">En attente</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-100 rounded-full">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{problemReports.length}</p>
-                  <p className="text-sm text-muted-foreground">Signalements</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <UserCheck className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {kycDocuments.filter(doc => doc.status === 'approved').length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Vérifiés</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Button asChild variant="outline" className="h-auto py-4">
+            <Link to="/admin/kyc" className="flex flex-col items-center gap-2">
+              <FileCheck className="h-6 w-6" />
+              <span className="font-semibold">Vérifications KYC</span>
+              <span className="text-xs text-muted-foreground">{kycPending} en attente</span>
+            </Link>
+          </Button>
+          
+          <Button asChild variant="outline" className="h-auto py-4">
+            <Link to="/support" className="flex flex-col items-center gap-2">
+              <AlertTriangle className="h-6 w-6" />
+              <span className="font-semibold">Support</span>
+              <span className="text-xs text-muted-foreground">{reportsOpen} tickets ouverts</span>
+            </Link>
+          </Button>
+          
+          <Button asChild variant="outline" className="h-auto py-4">
+            <Link to="/disputes" className="flex flex-col items-center gap-2">
+              <Scale className="h-6 w-6" />
+              <span className="font-semibold">Litiges</span>
+              <span className="text-xs text-muted-foreground">{disputesOpen} actifs</span>
+            </Link>
+          </Button>
+          
+          <Button asChild variant="outline" className="h-auto py-4">
+            <Link to="/profile" className="flex flex-col items-center gap-2">
+              <Users className="h-6 w-6" />
+              <span className="font-semibold">Utilisateurs</span>
+              <span className="text-xs text-muted-foreground">{totalUsers} inscrits</span>
+            </Link>
+          </Button>
         </div>
 
+        {/* Main Content */}
         <Tabs defaultValue="kyc" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="kyc">Vérifications KYC</TabsTrigger>
-            <TabsTrigger value="reports">Signalements</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="kyc">
+              <FileCheck className="h-4 w-4 mr-2" />
+              KYC ({kycPending})
+            </TabsTrigger>
+            <TabsTrigger value="reports">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Signalements ({reportsOpen})
+            </TabsTrigger>
+            <TabsTrigger value="disputes">
+              <Scale className="h-4 w-4 mr-2" />
+              Litiges ({disputesOpen})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="kyc" className="space-y-6">
-            {/* Filter */}
-            <div className="flex gap-2">
-              <Button
-                variant={filter === 'pending' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('pending')}
-              >
-                En attente
-              </Button>
-              <Button
-                variant={filter === 'approved' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('approved')}
-              >
-                Approuvés
-              </Button>
-              <Button
-                variant={filter === 'rejected' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('rejected')}
-              >
-                Rejetés
-              </Button>
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                Tous
-              </Button>
-            </div>
-
-            {/* KYC Documents */}
-            <div className="space-y-4">
-              {filteredKYC.map((document) => (
-                <Card key={document.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={document.user_profile.avatar_url} />
-                          <AvatarFallback>
-                            {document.user_profile.first_name[0]}{document.user_profile.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">
-                            {document.user_profile.first_name} {document.user_profile.last_name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">{document.user_profile.email}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">
-                              {document.document_type === 'national_id' ? 'Carte d\'identité' : 'Passeport'}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(document.created_at).toLocaleDateString('fr-FR')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(document.status)}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(document.document_url, '_blank')}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir
-                        </Button>
-                      </div>
-                    </div>
-
-                    {document.status === 'pending' && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                        <Textarea
-                          placeholder="Notes de révision (optionnel)..."
-                          className="min-h-[60px]"
-                          id={`notes-${document.id}`}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => {
-                              const notes = (window.document.getElementById(`notes-${document.id}`) as HTMLTextAreaElement)?.value;
-                              updateKYCStatus(document.id, 'approved', notes);
-                            }}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Approuver
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              const notes = (window.document.getElementById(`notes-${document.id}`) as HTMLTextAreaElement)?.value;
-                              updateKYCStatus(document.id, 'rejected', notes);
-                            }}
-                            variant="destructive"
-                            size="sm"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Rejeter
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {document.notes && (
-                      <div className="mt-4 pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-1">Notes:</p>
-                        <p className="text-sm">{document.notes}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <TabsContent value="kyc">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vérifications d'identité</CardTitle>
+                <CardDescription>
+                  Examinez et approuvez les documents d'identité des utilisateurs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <KYCSection
+                  documents={kycDocuments}
+                  filter={kycFilter}
+                  onFilterChange={setKycFilter}
+                  onUpdateStatus={updateKYCStatus}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="reports" className="space-y-6">
-            {/* Filter */}
-            <div className="flex gap-2">
-              <Button
-                variant={filter === 'open' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('open')}
-              >
-                Ouverts
-              </Button>
-              <Button
-                variant={filter === 'resolved' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('resolved')}
-              >
-                Résolus
-              </Button>
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                Tous
-              </Button>
-            </div>
+          <TabsContent value="reports">
+            <Card>
+              <CardHeader>
+                <CardTitle>Signalements & Support</CardTitle>
+                <CardDescription>
+                  Gérez les demandes d'assistance et les problèmes signalés
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-4">Consultez la page Support pour plus de détails</p>
+                  <Button asChild>
+                    <Link to="/support">Voir les signalements</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            {/* Problem Reports */}
-            <div className="space-y-4">
-              {filteredReports.map((report) => (
-                <Card key={report.id} className={`border-l-4 ${getPriorityColor(report.priority)}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{report.title}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {report.category}
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {report.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Par {report.user_profile.first_name} {report.user_profile.last_name}
-                        </p>
-                        <p className="text-sm mb-3">{report.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(report.created_at).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(report.status)}
-                      </div>
-                    </div>
-
-                    {report.status === 'open' && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                        <Textarea
-                          placeholder="Notes de résolution..."
-                          className="min-h-[60px]"
-                          id={`resolution-${report.id}`}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => {
-                              const notes = (window.document.getElementById(`resolution-${report.id}`) as HTMLTextAreaElement)?.value;
-                              updateReportStatus(report.id, 'resolved', notes);
-                            }}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Marquer comme résolu
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <TabsContent value="disputes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestion des litiges</CardTitle>
+                <CardDescription>
+                  Résolvez les conflits entre utilisateurs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Scale className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-4">Consultez la page Litiges pour plus de détails</p>
+                  <Button asChild>
+                    <Link to="/disputes">Voir les litiges</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
