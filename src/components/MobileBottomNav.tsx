@@ -14,7 +14,8 @@ import {
   Star,
   AlertCircle,
   HelpCircle,
-  Camera
+  Camera,
+  Shield
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
@@ -55,6 +56,10 @@ export function MobileBottomNav() {
     { title: "Avis", url: "/reviews", icon: Star },
     { title: "Litiges", url: "/disputes", icon: AlertCircle },
     { title: "Support", url: "/support", icon: HelpCircle },
+    ...(hasRole('admin') ? [
+      { title: "Administration", url: "/admin", icon: Shield },
+      { title: "KYC Admin", url: "/admin/kyc", icon: Shield },
+    ] : []),
   ]
 
   return (
