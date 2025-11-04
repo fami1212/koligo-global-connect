@@ -9,6 +9,7 @@ import { Camera, Upload, Check, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 
 interface Assignment {
   id: string;
@@ -35,6 +36,7 @@ export default function ProofOfDelivery() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [signatureData, setSignatureData] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -77,10 +79,10 @@ export default function ProofOfDelivery() {
   };
 
   const uploadProof = async () => {
-    if (!selectedAssignment || !photoFile || !recipientName.trim()) {
+    if (!selectedAssignment || !photoFile || !recipientName.trim() || !signatureData) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires (photo et signature)",
         variant: "destructive",
       });
       return;
@@ -110,6 +112,7 @@ export default function ProofOfDelivery() {
         recipient_name: recipientName.trim(),
         delivery_photo_url: urlData.publicUrl,
         delivery_notes: deliveryNotes.trim() || null,
+        signature_data: signatureData,
       });
 
       if (proofError) throw proofError;
@@ -133,6 +136,7 @@ export default function ProofOfDelivery() {
       setDeliveryNotes("");
       setPhotoFile(null);
       setPhotoPreview("");
+      setSignatureData("");
       loadAssignments();
     } catch (error: any) {
       toast({
@@ -268,10 +272,15 @@ export default function ProofOfDelivery() {
               />
             </div>
 
+            <SignatureCanvas
+              onSave={setSignatureData}
+              onClear={() => setSignatureData("")}
+            />
+
             <div className="flex gap-2">
               <Button
                 onClick={uploadProof}
-                disabled={uploading || !photoFile || !recipientName.trim()}
+                disabled={uploading || !photoFile || !recipientName.trim() || !signatureData}
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Enregistrer
@@ -284,6 +293,7 @@ export default function ProofOfDelivery() {
                   setDeliveryNotes("");
                   setPhotoFile(null);
                   setPhotoPreview("");
+                  setSignatureData("");
                 }}
               >
                 Annuler

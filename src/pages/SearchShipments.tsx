@@ -10,6 +10,7 @@ import { Calendar, MapPin, Package, User, Euro, Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { Pagination } from '@/components/Pagination';
 
 interface Shipment {
   id: string;
@@ -40,6 +41,9 @@ export default function SearchShipments() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
   const [filters, setFilters] = useState({
     pickup_city: '',
     delivery_city: '',
@@ -58,6 +62,13 @@ export default function SearchShipments() {
   const loadShipments = async () => {
     try {
       setLoading(true);
+      
+      // Count total
+      let countQuery = supabase
+        .from('shipments')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      
       let query = supabase
         .from('shipments')
         .select('*')
@@ -65,19 +76,32 @@ export default function SearchShipments() {
 
       if (filters.pickup_city) {
         query = query.ilike('pickup_city', `%${filters.pickup_city}%`);
+        countQuery = countQuery.ilike('pickup_city', `%${filters.pickup_city}%`);
       }
       if (filters.delivery_city) {
         query = query.ilike('delivery_city', `%${filters.delivery_city}%`);
+        countQuery = countQuery.ilike('delivery_city', `%${filters.delivery_city}%`);
       }
       if (filters.max_weight) {
         query = query.lte('weight_kg', parseFloat(filters.max_weight));
+        countQuery = countQuery.lte('weight_kg', parseFloat(filters.max_weight));
       }
       if (filters.min_value) {
         query = query.gte('estimated_value', parseFloat(filters.min_value));
+        countQuery = countQuery.gte('estimated_value', parseFloat(filters.min_value));
       }
 
+      // Get count
+      const { count } = await countQuery;
+      setTotalCount(count || 0);
+
+      // Get paginated data
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
       const { data: shipmentsData, error } = await query
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
 
@@ -231,7 +255,7 @@ export default function SearchShipments() {
               </div>
             </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={loadShipments} disabled={loading}>
+              <Button onClick={() => { setCurrentPage(1); loadShipments(); }} disabled={loading}>
                 {loading ? 'Recherche...' : 'Rechercher'}
               </Button>
             </div>

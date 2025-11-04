@@ -403,6 +403,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          metadata: Json | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          metadata?: Json | null
+          read?: boolean | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          metadata?: Json | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           created_at: string
@@ -908,10 +944,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      deactivate_expired_trips: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      deactivate_expired_trips: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -919,10 +952,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_trip_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_trip_status: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "sender" | "traveler"

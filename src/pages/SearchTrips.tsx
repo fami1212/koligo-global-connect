@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { BookingWorkflow } from '@/components/BookingWorkflow';
+import { Pagination } from '@/components/Pagination';
 
 interface Trip {
   id: string;
@@ -42,6 +43,9 @@ export default function SearchTrips() {
   const { toast } = useToast();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
   const [filters, setFilters] = useState({
     departure_city: '',
     arrival_city: '',
@@ -61,6 +65,15 @@ export default function SearchTrips() {
   const loadTrips = async () => {
     try {
       setLoading(true);
+      
+      // Count query
+      let countQuery = supabase
+        .from('trips')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .gte('departure_date', new Date().toISOString())
+        .neq('traveler_id', user?.id || '');
+      
       let query = supabase
         .from('trips')
         .select('*')
@@ -70,23 +83,36 @@ export default function SearchTrips() {
 
       if (filters.departure_city) {
         query = query.ilike('departure_city', `%${filters.departure_city}%`);
+        countQuery = countQuery.ilike('departure_city', `%${filters.departure_city}%`);
       }
       if (filters.arrival_city) {
         query = query.ilike('arrival_city', `%${filters.arrival_city}%`);
+        countQuery = countQuery.ilike('arrival_city', `%${filters.arrival_city}%`);
       }
       if (filters.min_weight) {
         query = query.gte('available_weight_kg', parseFloat(filters.min_weight));
+        countQuery = countQuery.gte('available_weight_kg', parseFloat(filters.min_weight));
       }
       if (filters.max_price) {
         query = query.lte('price_per_kg', parseFloat(filters.max_price));
+        countQuery = countQuery.lte('price_per_kg', parseFloat(filters.max_price));
       }
       if (filters.transport_type && filters.transport_type !== 'all') {
         query = query.eq('transport_type', filters.transport_type);
+        countQuery = countQuery.eq('transport_type', filters.transport_type);
       }
 
+      // Get count
+      const { count } = await countQuery;
+      setTotalCount(count || 0);
+
+      // Get paginated data
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
       const { data: tripsData, error } = await query
-        .eq('is_active', true)
-        .order('departure_date', { ascending: true });
+        .order('departure_date', { ascending: true })
+        .range(from, to);
 
       if (error) throw error;
 
@@ -257,7 +283,7 @@ export default function SearchTrips() {
               </div>
             </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={loadTrips} disabled={loading}>
+              <Button onClick={() => { setCurrentPage(1); loadTrips(); }} disabled={loading}>
                 {loading ? 'Recherche...' : 'Rechercher'}
               </Button>
             </div>
