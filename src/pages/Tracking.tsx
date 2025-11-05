@@ -27,6 +27,8 @@ import { ProblemReporter } from '@/components/ProblemReporter';
 import { CallButtons } from '@/components/CallButtons';
 import { StatusUpdater } from '@/components/StatusUpdater';
 import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
+import { GeolocationTracker } from '@/components/GeolocationTracker';
+import { useRealtimeTracking } from '@/hooks/useRealtimeMessages';
 
 interface Assignment {
   id: string;
@@ -88,6 +90,14 @@ export default function Tracking() {
       loadAssignments();
     }
   }, [user]);
+
+  // Real-time tracking updates
+  useRealtimeTracking(
+    selectedAssignment?.id || null,
+    (newEvent) => {
+      setTrackingEvents(prev => [...prev, newEvent]);
+    }
+  );
 
   useEffect(() => {
     if (selectedAssignment?.id) {
@@ -341,6 +351,13 @@ export default function Tracking() {
               <div className="xl:col-span-1 space-y-6">
                 {selectedAssignment && (
                   <>
+                    {user?.id === selectedAssignment.traveler_id && (
+                      <GeolocationTracker 
+                        assignmentId={selectedAssignment.id}
+                        enabled={true}
+                      />
+                    )}
+                    
                     <StatusUpdater 
                       assignment={selectedAssignment}
                       userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}

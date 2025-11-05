@@ -11,6 +11,7 @@ interface MediaUploadProps {
   accept?: string;
   maxSize?: number; // in MB
   multiple?: boolean;
+  maxFiles?: number;
   onUploadComplete: (urls: string[]) => void;
 }
 
@@ -20,6 +21,7 @@ export function MediaUpload({
   accept = 'image/*',
   maxSize = 5,
   multiple = false,
+  maxFiles = 10,
   onUploadComplete,
 }: MediaUploadProps) {
   const { toast } = useToast();
@@ -30,6 +32,16 @@ export function MediaUpload({
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+
+    // Validate max files
+    if (files.length > maxFiles) {
+      toast({
+        title: 'Trop de fichiers',
+        description: `Maximum ${maxFiles} fichiers autorisés`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Validate file sizes
     const oversizedFiles = files.filter(file => file.size > maxSize * 1024 * 1024);

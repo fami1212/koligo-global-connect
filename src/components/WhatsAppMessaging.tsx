@@ -19,6 +19,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useRealtimeMessages, RealtimeMessage } from '@/hooks/useRealtimeMessages';
 
 interface Conversation {
   id: string;
@@ -77,25 +78,23 @@ export default function WhatsAppMessaging({ preSelectedConversationId }: WhatsAp
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Real-time message updates
+  useRealtimeMessages(
+    selectedConversation?.id || null,
+    (newMessage: RealtimeMessage) => {
+      const message: Message = {
+        ...newMessage,
+        image_url: newMessage.image_url || null,
+        read_at: newMessage.read_at || null,
+      };
+      setMessages(prev => [...prev, message]);
+      loadConversations();
+    }
+  );
+
   useEffect(() => {
     if (user) {
       loadConversations();
-      
-      const channel = supabase
-        .channel('messages-realtime')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages' },
-          (payload) => {
-            const newMsg = payload.new as Message;
-            setMessages(prev => [...prev, newMsg]);
-            loadConversations();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
   }, [user]);
 

@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRealtimeMessages, RealtimeMessage } from '@/hooks/useRealtimeMessages';
 
 interface Message {
   id: string;
@@ -36,10 +37,21 @@ export function InstantMessaging({ conversationId, otherUserId, className }: Ins
   const [activeConversationId, setActiveConversationId] = useState(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Real-time message updates
+  useRealtimeMessages(
+    activeConversationId || null,
+    (newMessage: RealtimeMessage) => {
+      const message: Message = {
+        ...newMessage,
+        read_at: newMessage.read_at || null,
+      };
+      setMessages(prev => [...prev, message]);
+    }
+  );
+
   useEffect(() => {
     if (activeConversationId) {
       loadMessages();
-      subscribeToMessages();
     }
   }, [activeConversationId]);
 
@@ -89,30 +101,6 @@ export function InstantMessaging({ conversationId, otherUserId, className }: Ins
     }
   };
 
-  const subscribeToMessages = () => {
-    if (!activeConversationId) return;
-
-    const channel = supabase
-      .channel(`messages-${activeConversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${activeConversationId}`
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConversationId || !user) return;

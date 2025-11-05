@@ -2,19 +2,19 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface Message {
+export interface RealtimeMessage {
   id: string;
   conversation_id: string;
   sender_id: string;
   content: string;
-  image_url?: string;
+  image_url: string | null;
   created_at: string;
-  read_at?: string;
+  read_at: string | null;
 }
 
 export function useRealtimeMessages(
   conversationId: string | null,
-  onNewMessage: (message: Message) => void
+  onNewMessage: (message: RealtimeMessage) => void
 ) {
   const { toast } = useToast();
 
@@ -32,7 +32,7 @@ export function useRealtimeMessages(
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          onNewMessage(payload.new as Message);
+          onNewMessage(payload.new as RealtimeMessage);
         }
       )
       .subscribe();

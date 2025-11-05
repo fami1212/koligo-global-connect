@@ -10,12 +10,14 @@ import { ArrowLeft, Package, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { MediaUpload } from '@/components/MediaUpload';
 
 export default function CreateShipment() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,6 +45,7 @@ export default function CreateShipment() {
       volume_m3: parseFloat(formData.get('volume') as string) || null,
       estimated_value: parseFloat(formData.get('estimatedValue') as string) || null,
       special_instructions: formData.get('specialInstructions') as string || null,
+      photos: uploadedPhotos,
     };
 
     try {
@@ -271,6 +274,22 @@ export default function CreateShipment() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Photos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Photos du colis</CardTitle>
+            <CardDescription>Ajoutez des photos de votre colis (optionnel)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MediaUpload
+              bucket="shipment-photos"
+              multiple={true}
+              maxFiles={5}
+              onUploadComplete={(urls) => setUploadedPhotos(urls)}
+            />
           </CardContent>
         </Card>
 
