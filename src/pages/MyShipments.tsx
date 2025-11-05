@@ -3,10 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Eye, Edit, MapPin, Calendar } from 'lucide-react';
+import { Package, Plus, MapPin, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { ShipmentActions } from '@/components/ShipmentActions';
 
 interface Shipment {
@@ -26,6 +27,7 @@ interface Shipment {
 
 export default function MyShipments() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -97,9 +99,9 @@ export default function MyShipments() {
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Mes Colis</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('shipments.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Gérez vos demandes de livraison
+              {t('shipments.subtitle')}
             </p>
           </div>
           <div className="flex gap-2">

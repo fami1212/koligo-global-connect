@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Package, Menu, Globe } from "lucide-react";
+import { Package, Menu } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
+  const { t } = useTranslation();
+  
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -24,14 +28,7 @@ const Header = () => {
           <a href="#contact" className="text-foreground/80 hover:text-foreground transition-colors">
             Contact
           </a>
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <select className="bg-transparent text-sm border-none outline-none">
-              <option value="fr">FR</option>
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            </select>
-          </div>
+          <LanguageSwitcher />
         </nav>
 
         <div className="flex items-center gap-3">
