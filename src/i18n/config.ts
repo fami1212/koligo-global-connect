@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import enTranslations from './locales/en.json';
 import frTranslations from './locales/fr.json';
+import esTranslations from './locales/es.json';
+import deTranslations from './locales/de.json';
 
 export const defaultNS = 'translation';
 export const resources = {
@@ -12,6 +14,12 @@ export const resources = {
   },
   fr: {
     translation: frTranslations,
+  },
+  es: {
+    translation: esTranslations,
+  },
+  de: {
+    translation: deTranslations,
   },
 } as const;
 

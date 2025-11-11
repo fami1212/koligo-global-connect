@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { VerificationStatusCard } from '@/components/VerificationStatusCard';
+import { useTranslation } from 'react-i18next';
+import { formatDate, formatCurrency } from '@/lib/formatters';
 
 interface DashboardStats {
   activeShipments: number;
@@ -23,6 +25,7 @@ interface VerificationStatus {
 
 export default function Dashboard() {
   const { user, profile, hasRole } = useAuth();
+  const { t, i18n } = useTranslation();
   const [stats, setStats] = useState<DashboardStats>({
     activeShipments: 0,
     activeTrips: 0,
@@ -123,10 +126,10 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            Bonjour {profile?.first_name || 'utilisateur'} 👋
+            {t('dashboard.welcome')} {profile?.first_name || t('dashboard.user')} 👋
           </h1>
           <p className="text-muted-foreground mt-1">
-            Voici un aperçu de votre activité sur la plateforme
+            {t('dashboard.overview')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -137,7 +140,7 @@ export default function Dashboard() {
           {(profile as any)?.is_verified && (
             <Badge className="gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700">
               <Shield className="h-4 w-4" />
-              Vérifié
+              {t('profile.verified')}
             </Badge>
           )}
         </div>
@@ -157,7 +160,7 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-primary">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Colis actifs
+              {t('dashboard.activeShipments')}
             </CardTitle>
             <div className="text-2xl font-bold text-primary">
               {stats.activeShipments}
@@ -168,7 +171,7 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-accent">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Trajets actifs
+              {t('dashboard.activeTrips')}
             </CardTitle>
             <div className="text-2xl font-bold text-accent">
               {stats.activeTrips}
@@ -179,7 +182,7 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-success">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Livraisons terminées
+              {t('dashboard.completedDeliveries')}
             </CardTitle>
             <div className="text-2xl font-bold text-success">
               {stats.completedDeliveries}
@@ -190,10 +193,10 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-warning">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Gains totaux
+              {t('dashboard.totalEarnings')}
             </CardTitle>
             <div className="text-2xl font-bold text-warning">
-              €{stats.totalEarnings.toFixed(2)}
+              {formatCurrency(stats.totalEarnings, 'EUR', i18n.language)}
             </div>
           </CardHeader>
         </Card>
