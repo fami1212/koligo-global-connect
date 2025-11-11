@@ -29,6 +29,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useTranslation } from 'react-i18next'
 
 interface NavItem {
   title: string;
@@ -39,6 +40,7 @@ interface NavItem {
 
 export function UltraModernSidebar() {
   const { user, profile, hasRole, signOut } = useAuth()
+  const { t } = useTranslation()
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -91,32 +93,32 @@ export function UltraModernSidebar() {
 
   const getNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
-      { title: "Tableau de bord", url: "/dashboard", icon: Home },
+      { title: t('sidebar.dashboard'), url: "/dashboard", icon: Home },
     ]
 
     const senderItems: NavItem[] = [
-      { title: "Mes colis", url: "/my-shipments", icon: Package2 },
-      { title: "Nouveau colis", url: "/sender/create-shipment", icon: Plus },
-      { title: "Rechercher trajets", url: "/search-trips", icon: Search },
+      { title: t('sidebar.myShipments'), url: "/my-shipments", icon: Package2 },
+      { title: t('sidebar.newShipment'), url: "/sender/create-shipment", icon: Plus },
+      { title: t('sidebar.searchTrips'), url: "/search-trips", icon: Search },
     ]
 
     const travelerItems: NavItem[] = [
-      { title: "Mes trajets", url: "/my-trips", icon: Truck },
-      { title: "Nouveau trajet", url: "/traveler/create-trip", icon: Plus },
+      { title: t('sidebar.myTrips'), url: "/my-trips", icon: Truck },
+      { title: t('sidebar.newTrip'), url: "/traveler/create-trip", icon: Plus },
     ]
 
     const commonItems: NavItem[] = [
-      { title: "Réservations", url: "/reservations", icon: Sparkles },
-      { title: "Suivi", url: "/tracking", icon: MapPin },
-      { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
+      { title: t('sidebar.reservations'), url: "/reservations", icon: Sparkles },
+      { title: t('sidebar.tracking'), url: "/tracking", icon: MapPin },
+      { title: t('sidebar.messages'), url: "/messages", icon: MessageCircle, badge: unreadCount },
     ]
 
     const profileItems: NavItem[] = [
-      { title: "Profil", url: "/profile", icon: User },
+      { title: t('sidebar.profile'), url: "/profile", icon: User },
     ]
 
     const adminItems: NavItem[] = hasRole('admin') ? [
-      { title: "Administration", url: "/admin", icon: Shield },
+      { title: t('sidebar.administration'), url: "/admin", icon: Shield },
     ] : []
 
     let allItems = [...baseItems]
@@ -155,7 +157,7 @@ export function UltraModernSidebar() {
                 <h2 className="text-lg font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                   KoliGo
                 </h2>
-                <p className="text-xs text-muted-foreground font-medium">Transport intelligent</p>
+                <p className="text-xs text-muted-foreground font-medium">{t('sidebar.intelligentTransport')}</p>
               </div>
             )}
           </div>
@@ -266,7 +268,7 @@ export function UltraModernSidebar() {
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Déconnexion</span>}
+          {!collapsed && <span className="ml-2">{t('sidebar.logout')}</span>}
         </Button>
       </div>
     </div>
@@ -345,12 +347,12 @@ export function UltraModernSidebar() {
                 className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg min-w-0 flex-1 hover:bg-muted/50"
               >
                 <Settings className="h-5 w-5 shrink-0" />
-                <span className="text-xs font-medium">Plus</span>
+                <span className="text-xs font-medium">{t('sidebar.more')}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[60vh] rounded-t-2xl">
               <div className="py-4 space-y-4">
-                <h3 className="font-semibold text-lg mb-4 text-center">Actions rapides</h3>
+                <h3 className="font-semibold text-lg mb-4 text-center">{t('sidebar.quickActions')}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {getNavItems().slice(4).map((item) => (
                     <NavLink

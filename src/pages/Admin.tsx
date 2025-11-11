@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { KYCSection } from '@/components/admin/KYCSection';
+import { useTranslation } from 'react-i18next';
 
 interface KYCDocument {
   id: string;
@@ -48,6 +49,7 @@ export default function Admin() {
   const { user, hasRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [kycDocuments, setKycDocuments] = useState<KYCDocument[]>([]);
   const [problemReports, setProblemReports] = useState<ProblemReport[]>([]);
@@ -215,16 +217,16 @@ export default function Admin() {
               <div className="p-2 rounded-lg bg-primary/10">
                 <Shield className="h-8 w-8 text-primary" />
               </div>
-              Administration
+              {t('admin.title')}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Centre de contrôle et de gestion de la plateforme
+              {t('admin.subtitle')}
             </p>
           </div>
           <Button asChild variant="outline">
             <Link to="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              {t('admin.backToDashboard')}
             </Link>
           </Button>
         </div>

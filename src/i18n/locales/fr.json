@@ -16,7 +16,8 @@
     "close": "Fermer",
     "view": "Voir",
     "download": "Télécharger",
-    "upload": "Uploader"
+    "upload": "Uploader",
+    "or": "ou"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -46,7 +47,13 @@
     "dontHaveAccount": "Vous n'avez pas de compte ?",
     "alreadyHaveAccount": "Vous avez déjà un compte ?",
     "welcomeBack": "Bon retour",
-    "createAccount": "Créer un compte"
+    "createAccount": "Créer un compte",
+    "userType": "Type de profil",
+    "sender": "Expéditeur",
+    "senderDesc": "J'envoie des colis",
+    "traveler": "Transporteur",
+    "travelerDesc": "Je transporte des colis",
+    "termsAgreement": "En vous inscrivant, vous acceptez nos conditions d'utilisation"
   },
   "dashboard": {
     "welcome": "Bienvenue",
@@ -270,5 +277,85 @@
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Centre de contrôle et de gestion de la plateforme",
+    "backToDashboard": "Retour au tableau de bord",
+    "kycVerifications": "Vérifications KYC",
+    "kycPending": "en attente",
+    "supportTickets": "tickets ouverts",
+    "disputes": "Litiges",
+    "active": "actifs",
+    "users": "Utilisateurs",
+    "registered": "inscrits",
+    "stats": {
+      "kycDocuments": "Documents KYC",
+      "verifiedUsers": "Utilisateurs vérifiés",
+      "totalUsers": "Total",
+      "reports": "Signalements",
+      "open": "ouverts"
+    },
+    "kyc": {
+      "title": "Vérifications d'identité",
+      "subtitle": "Examinez et approuvez les documents d'identité des utilisateurs",
+      "pending": "En attente",
+      "approved": "Approuvés",
+      "rejected": "Rejetés",
+      "noDocuments": "Aucun document",
+      "reviewDocument": "Réviser le document",
+      "user": "Utilisateur:",
+      "type": "Type:",
+      "notes": "Notes",
+      "addNotes": "Ajoutez des notes...",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "cancel": "Annuler",
+      "document": "Document",
+      "view": "Voir",
+      "errorNote": "Veuillez ajouter une note pour le rejet",
+      "approveSuccess": "Document approuvé",
+      "rejectSuccess": "Document rejeté",
+      "userVerified": "L'utilisateur est maintenant vérifié",
+      "documentRejected": "Le document a été rejeté avec des notes",
+      "error": "Erreur",
+      "errorUpdating": "Impossible de mettre à jour le statut",
+      "nationalId": "Carte d'identité",
+      "passport": "Passeport",
+      "driverLicense": "Permis de conduire",
+      "unauthorized": "Accès non autorisé"
+    },
+    "reports": {
+      "title": "Signalements & Support",
+      "subtitle": "Gérez les demandes d'assistance et les problèmes signalés",
+      "viewMore": "Consultez la page Support pour plus de détails",
+      "viewReports": "Voir les signalements"
+    },
+    "quickActions": "Actions rapides"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "myShipments": "Mes colis",
+    "newShipment": "Nouveau colis",
+    "searchTrips": "Rechercher trajets",
+    "myTrips": "Mes trajets",
+    "newTrip": "Nouveau trajet",
+    "searchShipments": "Rechercher colis",
+    "reservations": "Réservations",
+    "tracking": "Suivi",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "reviews": "Avis",
+    "disputes": "Litiges",
+    "support": "Support",
+    "proofOfDelivery": "Preuve livraison",
+    "profile": "Profil",
+    "administration": "Administration",
+    "kycAdmin": "KYC Admin",
+    "collaborativeDelivery": "Livraison collaborative",
+    "intelligentTransport": "Transport intelligent",
+    "quickActions": "Actions rapides",
+    "more": "Plus",
+    "logout": "Déconnexion"
   }
 }

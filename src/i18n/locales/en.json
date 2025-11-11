@@ -16,7 +16,8 @@
     "close": "Close",
     "view": "View",
     "download": "Download",
-    "upload": "Upload"
+    "upload": "Upload",
+    "or": "or"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -46,7 +47,13 @@
     "dontHaveAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",
     "welcomeBack": "Welcome Back",
-    "createAccount": "Create Account"
+    "createAccount": "Create Account",
+    "userType": "Profile Type",
+    "sender": "Sender",
+    "senderDesc": "I send packages",
+    "traveler": "Traveler",
+    "travelerDesc": "I transport packages",
+    "termsAgreement": "By signing up, you agree to our terms of use"
   },
   "dashboard": {
     "welcome": "Welcome",
@@ -270,5 +277,85 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Platform management and control center",
+    "backToDashboard": "Back to Dashboard",
+    "kycVerifications": "KYC Verifications",
+    "kycPending": "pending",
+    "supportTickets": "tickets open",
+    "disputes": "Disputes",
+    "active": "active",
+    "users": "Users",
+    "registered": "registered",
+    "stats": {
+      "kycDocuments": "KYC Documents",
+      "verifiedUsers": "Verified Users",
+      "totalUsers": "Total",
+      "reports": "Reports",
+      "open": "open"
+    },
+    "kyc": {
+      "title": "Identity Verifications",
+      "subtitle": "Review and approve user identity documents",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "noDocuments": "No documents",
+      "reviewDocument": "Review document",
+      "user": "User:",
+      "type": "Type:",
+      "notes": "Notes",
+      "addNotes": "Add notes...",
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "document": "Document",
+      "view": "View",
+      "errorNote": "Please add a note for rejection",
+      "approveSuccess": "Document approved",
+      "rejectSuccess": "Document rejected",
+      "userVerified": "The user is now verified",
+      "documentRejected": "The document has been rejected with notes",
+      "error": "Error",
+      "errorUpdating": "Cannot update status",
+      "nationalId": "National ID Card",
+      "passport": "Passport",
+      "driverLicense": "Driver's License",
+      "unauthorized": "Unauthorized access"
+    },
+    "reports": {
+      "title": "Reports & Support",
+      "subtitle": "Manage support requests and reported issues",
+      "viewMore": "For more details, see Support page",
+      "viewReports": "View reports"
+    },
+    "quickActions": "Quick Actions"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "myShipments": "My Shipments",
+    "newShipment": "New Shipment",
+    "searchTrips": "Search Trips",
+    "myTrips": "My Trips",
+    "newTrip": "New Trip",
+    "searchShipments": "Search Shipments",
+    "reservations": "Reservations",
+    "tracking": "Tracking",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "reviews": "Reviews",
+    "disputes": "Disputes",
+    "support": "Support",
+    "proofOfDelivery": "Proof of Delivery",
+    "profile": "Profile",
+    "administration": "Administration",
+    "kycAdmin": "KYC Admin",
+    "collaborativeDelivery": "Collaborative Delivery",
+    "intelligentTransport": "Intelligent Transport",
+    "quickActions": "Quick Actions",
+    "more": "More",
+    "logout": "Logout"
   }
 }

@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from 'react-i18next';
 
 interface KYCDocument {
   id: string;
@@ -36,6 +37,7 @@ interface KYCDocument {
 export default function AdminKYC() {
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<KYCDocument[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<KYCDocument | null>(null);
@@ -176,20 +178,20 @@ export default function AdminKYC() {
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Vérification KYC</h1>
-        <p className="text-muted-foreground">Gérez les documents d'identité des utilisateurs</p>
+        <h1 className="text-3xl font-bold mb-2">{t('admin.kyc.title')}</h1>
+        <p className="text-muted-foreground">{t('admin.kyc.subtitle')}</p>
       </div>
 
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">
-            En attente ({filterByStatus("pending").length})
+            {t('admin.kyc.pending')} ({filterByStatus("pending").length})
           </TabsTrigger>
           <TabsTrigger value="approved">
-            Approuvés ({filterByStatus("approved").length})
+            {t('admin.kyc.approved')} ({filterByStatus("approved").length})
           </TabsTrigger>
           <TabsTrigger value="rejected">
-            Rejetés ({filterByStatus("rejected").length})
+            {t('admin.kyc.rejected')} ({filterByStatus("rejected").length})
           </TabsTrigger>
         </TabsList>
 

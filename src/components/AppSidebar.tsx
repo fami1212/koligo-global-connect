@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import Logo from "@/assets/gp_connect-removebg-preview.png"
+import { useTranslation } from 'react-i18next'
 
 interface NavItem {
   title: string
@@ -28,49 +29,50 @@ interface NavItem {
 export function AppSidebar() {
   const { state } = useSidebar()
   const { user, profile, hasRole, signOut } = useAuth()
+  const { t } = useTranslation()
   const collapsed = state === "collapsed"
 
   const getNavItems = (): NavItem[] => {
     const items: NavItem[] = [
-      { title: "Tableau de bord", url: "/dashboard", icon: Home },
+      { title: t('sidebar.dashboard'), url: "/dashboard", icon: Home },
     ]
 
     if (hasRole("sender")) {
       items.push(
-        { title: "Mes colis", url: "/my-shipments", icon: Package2 },
-        { title: "Nouveau colis", url: "/sender/create-shipment", icon: Plus },
-        { title: "Rechercher trajets", url: "/search-trips", icon: Search },
+        { title: t('sidebar.myShipments'), url: "/my-shipments", icon: Package2 },
+        { title: t('sidebar.newShipment'), url: "/sender/create-shipment", icon: Plus },
+        { title: t('sidebar.searchTrips'), url: "/search-trips", icon: Search },
       )
     }
 
     if (hasRole("traveler")) {
       items.push(
-        { title: "Mes trajets", url: "/my-trips", icon: Truck },
-        { title: "Nouveau trajet", url: "/traveler/create-trip", icon: Plus },
-        { title: "Rechercher colis", url: "/search-shipments", icon: Search },
+        { title: t('sidebar.myTrips'), url: "/my-trips", icon: Truck },
+        { title: t('sidebar.newTrip'), url: "/traveler/create-trip", icon: Plus },
+        { title: t('sidebar.searchShipments'), url: "/search-shipments", icon: Search },
       )
     }
 
     items.push(
-      { title: "Réservations", url: "/reservations", icon: Sparkles },
-      { title: "Suivi", url: "/tracking", icon: MapPin },
-      { title: "Messages", url: "/messages", icon: MessageCircle },
-      { title: "Notifications", url: "/notifications", icon: Bell },
-      { title: "Avis", url: "/reviews", icon: Star },
-      { title: "Litiges", url: "/disputes", icon: AlertCircle },
-      { title: "Support", url: "/support", icon: HelpCircle },
+      { title: t('sidebar.reservations'), url: "/reservations", icon: Sparkles },
+      { title: t('sidebar.tracking'), url: "/tracking", icon: MapPin },
+      { title: t('sidebar.messages'), url: "/messages", icon: MessageCircle },
+      { title: t('sidebar.notifications'), url: "/notifications", icon: Bell },
+      { title: t('sidebar.reviews'), url: "/reviews", icon: Star },
+      { title: t('sidebar.disputes'), url: "/disputes", icon: AlertCircle },
+      { title: t('sidebar.support'), url: "/support", icon: HelpCircle },
     )
 
     if (hasRole("traveler")) {
-      items.push({ title: "Preuve livraison", url: "/proof-of-delivery", icon: Camera })
+      items.push({ title: t('sidebar.proofOfDelivery'), url: "/proof-of-delivery", icon: Camera })
     }
 
-    items.push({ title: "Profil", url: "/profile", icon: User })
+    items.push({ title: t('sidebar.profile'), url: "/profile", icon: User })
 
     if (hasRole("admin")) {
       items.push(
-        { title: "Administration", url: "/admin", icon: Shield },
-        { title: "KYC Admin", url: "/admin/kyc", icon: Shield }
+        { title: t('sidebar.administration'), url: "/admin", icon: Shield },
+        { title: t('sidebar.kycAdmin'), url: "/admin/kyc", icon: Shield }
       )
     }
 
@@ -100,7 +102,7 @@ export function AppSidebar() {
               <h2 className="text-lg font-bold text-foreground">
                 GP Connect
               </h2>
-              <p className="text-xs text-muted-foreground">Livraison collaborative</p>
+              <p className="text-xs text-muted-foreground">{t('sidebar.collaborativeDelivery')}</p>
             </div>
           )}
         </div>
@@ -179,7 +181,7 @@ export function AppSidebar() {
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Déconnexion
+            {t('sidebar.logout')}
           </Button>
         )}
       </SidebarFooter>
