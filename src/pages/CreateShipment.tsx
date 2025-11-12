@@ -74,29 +74,30 @@ export default function CreateShipment() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-8">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Retour au tableau de bord
-        </Link>
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-          <Package className="h-8 w-8 text-primary" />
-          Créer un colis
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Remplissez les informations de votre colis pour trouver un transporteur
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-2xl">
+        <div className="mb-6 sm:mb-8">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-3 sm:mb-4 text-sm sm:text-base">
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Link>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            Créer un colis
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            Remplissez les informations de votre colis pour trouver un transporteur
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Package Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations du colis</CardTitle>
-            <CardDescription>Décrivez votre colis et ses caractéristiques</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
+          {/* Package Information */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Informations du colis</CardTitle>
+              <CardDescription className="text-sm">Décrivez votre colis et ses caractéristiques</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="space-y-2">
               <Label htmlFor="title">Titre du colis</Label>
               <Input
@@ -115,9 +116,9 @@ export default function CreateShipment() {
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="weight">Poids (kg)</Label>
+                <Label htmlFor="weight" className="text-sm">Poids (kg)</Label>
                 <Input
                   id="weight"
                   name="weight"
@@ -129,7 +130,7 @@ export default function CreateShipment() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="volume">Volume (m³) - optionnel</Label>
+                <Label htmlFor="volume" className="text-sm">Volume (m³) - optionnel</Label>
                 <Input
                   id="volume"
                   name="volume"
@@ -153,16 +154,16 @@ export default function CreateShipment() {
           </CardContent>
         </Card>
 
-        {/* Pickup Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Lieu de récupération
-            </CardTitle>
-            <CardDescription>Où le transporteur doit-il récupérer le colis ?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          {/* Pickup Information */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <MapPin className="h-5 w-5 text-primary" />
+                Lieu de récupération
+              </CardTitle>
+              <CardDescription className="text-sm">Où le transporteur doit-il récupérer le colis ?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="space-y-2">
               <Label htmlFor="pickupAddress">Adresse complète</Label>
               <Input
@@ -172,9 +173,9 @@ export default function CreateShipment() {
                 placeholder="123 Rue de la Paix"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="pickupCity">Ville</Label>
+                <Label htmlFor="pickupCity" className="text-sm">Ville</Label>
                 <Input
                   id="pickupCity"
                   name="pickupCity"
@@ -183,7 +184,7 @@ export default function CreateShipment() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pickupCountry">Pays</Label>
+                <Label htmlFor="pickupCountry" className="text-sm">Pays</Label>
                 <Input
                   id="pickupCountry"
                   name="pickupCountry"
@@ -192,9 +193,9 @@ export default function CreateShipment() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="pickupContactName">Nom du contact</Label>
+                <Label htmlFor="pickupContactName" className="text-sm">Nom du contact</Label>
                 <Input
                   id="pickupContactName"
                   name="pickupContactName"
@@ -203,7 +204,7 @@ export default function CreateShipment() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pickupContactPhone">Téléphone du contact</Label>
+                <Label htmlFor="pickupContactPhone" className="text-sm">Téléphone du contact</Label>
                 <Input
                   id="pickupContactPhone"
                   name="pickupContactPhone"
@@ -215,16 +216,16 @@ export default function CreateShipment() {
           </CardContent>
         </Card>
 
-        {/* Delivery Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-success" />
-              Lieu de livraison
-            </CardTitle>
-            <CardDescription>Où le colis doit-il être livré ?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          {/* Delivery Information */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <MapPin className="h-5 w-5 text-success" />
+                Lieu de livraison
+              </CardTitle>
+              <CardDescription className="text-sm">Où le colis doit-il être livré ?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="space-y-2">
               <Label htmlFor="deliveryAddress">Adresse complète</Label>
               <Input
@@ -308,15 +309,16 @@ export default function CreateShipment() {
           </CardContent>
         </Card>
 
-        <div className="flex gap-4">
-          <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1">
-            Annuler
-          </Button>
-          <Button type="submit" disabled={isLoading} className="flex-1">
-            {isLoading ? "Création..." : "Créer le colis"}
-          </Button>
-        </div>
-      </form>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-16 sm:bottom-0 bg-background/95 backdrop-blur-sm p-4 sm:p-0 -mx-3 sm:mx-0 border-t sm:border-t-0 border-border/50">
+            <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1 h-11 sm:h-10">
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isLoading} className="flex-1 h-11 sm:h-10">
+              {isLoading ? "Création..." : "Créer le colis"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

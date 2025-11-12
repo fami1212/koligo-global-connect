@@ -241,23 +241,26 @@ export default function MyTrips() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Mes Trajets</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Mes Trajets</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez vos offres de transport
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link to="/dashboard">Tableau de bord</Link>
+          <div className="flex gap-2 self-end sm:self-auto">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard">
+                <span className="hidden sm:inline">Tableau de bord</span>
+                <span className="sm:hidden">Retour</span>
+              </Link>
             </Button>
-            <Button asChild>
+            <Button asChild size="sm">
               <Link to="/traveler/create-trip">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau trajet
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nouveau trajet</span>
               </Link>
             </Button>
           </div>
@@ -285,7 +288,7 @@ export default function MyTrips() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {trips.map((trip) => {
               const status = getTripStatus(trip);
               const isExpired = status === 'expired';
@@ -293,35 +296,36 @@ export default function MyTrips() {
               return (
                 <Card key={trip.id} className="hover:shadow-lg transition-shadow relative">
                   {isExpired && (
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 z-10">
                       <Badge variant="destructive" className="text-xs">
                         Réservations fermées
                       </Badge>
                     </div>
                   )}
                   
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
+                  <CardHeader className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between gap-2">
                       <div>
-                        <CardTitle className="text-lg flex items-center gap-2">
+                        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                           <span>{getTransportIcon(trip.transport_type)}</span>
-                          {trip.departure_city} → {trip.arrival_city}
+                          <span className="truncate">{trip.departure_city} → {trip.arrival_city}</span>
                         </CardTitle>
-                        <CardDescription className="mt-1">
+                        <CardDescription className="mt-1 text-xs sm:text-sm">
                           {getTransportText(trip.transport_type)}
                         </CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <Switch
                           checked={trip.is_active && !isExpired}
                           onCheckedChange={(checked) => !isExpired && toggleTripStatus(trip.id, checked)}
                           disabled={isExpired}
+                          className="scale-75 sm:scale-100"
                         />
                         {getStatusBadge(trip)}
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-4 sm:p-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-primary" />
