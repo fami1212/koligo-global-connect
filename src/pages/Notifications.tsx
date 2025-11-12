@@ -133,50 +133,58 @@ export default function Notifications() {
 
   const NotificationCard = ({ notification }: { notification: Notification }) => (
     <Card className={`${notification.read ? 'opacity-60' : 'border-primary/50'} hover:shadow-md transition-shadow`}>
-      <CardContent className="p-4">
-        <div className="flex gap-3">
-          <div className="text-2xl">{getNotificationIcon(notification.type)}</div>
-          <div className="flex-1 space-y-2">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex gap-2 sm:gap-3">
+          <div className="text-xl sm:text-2xl flex-shrink-0">{getNotificationIcon(notification.type)}</div>
+          <div className="flex-1 space-y-2 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <h4 className="font-semibold">{notification.title}</h4>
-                <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-semibold text-sm sm:text-base truncate">{notification.title}</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
               </div>
               {!notification.read && (
-                <Badge variant="default" className="shrink-0">Nouveau</Badge>
+                <Badge variant="default" className="shrink-0 text-xs">Nouveau</Badge>
               )}
             </div>
             
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">
-                {new Date(notification.created_at).toLocaleString('fr-FR')}
+              <span className="text-xs text-muted-foreground truncate">
+                {new Date(notification.created_at).toLocaleString('fr-FR', { 
+                  day: '2-digit', 
+                  month: 'short', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
               </span>
               
-              <div className="flex gap-2">
+              <div className="flex gap-1 flex-shrink-0">
                 {notification.link && (
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => navigate(notification.link!)}
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 {!notification.read && (
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => markAsRead(notification.id)}
                   >
-                    <Check className="h-4 w-4" />
+                    <Check className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-8 w-8 p-0"
                   onClick={() => deleteNotification(notification.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -199,25 +207,28 @@ export default function Notifications() {
   const unreadNotifications = notifications.filter(n => !n.read);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Bell className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              <Bell className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               Notifications
               {unreadNotifications.length > 0 && (
-                <Badge variant="destructive" className="ml-2">
+                <Badge variant="destructive" className="ml-2 text-xs">
                   {unreadNotifications.length}
                 </Badge>
               )}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Restez informé de toutes vos activités
             </p>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/dashboard">Retour</Link>
+          <Button asChild variant="outline" size="sm" className="self-end sm:self-auto">
+            <Link to="/dashboard">
+              <span className="hidden sm:inline">Retour</span>
+              <span className="sm:inline md:hidden">Retour</span>
+            </Link>
           </Button>
         </div>
 
@@ -231,11 +242,11 @@ export default function Notifications() {
         )}
 
         <Tabs defaultValue="unread" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="unread">
+          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
+            <TabsTrigger value="unread" className="text-xs sm:text-sm">
               Non lues ({unreadNotifications.length})
             </TabsTrigger>
-            <TabsTrigger value="all">
+            <TabsTrigger value="all" className="text-xs sm:text-sm">
               Toutes ({notifications.length})
             </TabsTrigger>
           </TabsList>

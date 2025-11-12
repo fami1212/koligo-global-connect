@@ -187,34 +187,35 @@ export default function SearchShipments() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Rechercher des colis
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Trouvez des colis à transporter sur votre trajet
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" size="sm" className="self-end sm:self-auto">
             <Link to="/dashboard">
-              Retour au tableau de bord
+              <span className="hidden sm:inline">Retour au tableau de bord</span>
+              <span className="sm:hidden">Retour</span>
             </Link>
           </Button>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Package className="h-5 w-5 text-primary" />
               Filtres de recherche
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="pickup">Ville de collecte</Label>
                 <Input
@@ -255,7 +256,7 @@ export default function SearchShipments() {
               </div>
             </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={() => { setCurrentPage(1); loadShipments(); }} disabled={loading}>
+              <Button onClick={() => { setCurrentPage(1); loadShipments(); }} disabled={loading} className="w-full sm:w-auto">
                 {loading ? 'Recherche...' : 'Rechercher'}
               </Button>
             </div>
@@ -280,8 +281,8 @@ export default function SearchShipments() {
           ) : (
             shipments.map((shipment) => (
               <Card key={shipment.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                     {/* Route */}
                     <div className="lg:col-span-2">
                       <div className="flex items-center gap-4 mb-4">
