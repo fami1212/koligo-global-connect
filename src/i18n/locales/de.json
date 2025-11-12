@@ -271,5 +271,41 @@
     "quickActions": "Schnellaktionen",
     "more": "Mehr",
     "logout": "Abmelden"
+  },
+  "hero": {
+    "badge": "Kollaborative Lieferplattform",
+    "title": "Kollaborative Lieferung",
+    "subtitle": "weltweit",
+    "description": "Verbinden Sie sich mit Reisenden aus der ganzen Welt, um Ihre Pakete sicher zu versenden und sparen Sie bis zu 70% bei traditionellen Liefergebühren.",
+    "sendPackage": "Paket senden",
+    "becomeCarrier": "Fahrer werden",
+    "packagesDelivered": "Zugestellte Pakete",
+    "countriesCovered": "Abgedeckte Länder",
+    "averageRating": "Durchschnittsbewertung",
+    "realTimeTracking": "Echtzeit-Verfolgung",
+    "fastDelivery": "Schnelle Lieferung"
+  },
+  "howItWorks": {
+    "title": "Wie funktioniert",
+    "titleBrand": "KoliGo",
+    "subtitle": "Eine einfache und sichere Plattform, die Absender und Reisende weltweit verbindet",
+    "forSenders": "Für Absender",
+    "forTravelers": "Für Reisende",
+    "step1Sender": "Beschreiben Sie Ihr Paket",
+    "step1SenderDesc": "Fügen Sie Details zu Ihrer Sendung hinzu: Abmessungen, Gewicht, Ziel",
+    "step2Sender": "Finden Sie einen Fahrer",
+    "step2SenderDesc": "Unser Algorithmus verbindet Sie mit Reisenden auf Ihrer Route",
+    "step3Sender": "Sicher bezahlen",
+    "step3SenderDesc": "Sichere Zahlung mit unserem Treuhandsystem",
+    "step4Sender": "In Echtzeit verfolgen",
+    "step4SenderDesc": "GPS-Tracking und Benachrichtigungen in jeder Lieferphase",
+    "step1Traveler": "Veröffentlichen Sie Ihre Reise",
+    "step1TravelerDesc": "Geben Sie Ihre Reisedaten und verfügbaren Platz an",
+    "step2Traveler": "Pakete akzeptieren",
+    "step2TravelerDesc": "Wählen Sie Anfragen, die zu Ihrer Route passen",
+    "step3Traveler": "Sicherer Transport",
+    "step3TravelerDesc": "Alle Pakete sind versichert und verifiziert",
+    "step4Traveler": "Zahlung erhalten",
+    "step4TravelerDesc": "Automatische Zahlung bei bestätigter Lieferung"
   }
 }
