@@ -178,41 +178,44 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Mon Profil</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Mon Profil</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez vos informations personnelles
             </p>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/dashboard">Retour au tableau de bord</Link>
+          <Button asChild variant="outline" size="sm" className="self-end sm:self-auto">
+            <Link to="/dashboard">
+              <span className="hidden sm:inline">Retour au tableau de bord</span>
+              <span className="sm:hidden">Retour</span>
+            </Link>
           </Button>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Profil</TabsTrigger>
-            <TabsTrigger value="reviews">Avis ({reviews.length})</TabsTrigger>
-            <TabsTrigger value="kyc">Vérification</TabsTrigger>
+        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 h-10 sm:h-11">
+            <TabsTrigger value="profile" className="text-xs sm:text-sm">Profil</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-xs sm:text-sm">Avis ({reviews.length})</TabsTrigger>
+            <TabsTrigger value="kyc" className="text-xs sm:text-sm">Vérification</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
+          <TabsContent value="profile" className="space-y-4 sm:space-y-6">
             {/* Profile Header */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col md:flex-row items-center gap-6">
+              <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6 pb-4 sm:pb-6">
+                <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
                   <div className="relative">
-                    <Avatar className="w-24 h-24">
+                    <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                       <AvatarImage src={profileData.avatar_url} />
-                      <AvatarFallback className="text-lg">
+                      <AvatarFallback className="text-base sm:text-lg">
                         {profileData.first_name?.[0]}{profileData.last_name?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <label className="absolute bottom-0 right-0 p-1 bg-primary rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
-                      <Camera className="h-4 w-4 text-primary-foreground" />
+                      <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
                       <input
                         type="file"
                         accept="image/*"
@@ -223,25 +226,25 @@ export default function Profile() {
                     </label>
                   </div>
                   
-                  <div className="text-center md:text-left">
-                    <h2 className="text-2xl font-bold">
+                  <div className="text-center md:text-left w-full">
+                    <h2 className="text-xl sm:text-2xl font-bold truncate">
                       {profileData.first_name} {profileData.last_name}
                     </h2>
-                    <p className="text-muted-foreground">{profileData.email}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <Badge variant="outline" className="gap-1">
+                    <p className="text-sm sm:text-base text-muted-foreground truncate">{profileData.email}</p>
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2">
+                      <Badge variant="outline" className="gap-1 text-xs">
                         <Star className="h-3 w-3" />
                         {profileData.rating.toFixed(1)} ({profileData.total_reviews} avis)
                       </Badge>
                       {profileData.is_verified && (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary" className="gap-1 text-xs">
                           ✓ Vérifié
                         </Badge>
                       )}
                       {profileData.city && (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary" className="gap-1 text-xs">
                           <MapPin className="h-3 w-3" />
-                          {profileData.city}, {profileData.country}
+                          <span className="truncate max-w-[150px]">{profileData.city}, {profileData.country}</span>
                         </Badge>
                       )}
                     </div>
@@ -252,14 +255,14 @@ export default function Profile() {
 
             {/* Profile Form */}
             <Card>
-              <CardHeader>
-                <CardTitle>Informations personnelles</CardTitle>
-                <CardDescription>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Informations personnelles</CardTitle>
+                <CardDescription className="text-sm">
                   Mettez à jour vos informations de profil
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="first_name">Prénom</Label>
                     <Input
@@ -298,9 +301,9 @@ export default function Profile() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="country">Pays</Label>
+                    <Label htmlFor="country" className="text-sm">Pays</Label>
                     <Input
                       id="country"
                       value={profileData.country || ''}
@@ -308,7 +311,7 @@ export default function Profile() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city">Ville</Label>
+                    <Label htmlFor="city" className="text-sm">Ville</Label>
                     <Input
                       id="city"
                       value={profileData.city || ''}
@@ -317,7 +320,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <Button onClick={updateProfile} disabled={saving} className="w-full">
+                <Button onClick={updateProfile} disabled={saving} className="w-full h-11 sm:h-10">
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? 'Sauvegarde...' : 'Sauvegarder'}
                 </Button>
@@ -325,43 +328,47 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="reviews" className="space-y-6">
+          <TabsContent value="reviews" className="space-y-4 sm:space-y-6">
             {reviews.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-8">
-                  <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">Aucun avis pour le moment</p>
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="text-center py-8 sm:py-12 px-4">
+                  <Star className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-sm sm:text-base text-muted-foreground">Aucun avis pour le moment</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                     Commencez à utiliser KoliGo pour recevoir vos premiers avis
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {reviews.map((review) => (
                   <Card key={review.id}>
-                    <CardContent className="pt-4">
+                    <CardContent className="pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
                       <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Avatar className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0">
                             <AvatarFallback className="text-xs">
                               {review.reviewer.first_name[0]}{review.reviewer.last_name[0]}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">
+                          <div className="min-w-0">
+                            <p className="font-medium text-xs sm:text-sm truncate">
                               {review.reviewer.first_name} {review.reviewer.last_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(review.created_at).toLocaleDateString('fr-FR')}
+                              {new Date(review.created_at).toLocaleDateString('fr-FR', { 
+                                day: '2-digit', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${
+                              className={`h-3.5 w-3.5 ${
                                 i < review.rating ? 'text-yellow-500 fill-current' : 'text-muted-foreground'
                               }`}
                             />
@@ -369,7 +376,7 @@ export default function Profile() {
                         </div>
                       </div>
                       {review.comment && (
-                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{review.comment}</p>
                       )}
                     </CardContent>
                   </Card>
@@ -378,7 +385,7 @@ export default function Profile() {
             )}
           </TabsContent>
 
-          <TabsContent value="kyc" className="space-y-6">
+          <TabsContent value="kyc" className="space-y-4 sm:space-y-6">
             <KYCUpload />
           </TabsContent>
         </Tabs>
