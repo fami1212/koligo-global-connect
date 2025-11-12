@@ -4,8 +4,10 @@ import heroImage from "@/assets/hero-image.jpg";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const ModernHeroSection = () => {
+  const { t } = useTranslation();
   const [deliveredPackages, setDeliveredPackages] = useState(0);
   const [countriesCovered, setCountriesCovered] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
@@ -65,20 +67,19 @@ const ModernHeroSection = () => {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary">
                 <Package className="h-4 w-4" />
-                Plateforme de livraison collaborative
+                {t('hero.badge')}
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  Livraison collaborative
+                  {t('hero.title')}
                 </span>
                 <br />
-                <span className="text-foreground">mondiale</span>
+                <span className="text-foreground">{t('hero.subtitle')}</span>
               </h1>
               
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                Connectez-vous avec des voyageurs du monde entier pour envoyer vos colis 
-                en toute sécurité et économiser jusqu'à 70% sur les frais de livraison traditionnels.
+                {t('hero.description')}
               </p>
             </div>
 
@@ -90,7 +91,7 @@ const ModernHeroSection = () => {
                 onClick={handleSendPackage}
               >
                 <Send className="h-5 w-5" />
-                Envoyer un colis
+                {t('hero.sendPackage')}
               </Button>
               <Button 
                 variant="secondary" 
@@ -99,7 +100,7 @@ const ModernHeroSection = () => {
                 onClick={handleBecomeTransporter}
               >
                 <Users className="h-5 w-5" />
-                Devenir transporteur
+                {t('hero.becomeCarrier')}
               </Button>
             </div>
 
@@ -109,20 +110,20 @@ const ModernHeroSection = () => {
                 <div className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform duration-300">
                   {deliveredPackages.toLocaleString()}+
                 </div>
-                <div className="text-sm text-muted-foreground font-medium">Colis livrés</div>
+                <div className="text-sm text-muted-foreground font-medium">{t('hero.packagesDelivered')}</div>
               </div>
               <div className="text-center group cursor-pointer">
                 <div className="text-3xl font-bold text-secondary group-hover:scale-110 transition-transform duration-300">
                   {countriesCovered}+
                 </div>
-                <div className="text-sm text-muted-foreground font-medium">Pays couverts</div>
+                <div className="text-sm text-muted-foreground font-medium">{t('hero.countriesCovered')}</div>
               </div>
               <div className="text-center group cursor-pointer">
                 <div className="flex items-center justify-center gap-1 text-3xl font-bold text-accent group-hover:scale-110 transition-transform duration-300">
                   <Star className="h-6 w-6 fill-current" />
                   {averageRating}
                 </div>
-                <div className="text-sm text-muted-foreground font-medium">Note moyenne</div>
+                <div className="text-sm text-muted-foreground font-medium">{t('hero.averageRating')}</div>
               </div>
             </div>
           </div>
@@ -141,11 +142,11 @@ const ModernHeroSection = () => {
             {/* Floating elements */}
             <div className="absolute -top-6 -right-6 bg-background/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl animate-float border border-border/20">
               <MapPin className="h-8 w-8 text-primary" />
-              <div className="text-xs font-medium mt-1">Suivi en temps réel</div>
+              <div className="text-xs font-medium mt-1">{t('hero.realTimeTracking')}</div>
             </div>
             <div className="absolute -bottom-6 -left-6 bg-background/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl animate-float border border-border/20" style={{ animationDelay: '2s' }}>
               <Clock className="h-8 w-8 text-accent" />
-              <div className="text-xs font-medium mt-1">Livraison rapide</div>
+              <div className="text-xs font-medium mt-1">{t('hero.fastDelivery')}</div>
             </div>
           </div>
         </div>
