@@ -1,52 +1,55 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Users, Shield, Truck, Smartphone, CreditCard, Send } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  
   const senderSteps = [
     {
       icon: <Package className="h-8 w-8" />,
-      title: "Décrivez votre colis",
-      description: "Ajoutez les détails de votre envoi : dimensions, poids, destination"
+      title: t('howItWorks.step1Sender'),
+      description: t('howItWorks.step1SenderDesc')
     },
     {
       icon: <Users className="h-8 w-8" />,
-      title: "Trouvez un transporteur",
-      description: "Notre algorithme vous met en relation avec des voyageurs sur votre trajet"
+      title: t('howItWorks.step2Sender'),
+      description: t('howItWorks.step2SenderDesc')
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
-      title: "Payez en sécurité",
-      description: "Paiement sécurisé avec notre système d'entiercement"
+      title: t('howItWorks.step3Sender'),
+      description: t('howItWorks.step3SenderDesc')
     },
     {
       icon: <Smartphone className="h-8 w-8" />,
-      title: "Suivez en temps réel",
-      description: "Tracking GPS et notifications à chaque étape de la livraison"
+      title: t('howItWorks.step4Sender'),
+      description: t('howItWorks.step4SenderDesc')
     }
   ];
 
   const travelerSteps = [
     {
       icon: <Truck className="h-8 w-8" />,
-      title: "Publiez votre trajet",
-      description: "Indiquez vos dates de voyage et l'espace disponible"
+      title: t('howItWorks.step1Traveler'),
+      description: t('howItWorks.step1TravelerDesc')
     },
     {
       icon: <Package className="h-8 w-8" />,
-      title: "Acceptez des colis",
-      description: "Choisissez les demandes qui correspondent à votre itinéraire"
+      title: t('howItWorks.step2Traveler'),
+      description: t('howItWorks.step2TravelerDesc')
     },
     {
       icon: <Shield className="h-8 w-8" />,
-      title: "Transport sécurisé",
-      description: "Tous les colis sont assurés et vérifiés"
+      title: t('howItWorks.step3Traveler'),
+      description: t('howItWorks.step3TravelerDesc')
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
-      title: "Recevez votre paiement",
-      description: "Paiement automatique à la livraison confirmée"
+      title: t('howItWorks.step4Traveler'),
+      description: t('howItWorks.step4TravelerDesc')
     }
   ];
 
@@ -55,11 +58,11 @@ const HowItWorks = () => {
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-6">
-            Comment fonctionne 
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> KoliGo</span>
+            {t('howItWorks.title')}{' '}
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{t('howItWorks.titleBrand')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Une plateforme simple et sécurisée qui connecte expéditeurs et voyageurs du monde entier
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 
@@ -69,7 +72,7 @@ const HowItWorks = () => {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-3 bg-primary/10 rounded-full px-6 py-3 mb-6">
                 <Send className="h-6 w-6 text-primary" />
-                <span className="font-semibold text-primary">Pour les expéditeurs</span>
+                <span className="font-semibold text-primary">{t('howItWorks.forSenders')}</span>
               </div>
             </div>
             
@@ -109,7 +112,7 @@ const HowItWorks = () => {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-3 bg-secondary/10 rounded-full px-6 py-3 mb-6">
                 <Users className="h-6 w-6 text-secondary" />
-                <span className="font-semibold text-secondary">Pour les voyageurs</span>
+                <span className="font-semibold text-secondary">{t('howItWorks.forTravelers')}</span>
               </div>
             </div>
             
