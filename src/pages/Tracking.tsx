@@ -246,21 +246,21 @@ export default function Tracking() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Suivi des livraisons</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Suivi des livraisons</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Suivez l'état de vos colis et trajets en temps réel
             </p>
           </div>
         </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Assignments List */}
-              <div className="xl:col-span-2 space-y-4">
+              <div className="lg:col-span-2 space-y-3 sm:space-y-4">
                 {isLoading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -283,7 +283,7 @@ export default function Tracking() {
                         }`}
                         onClick={() => setSelectedAssignment(assignment)}
                       >
-                        <CardContent className="p-4">
+                        <CardContent className="p-3 sm:p-4">
                           <div className="space-y-3">
                             <div className="flex items-start justify-between">
                               <div>
@@ -348,7 +348,7 @@ export default function Tracking() {
               </div>
 
               {/* Status & Messaging Panel */}
-              <div className="xl:col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
                 {selectedAssignment && (
                   <>
                     {user?.id === selectedAssignment.traveler_id && (

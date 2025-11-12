@@ -73,35 +73,36 @@ export default function CreateTrip() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-8">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Retour au tableau de bord
-        </Link>
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-          <Truck className="h-8 w-8 text-accent" />
-          Créer un trajet
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Publiez votre trajet pour transporter des colis et gagner de l'argent
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-2xl">
+        <div className="mb-6 sm:mb-8">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-3 sm:mb-4 text-sm sm:text-base">
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Link>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Truck className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
+            Créer un trajet
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            Publiez votre trajet pour transporter des colis et gagner de l'argent
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Route Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Itinéraire
-            </CardTitle>
-            <CardDescription>Définissez votre parcours de transport</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
+          {/* Route Information */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <MapPin className="h-5 w-5 text-primary" />
+                Itinéraire
+              </CardTitle>
+              <CardDescription className="text-sm">Définissez votre parcours de transport</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="departureCity">Ville de départ</Label>
+                <Label htmlFor="departureCity" className="text-sm">Ville de départ</Label>
                 <Input
                   id="departureCity"
                   name="departureCity"
@@ -301,15 +302,16 @@ export default function CreateTrip() {
           </CardContent>
         </Card>
 
-        <div className="flex gap-4">
-          <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1">
-            Annuler
-          </Button>
-          <Button type="submit" disabled={isLoading || !transportType} className="flex-1">
-            {isLoading ? "Publication..." : "Publier le trajet"}
-          </Button>
-        </div>
-      </form>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sticky bottom-16 sm:bottom-0 bg-background/95 backdrop-blur-sm p-4 sm:p-0 -mx-3 sm:mx-0 border-t sm:border-t-0 border-border/50">
+            <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1 h-11 sm:h-10">
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isLoading || !transportType} className="flex-1 h-11 sm:h-10">
+              {isLoading ? "Publication..." : "Publier le trajet"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
