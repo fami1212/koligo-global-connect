@@ -357,5 +357,42 @@
     "quickActions": "Quick Actions",
     "more": "More",
     "logout": "Logout"
+  },
+  "hero": {
+    "badge": "Collaborative delivery platform",
+    "title": "Collaborative delivery",
+    "subtitle": "worldwide",
+    "description": "Connect with travelers from around the world to send your packages safely and save up to 70% on traditional delivery fees.",
+    "sendPackage": "Send a package",
+    "becomeCarrier": "Become a carrier",
+    "packagesDelivered": "Packages delivered",
+    "countriesCovered": "Countries covered",
+    "averageRating": "Average rating",
+    "realTimeTracking": "Real-time tracking",
+    "fastDelivery": "Fast delivery"
+  },
+  "howItWorks": {
+    "title": "How does",
+    "titleBrand": "KoliGo",
+    "titleEnd": "work",
+    "subtitle": "A simple and secure platform connecting senders and travelers worldwide",
+    "forSenders": "For senders",
+    "forTravelers": "For travelers",
+    "step1Sender": "Describe your package",
+    "step1SenderDesc": "Add details of your shipment: dimensions, weight, destination",
+    "step2Sender": "Find a carrier",
+    "step2SenderDesc": "Our algorithm matches you with travelers on your route",
+    "step3Sender": "Pay securely",
+    "step3SenderDesc": "Secure payment with our escrow system",
+    "step4Sender": "Track in real-time",
+    "step4SenderDesc": "GPS tracking and notifications at every delivery stage",
+    "step1Traveler": "Publish your trip",
+    "step1TravelerDesc": "Indicate your travel dates and available space",
+    "step2Traveler": "Accept packages",
+    "step2TravelerDesc": "Choose requests that match your route",
+    "step3Traveler": "Secure transport",
+    "step3TravelerDesc": "All packages are insured and verified",
+    "step4Traveler": "Receive payment",
+    "step4TravelerDesc": "Automatic payment upon confirmed delivery"
   }
 }
