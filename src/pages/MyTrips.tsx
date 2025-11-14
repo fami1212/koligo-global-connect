@@ -8,6 +8,8 @@ import { Truck, Plus, Eye, Edit, MapPin, Calendar, Package, Trash2, Clock } from
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 
 interface Trip {
   id: string;
@@ -35,6 +37,10 @@ export default function MyTrips() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
+
+  const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
+    onRefresh: async () => await loadTrips(),
+  });
 
   useEffect(() => {
     if (!user) {
@@ -241,7 +247,13 @@ export default function MyTrips() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-auto">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        threshold={threshold}
+      />
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
           <div>

@@ -10,6 +10,9 @@ import { Bell, BellOff, Check, CheckCheck, Trash2, ExternalLink } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeMessages';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface Notification {
   id: string;
@@ -28,6 +31,16 @@ export default function Notifications() {
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'unread' | 'all'>('unread');
+
+  const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
+    onRefresh: async () => await loadNotifications(),
+  });
+
+  const swipeRef = useSwipeGesture({
+    onSwipeLeft: () => setActiveTab('all'),
+    onSwipeRight: () => setActiveTab('unread'),
+  });
 
   useEffect(() => {
     if (!user) {
@@ -207,7 +220,13 @@ export default function Notifications() {
   const unreadNotifications = notifications.filter(n => !n.read);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-auto">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        threshold={threshold}
+      />
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
@@ -241,8 +260,9 @@ export default function Notifications() {
           </div>
         )}
 
-        <Tabs defaultValue="unread" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'unread' | 'all')} className="space-y-4">
+          <div ref={swipeRef}>
+            <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
             <TabsTrigger value="unread" className="text-xs sm:text-sm">
               Non lues ({unreadNotifications.length})
             </TabsTrigger>
@@ -250,6 +270,7 @@ export default function Notifications() {
               Toutes ({notifications.length})
             </TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="unread" className="space-y-4">
             {unreadNotifications.length === 0 ? (
