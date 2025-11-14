@@ -63,7 +63,7 @@ export default function Auth() {
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
               <Package className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">KoliGo</h1>
+            <h1 className="text-2xl font-bold text-foreground">GP CONNECT</h1>
           </div>
           <p className="text-muted-foreground">
             {t('auth.welcomeBack')}

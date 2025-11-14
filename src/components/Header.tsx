@@ -14,7 +14,7 @@ const Header = () => {
             <Package className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            KoliGo
+            GP Connect
           </h1>
         </div>
 
