@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
+import { PageTransition } from "@/components/PageTransition";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -50,7 +51,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <ModernDashboard />
+                      <PageTransition>
+                        <ModernDashboard />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -60,7 +63,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Messages />
+                      <PageTransition>
+                        <Messages />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -70,7 +75,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Profile />
+                      <PageTransition>
+                        <Profile />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -80,7 +87,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <UltraModernTracking />
+                      <PageTransition>
+                        <UltraModernTracking />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -91,7 +100,9 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="sender">
                     <AppLayout>
-                      <CreateShipment />
+                      <PageTransition>
+                        <CreateShipment />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -101,7 +112,9 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="traveler">
                     <AppLayout>
-                      <CreateTrip />
+                      <PageTransition>
+                        <CreateTrip />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -111,7 +124,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <ModernAdmin />
+                      <PageTransition>
+                        <ModernAdmin />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -121,7 +136,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <SearchTrips />
+                      <PageTransition>
+                        <SearchTrips />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -131,7 +148,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <MyShipments />
+                      <PageTransition>
+                        <MyShipments />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -141,7 +160,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <MyTrips />
+                      <PageTransition>
+                        <MyTrips />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -151,7 +172,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Reservations />
+                      <PageTransition>
+                        <Reservations />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -161,7 +184,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Reviews />
+                      <PageTransition>
+                        <Reviews />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -171,7 +196,9 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="traveler">
                     <AppLayout>
-                      <ProofOfDelivery />
+                      <PageTransition>
+                        <ProofOfDelivery />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -181,7 +208,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Notifications />
+                      <PageTransition>
+                        <Notifications />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -191,7 +220,9 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AppLayout>
-                      <AdminKYC />
+                      <PageTransition>
+                        <AdminKYC />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -201,7 +232,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Disputes />
+                      <PageTransition>
+                        <Disputes />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -211,7 +244,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Support />
+                      <PageTransition>
+                        <Support />
+                      </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
                 }
