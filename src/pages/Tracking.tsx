@@ -29,6 +29,8 @@ import { StatusUpdater } from '@/components/StatusUpdater';
 import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 import { GeolocationTracker } from '@/components/GeolocationTracker';
 import { useRealtimeTracking } from '@/hooks/useRealtimeMessages';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 
 interface Assignment {
   id: string;
@@ -84,6 +86,10 @@ export default function Tracking() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
+    onRefresh: async () => await loadAssignments(),
+  });
 
   useEffect(() => {
     if (user) {
@@ -246,7 +252,13 @@ export default function Tracking() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-auto">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        threshold={threshold}
+      />
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         <div className="flex items-center justify-between">
           <div>

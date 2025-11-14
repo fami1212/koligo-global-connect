@@ -13,6 +13,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { KYCUpload } from '@/components/KYCUpload';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface ProfileData {
   id: string;
@@ -48,6 +49,18 @@ export default function Profile() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'reviews' | 'kyc'>('profile');
+
+  const swipeRef = useSwipeGesture({
+    onSwipeLeft: () => {
+      if (activeTab === 'profile') setActiveTab('reviews');
+      else if (activeTab === 'reviews') setActiveTab('kyc');
+    },
+    onSwipeRight: () => {
+      if (activeTab === 'kyc') setActiveTab('reviews');
+      else if (activeTab === 'reviews') setActiveTab('profile');
+    },
+  });
 
   useEffect(() => {
     if (!user) {
@@ -195,12 +208,14 @@ export default function Profile() {
           </Button>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-10 sm:h-11">
-            <TabsTrigger value="profile" className="text-xs sm:text-sm">Profil</TabsTrigger>
-            <TabsTrigger value="reviews" className="text-xs sm:text-sm">Avis ({reviews.length})</TabsTrigger>
-            <TabsTrigger value="kyc" className="text-xs sm:text-sm">Vérification</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'profile' | 'reviews' | 'kyc')} className="space-y-4 sm:space-y-6">
+          <div ref={swipeRef}>
+            <TabsList className="grid w-full grid-cols-3 h-10 sm:h-11">
+              <TabsTrigger value="profile" className="text-xs sm:text-sm">Profil</TabsTrigger>
+              <TabsTrigger value="reviews" className="text-xs sm:text-sm">Avis ({reviews.length})</TabsTrigger>
+              <TabsTrigger value="kyc" className="text-xs sm:text-sm">Vérification</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="profile" className="space-y-4 sm:space-y-6">
             {/* Profile Header */}
