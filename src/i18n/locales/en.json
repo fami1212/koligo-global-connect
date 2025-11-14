@@ -256,7 +256,7 @@
     "errorUpdating": "Error",
     "errorUpdatingDesc": "Unable to update profile",
     "noReviewsYet": "No reviews yet",
-    "startUsingKoliGo": "Start using KoliGo to receive your first reviews"
+    "startUsingKoliGo": "Start using GP CONNECT to receive your first reviews"
   },
   "notifications": {
     "title": "Notifications",
@@ -373,7 +373,7 @@
   },
   "howItWorks": {
     "title": "How does",
-    "titleBrand": "KoliGo",
+    "titleBrand": "GP CONNECT",
     "titleEnd": "work",
     "subtitle": "A simple and secure platform connecting senders and travelers worldwide",
     "forSenders": "For senders",

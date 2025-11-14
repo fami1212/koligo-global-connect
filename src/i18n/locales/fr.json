@@ -1,4 +1,41 @@
 {
+  "howItWorks": {
+    "title": "Comment fonctionne",
+    "titleBrand": "GP CONNECT",
+    "titleEnd": "",
+    "subtitle": "Une plateforme simple et sécurisée qui connecte expéditeurs et voyageurs à travers le monde",
+    "forSenders": "Pour les expéditeurs",
+    "forTravelers": "Pour les voyageurs",
+    "step1Sender": "Décrivez votre colis",
+    "step1SenderDesc": "Ajoutez les détails de votre envoi : dimensions, poids, destination",
+    "step2Sender": "Trouvez un transporteur",
+    "step2SenderDesc": "Notre algorithme vous met en relation avec des voyageurs sur votre trajet",
+    "step3Sender": "Payez en toute sécurité",
+    "step3SenderDesc": "Paiement sécurisé avec notre système d'escrow",
+    "step4Sender": "Suivez en temps réel",
+    "step4SenderDesc": "Suivi GPS et notifications à chaque étape de la livraison",
+    "step1Traveler": "Publiez votre trajet",
+    "step1TravelerDesc": "Indiquez vos dates de voyage et l'espace disponible",
+    "step2Traveler": "Acceptez des colis",
+    "step2TravelerDesc": "Choisissez les demandes qui correspondent à votre itinéraire",
+    "step3Traveler": "Transport sécurisé",
+    "step3TravelerDesc": "Tous les colis sont assurés et vérifiés",
+    "step4Traveler": "Recevez le paiement",
+    "step4TravelerDesc": "Paiement automatique lors de la livraison confirmée"
+},
+  "hero": {
+    "badge": "Plateforme de livraison collaborative",
+    "title": "Livraison collaborative",
+    "subtitle": "à l'échelle mondiale",
+    "description": "Connectez-vous avec des voyageurs du monde entier pour envoyer vos colis en toute sécurité et économiser jusqu'à 70% sur les frais de livraison traditionnels.",
+    "sendPackage": "Envoyer un colis",
+    "becomeCarrier": "Devenir transporteur",
+    "packagesDelivered": "Colis livrés",
+    "countriesCovered": "Pays couverts",
+    "averageRating": "Note moyenne",
+    "realTimeTracking": "Suivi en temps réel",
+    "fastDelivery": "Livraison rapide"
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
@@ -256,7 +293,7 @@
     "errorUpdating": "Erreur",
     "errorUpdatingDesc": "Impossible de mettre à jour le profil",
     "noReviewsYet": "Aucun avis pour le moment",
-    "startUsingKoliGo": "Commencez à utiliser KoliGo pour recevoir vos premiers avis"
+    "startUsingKoliGo": "Commencez à utiliser GP CONNECT pour recevoir vos premiers avis"
   },
   "notifications": {
     "title": "Notifications",

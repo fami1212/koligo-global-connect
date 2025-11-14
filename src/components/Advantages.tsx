@@ -102,7 +102,7 @@ const Advantages = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-6">
             Pourquoi choisir 
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"> KoliGo</span>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"> GP CONNECT</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Une solution révolutionnaire qui transforme la façon d'envoyer des colis dans le monde
