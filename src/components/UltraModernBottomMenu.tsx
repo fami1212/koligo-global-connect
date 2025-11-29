@@ -20,9 +20,10 @@ import {
   Shield,
   Settings,
   LogOut,
-  Menu,
   ChevronUp,
-  Star
+  Star,
+  AlertCircle,
+  HelpCircle
 } from "lucide-react"
 
 interface NavItem {
@@ -64,6 +65,9 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
       { title: "Réservations", url: "/reservations", icon: Sparkles },
       { title: "Suivi", url: "/tracking", icon: MapPin },
       { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
+      { title: "Avis", url: "/reviews", icon: Star },
+      { title: "Litiges", url: "/disputes", icon: AlertCircle },
+      { title: "Support", url: "/support", icon: HelpCircle },
       { title: "Profil", url: "/profile", icon: User },
     )
 

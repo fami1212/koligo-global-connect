@@ -1,21 +1,15 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { InstantMessaging } from '@/components/InstantMessaging';
-import { StatusTracker } from '@/components/StatusTracker';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   MapPin, 
-  Clock, 
   Package, 
   Truck, 
-  Phone, 
   MessageCircle,
   CheckCircle,
-  AlertCircle,
-  Navigation,
   User
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +20,6 @@ import { StatusSynchronizer } from '@/components/StatusSynchronizer';
 import { ProblemReporter } from '@/components/ProblemReporter';
 import { CallButtons } from '@/components/CallButtons';
 import { StatusUpdater } from '@/components/StatusUpdater';
-import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 import { GeolocationTracker } from '@/components/GeolocationTracker';
 import { useRealtimeTracking } from '@/hooks/useRealtimeMessages';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -86,6 +79,7 @@ export default function Tracking() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showMessaging, setShowMessaging] = useState(false);
 
   const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
     onRefresh: async () => await loadAssignments(),
@@ -97,7 +91,6 @@ export default function Tracking() {
     }
   }, [user]);
 
-  // Real-time tracking updates
   useRealtimeTracking(
     selectedAssignment?.id || null,
     (newEvent) => {
@@ -142,7 +135,6 @@ export default function Tracking() {
 
       if (error) throw error;
 
-      // Get profiles for assignments
       const senderIds = [...new Set(assignmentsData?.map((a: any) => a.sender_id) || [])];
       const travelerIds = [...new Set(assignmentsData?.map((a: any) => a.traveler_id) || [])];
       const allUserIds = [...new Set([...senderIds, ...travelerIds])];
@@ -202,26 +194,12 @@ export default function Tracking() {
   const getStatusText = (assignment: Assignment) => {
     if (assignment.delivery_completed_at) return 'Livré';
     if (assignment.pickup_completed_at) return 'En transit';
-    if (assignment.payment_status === 'released') return 'Payé - En attente de collecte';
-    return 'En attente de paiement';
-  };
-
-  const getEventIcon = (eventType: string) => {
-    switch (eventType) {
-      case 'pickup':
-        return <Package className="h-4 w-4 text-primary" />;
-      case 'transit':
-        return <Truck className="h-4 w-4 text-secondary" />;
-      case 'delivery':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      default:
-        return <MapPin className="h-4 w-4 text-muted-foreground" />;
-    }
+    if (assignment.payment_status === 'released') return 'En attente';
+    return 'Paiement';
   };
 
   const openConversation = async (assignment: Assignment) => {
     try {
-      // Check if conversation exists
       const { data: existingConversation } = await supabase
         .from('conversations')
         .select('id')
@@ -231,7 +209,6 @@ export default function Tracking() {
       if (existingConversation) {
         setActiveConversationId(existingConversation.id);
       } else {
-        // Create new conversation
         const { data: newConversation } = await supabase
           .from('conversations')
           .insert({
@@ -246,149 +223,179 @@ export default function Tracking() {
           setActiveConversationId(newConversation.id);
         }
       }
+      setShowMessaging(true);
     } catch (error) {
       console.error('Error opening conversation:', error);
     }
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-auto">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden overflow-y-auto">
       <PullToRefreshIndicator
         isPulling={isPulling}
         isRefreshing={isRefreshing}
         pullDistance={pullDistance}
         threshold={threshold}
       />
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Suivi des livraisons</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Suivez l'état de vos colis et trajets en temps réel
-            </p>
-          </div>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-6">
+        <div>
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">Suivi des livraisons</h1>
+          <p className="text-xs sm:text-base text-muted-foreground mt-1">
+            Suivez l'état de vos colis en temps réel
+          </p>
         </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Assignments List */}
-              <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-                {isLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  </div>
-                ) : assignments.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-8 text-muted-foreground">
-                      <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Aucune livraison trouvée</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  assignments.map((assignment) => (
-                      <Card 
-                        key={assignment.id} 
-                        className={`cursor-pointer transition-colors ${
-                          selectedAssignment?.id === assignment.id
-                            ? 'border-primary bg-primary/5'
-                            : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => setSelectedAssignment(assignment)}
-                      >
-                        <CardContent className="p-3 sm:p-4">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="font-semibold text-base">
-                                  {assignment.shipment?.title}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="ml-2">
-                                {getStatusText(assignment)}
-                              </Badge>
-                            </div>
+        {/* Main Content */}
+        <div className="space-y-4">
+          {/* Assignments List */}
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            </div>
+          ) : assignments.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-8 text-muted-foreground">
+                <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                <p className="text-sm sm:text-base">Aucune livraison trouvée</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {assignments.map((assignment) => (
+                <Card 
+                  key={assignment.id} 
+                  className={`cursor-pointer transition-all ${
+                    selectedAssignment?.id === assignment.id
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                      : 'hover:bg-muted/50'
+                  }`}
+                  onClick={() => setSelectedAssignment(assignment)}
+                >
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-3">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-sm sm:text-base truncate">
+                            {assignment.shipment?.title}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                            {assignment.shipment?.pickup_city} → {assignment.shipment?.delivery_city}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="self-start text-xs whitespace-nowrap">
+                          {getStatusText(assignment)}
+                        </Badge>
+                      </div>
 
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">Progression</span>
-                                <span className="font-medium">{getStatusProgress(assignment)}%</span>
-                              </div>
-                              <Progress value={getStatusProgress(assignment)} className="h-1.5" />
-                            </div>
+                      {/* Progress */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground">Progression</span>
+                          <span className="font-medium">{getStatusProgress(assignment)}%</span>
+                        </div>
+                        <Progress value={getStatusProgress(assignment)} className="h-1.5" />
+                      </div>
 
-                            <Separator />
+                      <Separator />
 
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 text-sm">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">
-                                  {user?.id === assignment.sender_id ? 'Transporteur:' : 'Expéditeur:'}
-                                </span>
-                                <span>
-                                  {user?.id === assignment.sender_id 
-                                    ? assignment.traveler_profile.first_name
-                                    : assignment.sender_profile.first_name}
-                                </span>
-                              </div>
+                      {/* User Info & Actions */}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm">
+                          <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            {user?.id === assignment.sender_id ? 'Transporteur:' : 'Expéditeur:'}
+                          </span>
+                          <span className="truncate">
+                            {user?.id === assignment.sender_id 
+                              ? assignment.traveler_profile.first_name
+                              : assignment.sender_profile.first_name}
+                          </span>
+                        </div>
 
-                              <div className="flex flex-wrap gap-1 sm:gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <CallButtons assignment={assignment} currentUserId={user?.id} />
-                                </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => openConversation(assignment)}
-                                  className="flex-shrink-0 min-w-0"
-                                >
-                                  <MessageCircle className="h-4 w-4 sm:mr-1" />
-                                  <span className="hidden sm:inline">Message</span>
-                                </Button>
-                                <div className="flex-shrink-0">
-                                  <ProblemReporter assignmentId={assignment.id} />
-                                </div>
-                              </div>
-                            </div>
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex-shrink-0">
+                            <CallButtons assignment={assignment} currentUserId={user?.id} />
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-              </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openConversation(assignment);
+                            }}
+                            className="flex-shrink-0 text-xs h-8"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                            <span className="hidden xs:inline">Message</span>
+                          </Button>
+                          <div className="flex-shrink-0">
+                            <ProblemReporter assignmentId={assignment.id} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-              {/* Status & Messaging Panel */}
-              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
-                {selectedAssignment && (
-                  <>
-                    {user?.id === selectedAssignment.traveler_id && (
-                      <GeolocationTracker 
-                        assignmentId={selectedAssignment.id}
-                        enabled={true}
-                      />
-                    )}
-                    
-                    <StatusUpdater 
-                      assignment={selectedAssignment}
-                      userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
-                      onStatusUpdate={loadAssignments}
-                    />
-                    <StatusSynchronizer 
-                      assignment={selectedAssignment}
-                      userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
-                      onStatusUpdate={loadAssignments}
-                    />
-                  </>
-                )}
-                
+          {/* Selected Assignment Details */}
+          {selectedAssignment && (
+            <div className="space-y-4">
+              {user?.id === selectedAssignment.traveler_id && (
+                <GeolocationTracker 
+                  assignmentId={selectedAssignment.id}
+                  enabled={true}
+                />
+              )}
+              
+              <StatusUpdater 
+                assignment={selectedAssignment}
+                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                onStatusUpdate={loadAssignments}
+              />
+              
+              <StatusSynchronizer 
+                assignment={selectedAssignment}
+                userRole={user?.id === selectedAssignment.sender_id ? 'sender' : 'traveler'}
+                onStatusUpdate={loadAssignments}
+              />
+            </div>
+          )}
+
+          {/* Messaging - Collapsible on mobile */}
+          {showMessaging && (
+            <Card className="lg:hidden">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-sm">Messages</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setShowMessaging(false)}
+                  >
+                    Fermer
+                  </Button>
+                </div>
                 <InstantMessaging 
                   conversationId={activeConversationId || undefined}
-                  className="h-[400px]"
+                  className="h-[300px]"
                 />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Desktop Messaging Panel */}
+          <div className="hidden lg:block">
+            <InstantMessaging 
+              conversationId={activeConversationId || undefined}
+              className="h-[400px]"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

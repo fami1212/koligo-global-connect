@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Package, Truck, Clock, CheckCircle, XCircle, MessageCircle, Euro } from 'lucide-react';
 import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 
 interface MatchRequest {
   id: string;
@@ -59,6 +60,10 @@ export default function Reservations() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
+    onRefresh: async () => await loadRequests(),
+  });
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -75,7 +80,6 @@ export default function Reservations() {
         .from('match_requests')
         .select('*');
 
-      // Filter based on user role
       if (hasRole('traveler')) {
         query = query.eq('traveler_id', user?.id);
       } else {
@@ -86,7 +90,6 @@ export default function Reservations() {
 
       if (error) throw error;
 
-      // Get related data
       const shipmentIds = [...new Set(requestsData?.map(r => r.shipment_id) || [])];
       const tripIds = [...new Set(requestsData?.map(r => r.trip_id) || [])];
       const senderIds = [...new Set(requestsData?.map(r => r.sender_id) || [])];
@@ -142,7 +145,6 @@ export default function Reservations() {
 
       if (error) throw error;
 
-      // If accepted, create assignment
       if (status === 'accepted') {
         const request = requests.find(r => r.id === requestId);
         if (request) {
@@ -195,7 +197,6 @@ export default function Reservations() {
 
   const openConversation = async (request: MatchRequest) => {
     try {
-      // Check if assignment exists for this request
       const { data: assignmentData } = await supabase
         .from('assignments')
         .select('id')
@@ -204,7 +205,6 @@ export default function Reservations() {
 
       const assignmentId = assignmentData?.id || null;
 
-      // Check if a conversation already exists between these users
       const { data, error } = await supabase
         .from('conversations')
         .select('id')
@@ -219,7 +219,6 @@ export default function Reservations() {
       let conversationId = data?.id;
 
       if (!conversationId) {
-        // Create new conversation
         const { data: created, error: createError } = await supabase
           .from('conversations')
           .insert({
@@ -252,72 +251,75 @@ export default function Reservations() {
 
     return (
       <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <CardHeader className="p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               {isTraveler ? (
-                <Package className="h-5 w-5 text-primary" />
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
               ) : (
-                <Truck className="h-5 w-5 text-accent" />
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0" />
               )}
-              {isTraveler ? request.shipment?.title : `${request.trip?.departure_city} → ${request.trip?.arrival_city}`}
+              <span className="truncate">
+                {isTraveler ? request.shipment?.title : `${request.trip?.departure_city} → ${request.trip?.arrival_city}`}
+              </span>
             </CardTitle>
             {getStatusBadge(request.status)}
           </div>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Par {otherUser?.first_name} {otherUser?.last_name} (★ {otherUser?.rating?.toFixed(1) || '0.0'})
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <div>
-              <h4 className="font-medium mb-2">Détails du colis</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-medium mb-1 text-sm sm:text-base">Détails du colis</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {request.shipment?.pickup_city} → {request.shipment?.delivery_city}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Poids: {request.shipment?.weight_kg}kg
               </p>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Détails du trajet</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-medium mb-1 text-sm sm:text-base">Détails du trajet</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {request.trip?.departure_date ? new Date(request.trip.departure_date).toLocaleDateString('fr-FR') : 'N/A'}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Transport: {request.trip?.transport_type || 'N/A'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Euro className="h-4 w-4 text-success" />
-            <span className="font-medium">
+            <Euro className="h-4 w-4 text-success flex-shrink-0" />
+            <span className="font-medium text-sm sm:text-base">
               Prix: {request.final_price || request.estimated_price}€
             </span>
           </div>
 
           {request.message && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm">{request.message}</p>
+            <div className="p-2 sm:p-3 bg-muted rounded-lg">
+              <p className="text-xs sm:text-sm">{request.message}</p>
             </div>
           )}
 
           {request.status === 'pending' && isTraveler && (
-            <div className="flex gap-2 pt-2">
-              <div className="flex-1 flex gap-2">
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   type="number"
                   placeholder="Prix final"
                   value={finalPrice}
                   onChange={(e) => setFinalPrice(parseFloat(e.target.value))}
-                  className="w-32"
+                  className="w-full sm:w-32"
                 />
                 <Button
                   onClick={() => updateRequestStatus(request.id, 'accepted', finalPrice)}
                   disabled={processingId === request.id}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
+                  size="sm"
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Accepter
@@ -327,6 +329,8 @@ export default function Reservations() {
                 variant="outline"
                 onClick={() => updateRequestStatus(request.id, 'rejected')}
                 disabled={processingId === request.id}
+                className="w-full"
+                size="sm"
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Refuser
@@ -334,9 +338,9 @@ export default function Reservations() {
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-2 text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 text-xs text-muted-foreground">
             <span>Créé le {new Date(request.created_at).toLocaleDateString('fr-FR')}</span>
-            <Button variant="ghost" size="sm" onClick={() => openConversation(request)}>
+            <Button variant="ghost" size="sm" onClick={() => openConversation(request)} className="w-full sm:w-auto">
               <MessageCircle className="h-3 w-3 mr-1" />
               Message
             </Button>
@@ -359,49 +363,62 @@ export default function Reservations() {
   const rejectedRequests = requests.filter(r => r.status === 'rejected');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        threshold={threshold}
+      />
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground">
               {hasRole('traveler') ? 'Demandes reçues' : 'Mes demandes'}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-base text-muted-foreground mt-1">
               {hasRole('traveler') 
                 ? 'Gérez les demandes de transport pour vos trajets' 
                 : 'Suivez l\'état de vos demandes de transport'
               }
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
             <Link to="/dashboard">Retour au tableau de bord</Link>
           </Button>
         </div>
 
-        <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="pending">
-              En attente ({pendingRequests.length})
+        <Tabs defaultValue="pending" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full h-auto flex flex-wrap gap-1 p-1">
+            <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">En attente</span>
+              <span className="sm:hidden">Attente</span>
+              <span className="ml-1">({pendingRequests.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="accepted">
-              Acceptées ({acceptedRequests.length})
+            <TabsTrigger value="accepted" className="flex-1 min-w-[80px] text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">Acceptées</span>
+              <span className="sm:hidden">Accept.</span>
+              <span className="ml-1">({acceptedRequests.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="rejected">
-              Refusées ({rejectedRequests.length})
+            <TabsTrigger value="rejected" className="flex-1 min-w-[80px] text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">Refusées</span>
+              <span className="sm:hidden">Refus.</span>
+              <span className="ml-1">({rejectedRequests.length})</span>
             </TabsTrigger>
             {hasRole('traveler') && (
-              <TabsTrigger value="deliveries">
-                Mes livraisons
+              <TabsTrigger value="deliveries" className="flex-1 min-w-[80px] text-xs sm:text-sm py-2">
+                <span className="hidden sm:inline">Mes livraisons</span>
+                <span className="sm:hidden">Livr.</span>
               </TabsTrigger>
             )}
           </TabsList>
 
-          <TabsContent value="pending" className="space-y-4">
+          <TabsContent value="pending" className="space-y-3 sm:space-y-4">
             {pendingRequests.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-8">
-                  <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">Aucune demande en attente</p>
+                <CardContent className="text-center py-6 sm:py-8">
+                  <Clock className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+                  <p className="text-sm sm:text-base text-muted-foreground">Aucune demande en attente</p>
                 </CardContent>
               </Card>
             ) : (
@@ -411,12 +428,12 @@ export default function Reservations() {
             )}
           </TabsContent>
 
-          <TabsContent value="accepted" className="space-y-4">
+          <TabsContent value="accepted" className="space-y-3 sm:space-y-4">
             {acceptedRequests.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
-                  <p className="text-muted-foreground">Aucune demande acceptée</p>
+                <CardContent className="text-center py-6 sm:py-8">
+                  <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-success" />
+                  <p className="text-sm sm:text-base text-muted-foreground">Aucune demande acceptée</p>
                 </CardContent>
               </Card>
             ) : (
@@ -426,12 +443,12 @@ export default function Reservations() {
             )}
           </TabsContent>
 
-          <TabsContent value="rejected" className="space-y-4">
+          <TabsContent value="rejected" className="space-y-3 sm:space-y-4">
             {rejectedRequests.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-8">
-                  <XCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
-                  <p className="text-muted-foreground">Aucune demande refusée</p>
+                <CardContent className="text-center py-6 sm:py-8">
+                  <XCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-destructive" />
+                  <p className="text-sm sm:text-base text-muted-foreground">Aucune demande refusée</p>
                 </CardContent>
               </Card>
             ) : (
@@ -442,7 +459,7 @@ export default function Reservations() {
           </TabsContent>
 
           {hasRole('traveler') && (
-            <TabsContent value="deliveries" className="space-y-4">
+            <TabsContent value="deliveries" className="space-y-3 sm:space-y-4">
               <DeliveryStatusTracker mode="update" />
             </TabsContent>
           )}
