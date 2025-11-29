@@ -19,7 +19,6 @@ import CreateTrip from "./pages/CreateTrip";
 import UltraModernTracking from "./pages/UltraModernTracking";
 import ModernAdmin from "./pages/ModernAdmin";
 import SearchTrips from "./pages/SearchTrips";
-import MyShipments from "./pages/MyShipments";
 import MyTrips from "./pages/MyTrips";
 import Reservations from "./pages/Reservations";
 import Reviews from "./pages/Reviews";
@@ -28,6 +27,7 @@ import Notifications from "./pages/Notifications";
 import AdminKYC from "./pages/AdminKYC";
 import Disputes from "./pages/Disputes";
 import Support from "./pages/Support";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -144,12 +144,12 @@ function App() {
                 }
               />
               <Route
-                path="/my-shipments"
+                path="/favorites"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
                       <PageTransition>
-                        <MyShipments />
+                        <Favorites />
                       </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>

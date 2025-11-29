@@ -9,7 +9,6 @@ import { NavLink } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import {
   Home,
-  Package2,
   Plus,
   Search,
   Truck,
@@ -23,7 +22,8 @@ import {
   ChevronUp,
   Star,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Heart
 } from "lucide-react"
 
 interface NavItem {
@@ -41,16 +41,8 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
   const getAllNavItems = (): NavItem[] => {
     const items: NavItem[] = [
       { title: "Tableau de bord", url: "/dashboard", icon: Home },
+      { title: "Rechercher", url: "/search-trips", icon: Search },
     ]
-
-    // Sender items
-    if (hasRole('sender')) {
-      items.push(
-        { title: "Mes colis", url: "/my-shipments", icon: Package2 },
-        { title: "Nouveau colis", url: "/sender/create-shipment", icon: Plus },
-        { title: "Rechercher trajets", url: "/search-trips", icon: Search },
-      )
-    }
 
     // Traveler items
     if (hasRole('traveler')) {
@@ -62,6 +54,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
 
     // Common items
     items.push(
+      { title: "Favoris", url: "/favorites", icon: Heart },
       { title: "Réservations", url: "/reservations", icon: Sparkles },
       { title: "Suivi", url: "/tracking", icon: MapPin },
       { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
