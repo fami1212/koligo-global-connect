@@ -22,15 +22,24 @@ Deno.serve(async (req) => {
       throw new Error('No user data provided')
     }
 
-    // Create profile
+    // Create profile with GP-specific fields if applicable
+    const profileData: Record<string, any> = {
+      user_id: user.id,
+      email: user.email,
+      first_name: metadata?.first_name || null,
+      last_name: metadata?.last_name || null,
+    }
+
+    // Add GP-specific fields if user is a traveler
+    if (metadata?.user_type === 'traveler') {
+      profileData.business_name = metadata?.business_name || null
+      profileData.id_type = metadata?.id_type || null
+      profileData.id_validity_date = metadata?.id_validity_date || null
+    }
+
     const { error: profileError } = await supabaseClient
       .from('profiles')
-      .insert({
-        user_id: user.id,
-        email: user.email,
-        first_name: metadata?.first_name || null,
-        last_name: metadata?.last_name || null,
-      })
+      .insert(profileData)
 
     if (profileError) {
       console.error('Profile creation error:', profileError)
