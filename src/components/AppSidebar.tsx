@@ -24,6 +24,7 @@ interface NavItem {
   url: string
   icon: React.ComponentType<any>
   badge?: number
+  showBadge?: boolean
 }
 
 export function AppSidebar() {
@@ -31,6 +32,47 @@ export function AppSidebar() {
   const { user, profile, hasRole, signOut } = useAuth()
   const { t } = useTranslation()
   const collapsed = state === "collapsed"
+  const [notificationCount, setNotificationCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+
+    loadNotificationCount()
+
+    const channel = supabase
+      .channel('notifications-sidebar')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadNotificationCount()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user])
+
+  const loadNotificationCount = async () => {
+    if (!user) return
+
+    try {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false)
+
+      setNotificationCount(count || 0)
+    } catch (error) {
+      console.error('Error loading notification count:', error)
+    }
+  }
 
   const getNavItems = (): NavItem[] => {
     const items: NavItem[] = [
@@ -57,7 +99,7 @@ export function AppSidebar() {
       { title: t('sidebar.reservations'), url: "/reservations", icon: Sparkles },
       { title: t('sidebar.tracking'), url: "/tracking", icon: MapPin },
       { title: t('sidebar.messages'), url: "/messages", icon: MessageCircle },
-      { title: t('sidebar.notifications'), url: "/notifications", icon: Bell },
+      { title: t('sidebar.notifications'), url: "/notifications", icon: Bell, showBadge: true },
       { title: t('sidebar.reviews'), url: "/reviews", icon: Star },
       { title: t('sidebar.disputes'), url: "/disputes", icon: AlertCircle },
       { title: t('sidebar.support'), url: "/support", icon: HelpCircle },
@@ -121,9 +163,16 @@ export function AppSidebar() {
                         <div className="flex items-center gap-3 w-full">
                           <item.icon className="h-5 w-5 shrink-0" />
                           {!collapsed && (
-                            <span className="text-sm font-medium">
-                              {item.title}
-                            </span>
+                            <>
+                              <span className="text-sm font-medium flex-1">
+                                {item.title}
+                              </span>
+                              {item.showBadge && notificationCount > 0 && (
+                                <Badge variant="destructive" className="h-5 px-2 text-xs">
+                                  {notificationCount > 9 ? '9+' : notificationCount}
+                                </Badge>
+                              )}
+                            </>
                           )}
                         </div>
                       )}

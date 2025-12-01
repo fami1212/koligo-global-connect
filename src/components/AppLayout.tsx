@@ -1,4 +1,4 @@
-import { SidebarProvider } from "@/components/ui/sidebar" // <-- adapte le chemin
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { UltraModernBottomMenu } from "@/components/UltraModernBottomMenu"
 import { useAuth } from "@/contexts/AuthContext"
@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useState, useEffect } from "react"
+import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -73,6 +74,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SidebarProvider>
+      <RealtimeNotificationsProvider />
       <div className="min-h-screen flex w-full bg-background">
         {/* Sidebar (Desktop only) */}
         <div className="hidden md:flex">

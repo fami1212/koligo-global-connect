@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { NavLink } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/integrations/supabase/client"
 import {
   Home,
   Plus,
@@ -23,7 +24,8 @@ import {
   Star,
   AlertCircle,
   HelpCircle,
-  Heart
+  Heart,
+  Bell
 } from "lucide-react"
 
 interface NavItem {
@@ -35,9 +37,49 @@ interface NavItem {
 }
 
 export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) {
-  const { user, profile, hasRole } = useAuth()
+  const { user, profile, hasRole, signOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
-  const { signOut } = useAuth();
+  const [notificationCount, setNotificationCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+
+    loadNotificationCount()
+
+    const channel = supabase
+      .channel('notifications-bottom-menu')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadNotificationCount()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user])
+
+  const loadNotificationCount = async () => {
+    if (!user) return
+
+    try {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false)
+
+      setNotificationCount(count || 0)
+    } catch (error) {
+      console.error('Error loading notification count:', error)
+    }
+  }
   const getAllNavItems = (): NavItem[] => {
     const items: NavItem[] = [
       { title: "Tableau de bord", url: "/dashboard", icon: Home },
@@ -58,6 +100,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
       { title: "Réservations", url: "/reservations", icon: Sparkles },
       { title: "Suivi", url: "/tracking", icon: MapPin },
       { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
+      { title: "Notifications", url: "/notifications", icon: Bell, badge: notificationCount },
       { title: "Avis", url: "/reviews", icon: Star },
       { title: "Litiges", url: "/disputes", icon: AlertCircle },
       { title: "Support", url: "/support", icon: HelpCircle },
