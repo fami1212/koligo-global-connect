@@ -52,7 +52,7 @@ export default function Auth() {
     const idValidityDate = formData.get('idValidityDate') as string;
     const idDocument = (e.currentTarget.querySelector('#idDocument') as HTMLInputElement)?.files?.[0];
     
-    await signUp(email, password, {
+    const { error } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
       user_type: userType,
@@ -61,32 +61,35 @@ export default function Auth() {
       id_validity_date: userType === 'traveler' ? idValidityDate : null,
     });
     
-    // Upload document si GP (après inscription)
-    if (userType === 'traveler' && idDocument && idType) {
-      setTimeout(async () => {
-        try {
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          if (currentUser) {
-            const fileExt = idDocument.name.split('.').pop();
-            const fileName = `${currentUser.id}/${idType}-${Date.now()}.${fileExt}`;
-            
-            const { error: uploadError } = await supabase.storage
-              .from('kyc-documents')
-              .upload(fileName, idDocument);
-            
-            if (!uploadError) {
-              await supabase.from('kyc_documents').insert({
-                user_id: currentUser.id,
-                document_type: idType,
-                document_url: fileName,
-                status: 'pending'
-              });
+    // Si inscription réussie sans erreur
+    if (!error) {
+      // Upload document si GP (après inscription)
+      if (userType === 'traveler' && idDocument && idType) {
+        setTimeout(async () => {
+          try {
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (currentUser) {
+              const fileExt = idDocument.name.split('.').pop();
+              const fileName = `${currentUser.id}/${idType}-${Date.now()}.${fileExt}`;
+              
+              const { error: uploadError } = await supabase.storage
+                .from('kyc-documents')
+                .upload(fileName, idDocument);
+              
+              if (!uploadError) {
+                await supabase.from('kyc_documents').insert({
+                  user_id: currentUser.id,
+                  document_type: idType,
+                  document_url: fileName,
+                  status: 'pending'
+                });
+              }
             }
+          } catch (err) {
+            console.error('Error uploading document:', err);
           }
-        } catch (err) {
-          console.error('Error uploading document:', err);
-        }
-      }, 1000);
+        }, 1000);
+      }
     }
     
     setIsLoading(false);
