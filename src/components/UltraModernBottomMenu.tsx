@@ -80,6 +80,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
       console.error('Error loading notification count:', error)
     }
   }
+
   const getAllNavItems = (): NavItem[] => {
     const items: NavItem[] = [
       { title: "Tableau de bord", url: "/dashboard", icon: Home },
@@ -162,95 +163,102 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0">
-              <div className="p-6 space-y-6">
+              <div className="flex flex-col h-full">
                 {/* Handle */}
-                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto -mt-3"></div>
-
-                {/* Header */}
-                <div className="text-center">
-                  <h3 className="text-xl font-bold">Menu complet</h3>
-                  <p className="text-muted-foreground">Accédez à toutes vos fonctionnalités</p>
+                <div className="pt-4 pb-2 flex justify-center">
+                  <div className="w-12 h-1 bg-muted-foreground/30 rounded-full"></div>
                 </div>
 
-                {/* User Profile */}
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl">
-                  <Avatar className="h-16 w-16 ring-2 ring-primary/20">
-                    <AvatarImage src={(profile as any)?.avatar_url} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground font-bold text-lg">
-                      {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-lg">
-                        {profile?.first_name || 'Utilisateur'}
-                      </h4>
-                      {(profile as any)?.is_verified && (
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200">
-                        <Star className="h-3 w-3 mr-1" />
-                        {profile?.rating?.toFixed(1) || '0.0'}
-                      </Badge>
-                    </div>
+                {/* Header - Fixed */}
+                <div className="px-6 pb-4 flex-shrink-0">
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold">Menu complet</h3>
+                    <p className="text-muted-foreground">Accédez à toutes vos fonctionnalités</p>
                   </div>
                 </div>
 
-                <Separator />
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                  {/* User Profile */}
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl mb-6">
+                    <Avatar className="h-16 w-16 ring-2 ring-primary/20">
+                      <AvatarImage src={(profile as any)?.avatar_url} />
+                      <AvatarFallback className="bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground font-bold text-lg">
+                        {profile?.first_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-lg">
+                          {profile?.first_name || 'Utilisateur'}
+                        </h4>
+                        {(profile as any)?.is_verified && (
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200">
+                          <Star className="h-3 w-3 mr-1" />
+                          {profile?.rating?.toFixed(1) || '0.0'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* Navigation Grid */}
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    {secondaryItems.map((item) => (
-                      <NavLink
-                        key={item.title}
-                        to={item.url}
+                  <Separator className="mb-6" />
+
+                  {/* Navigation Grid */}
+                  <div className="space-y-6 mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      {secondaryItems.map((item) => (
+                        <NavLink
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setIsOpen(false)}
+                          className="group flex items-center gap-3 p-3 rounded-xl hover:bg-muted/70 transition-all duration-200 border border-border/20 shadow-sm hover:shadow-md"
+                        >
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
+                            <item.icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-sm truncate block">{item.title}</span>
+                            {item.badge && item.badge > 0 && (
+                              <span className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive align-middle" />
+                            )}
+                          </div>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator className="mb-6" />
+
+                  {/* Quick Actions - Fixed at bottom of scroll area */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Actions rapides</h4>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12"
                         onClick={() => setIsOpen(false)}
-                        className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/70 transition-all duration-200 border border-border/20 shadow-sm hover:shadow-md"
                       >
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:from-primary/20 group-hover:to-secondary/20 transition-colors">
-                          <item.icon className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-medium text-sm">{item.title}</span>
-                          {item.title === 'Messages' && item.badge && item.badge > 0 && (
-                            <span className="ml-2 inline-block w-2 h-2 rounded-full bg-destructive align-middle" />
-                          )}
-                        </div>
-                      </NavLink>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Quick Actions */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Actions rapides</h4>
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Settings className="h-5 w-5" />
-                      Paramètres
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-3 h-12 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setIsOpen(false);
-                        signOut(); // Ajouter l'appel à signOut
-                      }}
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Déconnexion
-                    </Button>
+                        <Settings className="h-5 w-5" />
+                        Paramètres
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12 text-destructive hover:text-destructive hover:border-destructive/50"
+                        onClick={() => {
+                          setIsOpen(false)
+                          signOut()
+                        }}
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Déconnexion
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
