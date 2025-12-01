@@ -91,31 +91,19 @@ export function AppSidebar() {
       items.push(
         { title: t('sidebar.myTrips'), url: "/my-trips", icon: Truck },
         { title: t('sidebar.newTrip'), url: "/traveler/create-trip", icon: Plus },
-        { title: t('sidebar.searchShipments'), url: "/search-shipments", icon: Search },
       )
     }
 
     items.push(
       { title: t('sidebar.reservations'), url: "/reservations", icon: Sparkles },
-      { title: t('sidebar.tracking'), url: "/tracking", icon: MapPin },
       { title: t('sidebar.messages'), url: "/messages", icon: MessageCircle },
       { title: t('sidebar.notifications'), url: "/notifications", icon: Bell, showBadge: true },
-      { title: t('sidebar.reviews'), url: "/reviews", icon: Star },
-      { title: t('sidebar.disputes'), url: "/disputes", icon: AlertCircle },
       { title: t('sidebar.support'), url: "/support", icon: HelpCircle },
+      { title: t('sidebar.profile'), url: "/profile", icon: User }
     )
 
-    if (hasRole("traveler")) {
-      items.push({ title: t('sidebar.proofOfDelivery'), url: "/proof-of-delivery", icon: Camera })
-    }
-
-    items.push({ title: t('sidebar.profile'), url: "/profile", icon: User })
-
     if (hasRole("admin")) {
-      items.push(
-        { title: t('sidebar.administration'), url: "/admin", icon: Shield },
-        { title: t('sidebar.kycAdmin'), url: "/admin/kyc", icon: Shield }
-      )
+      items.push({ title: "Administration", url: "/admin-dashboard", icon: Shield })
     }
 
     return items

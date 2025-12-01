@@ -63,17 +63,18 @@ export default function CreateTrip() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isVerified = (profile as any)?.is_verified === true;
+  const hasApprovedKYC = (profile as any)?.verification_approved_at !== null;
 
-  // Vérification KYC au chargement
+  // Vérification KYC au chargement - Ne pas revérifier si déjà approuvé
   useEffect(() => {
-    if (profile && !(profile as any)?.is_verified) {
+    if (profile && !isVerified && !hasApprovedKYC) {
       toast({
         title: "Vérification requise",
         description: "Vous devez être vérifié pour publier des trajets",
         variant: "destructive",
       });
     }
-  }, [profile]);
+  }, [profile, isVerified, hasApprovedKYC]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

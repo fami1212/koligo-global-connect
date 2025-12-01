@@ -9,7 +9,7 @@ import { Calendar, MapPin, Package, Star, Heart, Search, Plane, Car, Train, Ship
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { TripDetailSheet } from '@/components/TripDetailSheet';
+import { ImprovedBookingWorkflow } from '@/components/ImprovedBookingWorkflow';
 import { Pagination } from '@/components/Pagination';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
@@ -63,6 +63,7 @@ interface Trip {
   transport_type: string;
   description?: string;
   pickup_address?: string;
+  delivery_address?: string;
   pickup_time_limit: string;
   traveler_id: string;
   profiles?: {
@@ -72,6 +73,8 @@ interface Trip {
     total_reviews: number;
     is_verified: boolean;
     avatar_url?: string;
+    phone?: string;
+    email: string;
   } | null;
   isFavorite?: boolean;
 }
@@ -88,7 +91,7 @@ export default function SearchTrips() {
   const [totalCount, setTotalCount] = useState(0);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
   const itemsPerPage = 10;
   
@@ -143,13 +146,14 @@ export default function SearchTrips() {
         .eq('is_active', true)
         .gte('departure_date', new Date().toISOString());
 
+      // Recherche exacte sur les pays
       if (departureCountry.trim()) {
-        query = query.ilike('departure_country', `%${departureCountry.trim()}%`);
-        countQuery = countQuery.ilike('departure_country', `%${departureCountry.trim()}%`);
+        query = query.eq('departure_country', departureCountry.trim());
+        countQuery = countQuery.eq('departure_country', departureCountry.trim());
       }
       if (arrivalCountry.trim()) {
-        query = query.ilike('arrival_country', `%${arrivalCountry.trim()}%`);
-        countQuery = countQuery.ilike('arrival_country', `%${arrivalCountry.trim()}%`);
+        query = query.eq('arrival_country', arrivalCountry.trim());
+        countQuery = countQuery.eq('arrival_country', arrivalCountry.trim());
       }
 
       const { count } = await countQuery;
@@ -167,7 +171,7 @@ export default function SearchTrips() {
       const travelerIds = [...new Set(tripsData?.map(t => t.traveler_id) || [])];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name, rating, total_reviews, is_verified, avatar_url')
+        .select('user_id, first_name, last_name, rating, total_reviews, is_verified, avatar_url, phone, email')
         .in('user_id', travelerIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -246,9 +250,9 @@ export default function SearchTrips() {
     }
   };
 
-  const openTripDetails = (trip: Trip) => {
+  const openBooking = (trip: Trip) => {
     setSelectedTrip(trip);
-    setSheetOpen(true);
+    setBookingOpen(true);
   };
 
   const getTransportIcon = (type: string) => {
@@ -303,13 +307,16 @@ export default function SearchTrips() {
                   </label>
                   <Select 
                     value={filters.departure_country} 
-                    onValueChange={(val) => setFilters(prev => ({ ...prev, departure_country: val }))}
+                    onValueChange={(val) => {
+                      setFilters(prev => ({ ...prev, departure_country: val }))
+                      setCountryFilter("")
+                    }}
                   >
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Tous les pays" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      <div className="p-2 sticky top-0 bg-background">
+                      <div className="p-2 sticky top-0 bg-background z-10">
                         <Input
                           placeholder="Rechercher..."
                           value={countryFilter}
@@ -317,18 +324,20 @@ export default function SearchTrips() {
                           className="h-9"
                         />
                       </div>
-                      {countryFilter === "" && (
-                        <>
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
-                          {POPULAR_COUNTRIES.map(c => (
-                            <SelectItem key={`pop-dep-${c}`} value={c}>{c}</SelectItem>
-                          ))}
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1">Tous</div>
-                        </>
-                      )}
-                      {filteredCountries(countryFilter).map(c => (
-                        <SelectItem key={`dep-${c}`} value={c}>{c}</SelectItem>
-                      ))}
+                      <div className="overflow-y-auto max-h-[250px]">
+                        {countryFilter === "" && (
+                          <>
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 sticky top-0">Populaires</div>
+                            {POPULAR_COUNTRIES.map(c => (
+                              <SelectItem key={`pop-dep-${c}`} value={c}>{c}</SelectItem>
+                            ))}
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 border-t mt-1">Tous</div>
+                          </>
+                        )}
+                        {filteredCountries(countryFilter).map(c => (
+                          <SelectItem key={`dep-${c}`} value={c}>{c}</SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
@@ -339,13 +348,16 @@ export default function SearchTrips() {
                   </label>
                   <Select 
                     value={filters.arrival_country} 
-                    onValueChange={(val) => setFilters(prev => ({ ...prev, arrival_country: val }))}
+                    onValueChange={(val) => {
+                      setFilters(prev => ({ ...prev, arrival_country: val }))
+                      setCountryFilter("")
+                    }}
                   >
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Tous les pays" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      <div className="p-2 sticky top-0 bg-background">
+                      <div className="p-2 sticky top-0 bg-background z-10">
                         <Input
                           placeholder="Rechercher..."
                           value={countryFilter}
@@ -353,18 +365,20 @@ export default function SearchTrips() {
                           className="h-9"
                         />
                       </div>
-                      {countryFilter === "" && (
-                        <>
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
-                          {POPULAR_COUNTRIES.map(c => (
-                            <SelectItem key={`pop-arr-${c}`} value={c}>{c}</SelectItem>
-                          ))}
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1">Tous</div>
-                        </>
-                      )}
-                      {filteredCountries(countryFilter).map(c => (
-                        <SelectItem key={`arr-${c}`} value={c}>{c}</SelectItem>
-                      ))}
+                      <div className="overflow-y-auto max-h-[250px]">
+                        {countryFilter === "" && (
+                          <>
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 sticky top-0">Populaires</div>
+                            {POPULAR_COUNTRIES.map(c => (
+                              <SelectItem key={`pop-arr-${c}`} value={c}>{c}</SelectItem>
+                            ))}
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50 border-t mt-1">Tous</div>
+                          </>
+                        )}
+                        {filteredCountries(countryFilter).map(c => (
+                          <SelectItem key={`arr-${c}`} value={c}>{c}</SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
@@ -404,59 +418,61 @@ export default function SearchTrips() {
                   {trips.map((trip) => (
                     <Card 
                       key={trip.id} 
-                      className="cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-                      onClick={() => openTripDetails(trip)}
+                      className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] bg-gradient-to-br from-background to-muted/20"
                     >
                       <CardContent className="p-4">
                         <div className="flex flex-col gap-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+                              <Avatar className="h-12 w-12 border-2 border-primary/20">
                                 <AvatarImage src={trip.profiles?.avatar_url || ''} />
-                                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                   {trip.profiles?.first_name?.[0]}{trip.profiles?.last_name?.[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="flex items-center gap-1.5 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <p className="font-semibold text-sm sm:text-base">
                                     {trip.profiles?.first_name} {trip.profiles?.last_name}
                                   </p>
                                   {trip.profiles?.is_verified && (
-                                    <Badge variant="secondary" className="gap-0.5 text-xs px-1.5 py-0">
+                                    <Badge variant="outline" className="bg-success/10 text-success border-success text-xs gap-1">
                                       <Shield className="h-3 w-3" />
-                                      <span className="hidden sm:inline ml-0.5">Vérifié</span>
+                                      Vérifié
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                                  <span>{trip.profiles?.rating?.toFixed(1) || '0.0'}</span>
-                                  <span className="text-xs">({trip.profiles?.total_reviews || 0})</span>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Star className="h-3 w-3 fill-warning text-warning" />
+                                  <span>{trip.profiles?.rating?.toFixed(1) || '5.0'}</span>
+                                  <span>({trip.profiles?.total_reviews || 0})</span>
                                 </div>
                               </div>
                             </div>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className={`${favoriteIds.has(trip.id) ? 'text-red-500' : 'text-muted-foreground'}`}
                               onClick={(e) => toggleFavorite(trip.id, e)}
+                              className="shrink-0"
                             >
-                              <Heart className={`h-5 w-5 ${favoriteIds.has(trip.id) ? 'fill-current' : ''}`} />
+                              <Heart 
+                                className={`h-5 w-5 ${trip.isFavorite ? 'fill-red-500 text-red-500' : ''}`} 
+                              />
                             </Button>
                           </div>
 
-                          <div className="flex items-center gap-2 bg-muted/30 rounded-lg p-3">
-                            <div className="flex-1 text-center">
-                              <p className="font-bold text-base sm:text-lg">{trip.departure_city}</p>
+                          <div className="flex items-center gap-3 text-sm">
+                            <div className="flex-1 bg-primary/5 p-3 rounded-lg">
+                              <p className="text-xs text-muted-foreground mb-1">Départ</p>
+                              <p className="font-bold text-base">{trip.departure_city}</p>
                               <p className="text-xs text-muted-foreground">{trip.departure_country}</p>
                             </div>
-                            <div className="flex flex-col items-center px-2">
+                            <div className="shrink-0">
                               {getTransportIcon(trip.transport_type)}
-                              <div className="h-px w-8 sm:w-12 bg-border my-1" />
                             </div>
-                            <div className="flex-1 text-center">
-                              <p className="font-bold text-base sm:text-lg">{trip.arrival_city}</p>
+                            <div className="flex-1 bg-secondary/5 p-3 rounded-lg">
+                              <p className="text-xs text-muted-foreground mb-1">Arrivée</p>
+                              <p className="font-bold text-base">{trip.arrival_city}</p>
                               <p className="text-xs text-muted-foreground">{trip.arrival_country}</p>
                             </div>
                           </div>
@@ -474,12 +490,15 @@ export default function SearchTrips() {
                                 {trip.available_weight_kg} kg
                               </Badge>
                             </div>
-                            <span className="text-green-600 font-bold text-base">
+                            <span className="text-success font-bold text-base">
                               {trip.price_per_kg} {trip.currency}/kg
                             </span>
                           </div>
 
-                          <Button className="w-full">
+                          <Button 
+                            className="w-full bg-gradient-primary hover:opacity-90"
+                            onClick={() => openBooking(trip)}
+                          >
                             Choisir ce trajet
                           </Button>
                         </div>
@@ -502,13 +521,18 @@ export default function SearchTrips() {
             )}
           </div>
         )}
-      </div>
 
-      <TripDetailSheet 
-        trip={selectedTrip} 
-        open={sheetOpen} 
-        onOpenChange={setSheetOpen} 
-      />
+        {selectedTrip && (
+          <ImprovedBookingWorkflow 
+            trip={selectedTrip} 
+            open={bookingOpen}
+            onClose={() => {
+              setBookingOpen(false);
+              setSelectedTrip(null);
+            }} 
+          />
+        )}
+      </div>
     </div>
   );
 }
