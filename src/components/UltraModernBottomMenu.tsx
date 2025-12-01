@@ -103,8 +103,7 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
       { title: "Messages", url: "/messages", icon: MessageCircle, badge: unreadCount },
       { title: "Notifications", url: "/notifications", icon: Bell, badge: notificationCount },
       { title: "Avis", url: "/reviews", icon: Star },
-      { title: "Litiges", url: "/disputes", icon: AlertCircle },
-      { title: "Support", url: "/support", icon: HelpCircle },
+      
       { title: "Profil", url: "/profile", icon: User },
     )
 
