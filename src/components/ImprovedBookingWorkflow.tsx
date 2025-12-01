@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Package, Euro, User, Check, Plus } from 'lucide-react';
+import { Calendar, MapPin, Package, Check, Upload, User, Star, Shield, Phone, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Trip {
   id: string;
@@ -23,39 +24,31 @@ interface Trip {
   departure_date: string;
   available_weight_kg: number;
   price_per_kg: number;
+  currency: string;
   transport_type: string;
+  pickup_address?: string;
+  delivery_address?: string;
   traveler_id: string;
   profiles?: {
     first_name: string;
     last_name: string;
     rating: number;
+    total_reviews: number;
+    is_verified: boolean;
+    phone?: string;
+    email: string;
   };
-}
-
-interface Shipment {
-  id: string;
-  title: string;
-  description: string;
-  weight_kg: number;
-  volume_m3: number;
-  estimated_value: number;
-  pickup_city: string;
-  pickup_country: string;
-  delivery_city: string;
-  delivery_country: string;
-  delivery_address: string;
-  delivery_contact_name: string;
-  delivery_contact_phone: string;
-  special_instructions: string;
 }
 
 interface BookingWorkflowProps {
   trip: Trip;
+  open: boolean;
   onClose: () => void;
 }
 
 interface ShipmentData {
   title: string;
+  package_type: string;
   description: string;
   weight_kg: number;
   volume_m3: number;
@@ -66,18 +59,31 @@ interface ShipmentData {
   delivery_contact_name: string;
   delivery_contact_phone: string;
   special_instructions: string;
+  photo_url?: string;
 }
 
-export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps) {
+const PACKAGE_TYPES = [
+  "Documents",
+  "Vêtements",
+  "Électronique",
+  "Alimentaire",
+  "Médicaments",
+  "Livres",
+  "Jouets",
+  "Cosmétiques",
+  "Autre"
+];
+
+export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflowProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(user ? 2 : 1);
   const [loading, setLoading] = useState(false);
-  const [bookingMode, setBookingMode] = useState<'existing' | 'new'>('existing');
-  const [existingShipments, setExistingShipments] = useState<Shipment[]>([]);
-  const [selectedShipment, setSelectedShipment] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
   const [shipmentData, setShipmentData] = useState<ShipmentData>({
     title: '',
+    package_type: '',
     description: '',
     weight_kg: 0,
     volume_m3: 0,
@@ -90,32 +96,8 @@ export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps)
     special_instructions: ''
   });
 
-  const totalSteps = bookingMode === 'existing' ? 2 : 3;
+  const totalSteps = user ? 4 : 5;
   const progressPercentage = (currentStep / totalSteps) * 100;
-
-  useEffect(() => {
-    if (user && bookingMode === 'existing') {
-      loadExistingShipments();
-    }
-  }, [user, bookingMode]);
-
-  const loadExistingShipments = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('sender_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setExistingShipments(data || []);
-    } catch (error) {
-      console.error('Error loading shipments:', error);
-    }
-  };
 
   const handleInputChange = (field: keyof ShipmentData, value: string | number) => {
     setShipmentData(prev => ({
@@ -124,91 +106,113 @@ export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps)
     }));
   };
 
+  const uploadPhoto = async (file: File) => {
+    if (!file) return null;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('shipment-photos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('shipment-photos')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'uploader la photo",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const validateStep = (step: number): boolean => {
     switch (step) {
-      case 1:
-        if (bookingMode === 'existing') {
-          return !!selectedShipment;
-        } else {
-          return !!(shipmentData.title && shipmentData.description && shipmentData.weight_kg > 0);
-        }
       case 2:
-        if (bookingMode === 'existing') {
-          return true; // Confirmation step for existing shipment
-        } else {
-          return !!(shipmentData.delivery_address && shipmentData.delivery_city && 
-                   shipmentData.delivery_contact_name && shipmentData.delivery_contact_phone);
-        }
+        return !!(shipmentData.title && shipmentData.package_type && shipmentData.description && shipmentData.weight_kg > 0);
       case 3:
-        return true; // Confirmation step for new shipment
+        return !!(shipmentData.delivery_address && shipmentData.delivery_city && 
+                 shipmentData.delivery_contact_name && shipmentData.delivery_contact_phone);
+      case 4:
+        return true;
       default:
         return false;
     }
   };
 
   const nextStep = () => {
+    if (currentStep === 1 && !user) {
+      navigate('/auth');
+      return;
+    }
     if (validateStep(currentStep) && currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     }
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > (user ? 2 : 1)) {
       setCurrentStep(prev => prev - 1);
     }
   };
 
   const calculateEstimatedPrice = () => {
-    const weight = bookingMode === 'existing' 
-      ? existingShipments.find(s => s.id === selectedShipment)?.weight_kg || 0
-      : shipmentData.weight_kg;
-    return weight * trip.price_per_kg;
+    return shipmentData.weight_kg * trip.price_per_kg;
   };
 
   const submitBooking = async () => {
-    if (!user) return;
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
 
     setLoading(true);
     try {
-      let shipmentId = selectedShipment;
+      const { data: shipment, error: shipmentError } = await supabase
+        .from('shipments')
+        .insert({
+          ...shipmentData,
+          sender_id: user.id,
+          pickup_address: trip.departure_city + ', ' + trip.departure_country,
+          pickup_city: trip.departure_city,
+          pickup_country: trip.departure_country,
+          pickup_contact_name: trip.profiles?.first_name + ' ' + trip.profiles?.last_name,
+          pickup_contact_phone: trip.profiles?.phone || 'À définir',
+          photos: shipmentData.photo_url ? [shipmentData.photo_url] : null
+        })
+        .select()
+        .single();
 
-      // If creating new shipment, insert it first
-      if (bookingMode === 'new') {
-        const { data: shipment, error: shipmentError } = await supabase
-          .from('shipments')
-          .insert({
-            ...shipmentData,
-            sender_id: user.id,
-            pickup_address: trip.departure_city + ', ' + trip.departure_country,
-            pickup_city: trip.departure_city,
-            pickup_country: trip.departure_country,
-            pickup_contact_name: trip.profiles?.first_name + ' ' + trip.profiles?.last_name,
-            pickup_contact_phone: 'À définir avec le transporteur'
-          })
-          .select()
-          .single();
+      if (shipmentError) throw shipmentError;
 
-        if (shipmentError) throw shipmentError;
-        shipmentId = shipment.id;
-      }
-
-      // Create match request
       const { error: matchError } = await supabase
         .from('match_requests')
         .insert({
           trip_id: trip.id,
-          shipment_id: shipmentId,
+          shipment_id: shipment.id,
           sender_id: user.id,
           traveler_id: trip.traveler_id,
           estimated_price: calculateEstimatedPrice(),
-          message: bookingMode === 'new' ? shipmentData.special_instructions : 'Demande de transport'
+          message: shipmentData.special_instructions
         });
 
       if (matchError) throw matchError;
 
       toast({
-        title: "Réservation envoyée !",
-        description: "Votre demande de transport a été envoyée au transporteur.",
+        title: "Demande envoyée !",
+        description: "Le GP va examiner votre demande et vous répondre rapidement.",
       });
 
       onClose();
@@ -216,7 +220,7 @@ export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps)
       console.error('Error creating booking:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer la réservation. Veuillez réessayer.",
+        description: "Impossible d'envoyer la demande.",
         variant: "destructive",
       });
     } finally {
@@ -227,274 +231,288 @@ export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps)
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        if (bookingMode === 'existing') {
-          return (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <Package className="h-12 w-12 mx-auto mb-4 text-primary" />
-                <h3 className="text-xl font-semibold">Sélectionnez un colis</h3>
-                <p className="text-muted-foreground">Choisissez parmi vos colis existants</p>
-              </div>
-              
-              {existingShipments.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">Aucun colis disponible</p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setBookingMode('new')}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Créer un nouveau colis
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {existingShipments.map((shipment) => (
-                    <div
-                      key={shipment.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedShipment === shipment.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-muted/50'
-                      }`}
-                      onClick={() => setSelectedShipment(shipment.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium">{shipment.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {shipment.pickup_city} → {shipment.delivery_city}
-                          </p>
-                          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>{shipment.weight_kg} kg</span>
-                            {shipment.volume_m3 && <span>{shipment.volume_m3} m³</span>}
-                          </div>
-                        </div>
-                        <Badge variant="outline">
-                          {(shipment.weight_kg * trip.price_per_kg).toFixed(2)}€
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        return (
+          <div className="space-y-6 py-8">
+            <div className="text-center">
+              <User className="h-16 w-16 mx-auto mb-4 text-primary" />
+              <h3 className="text-2xl font-semibold mb-2">Connexion requise</h3>
+              <p className="text-muted-foreground">
+                Créez un compte ou connectez-vous pour réserver ce trajet
+              </p>
             </div>
-          );
-        } else {
-          return (
-            <div className="space-y-4">
-              <div className="text-center mb-6">
-                <Package className="h-12 w-12 mx-auto mb-4 text-primary" />
-                <h3 className="text-xl font-semibold">Détails du colis</h3>
-                <p className="text-muted-foreground">Décrivez votre envoi</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Titre du colis *</Label>
-                  <Input
-                    id="title"
-                    placeholder="ex: Documents importantes"
-                    value={shipmentData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Décrivez le contenu du colis..."
-                    value={shipmentData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="weight">Poids (kg) *</Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      step="0.1"
-                      value={shipmentData.weight_kg}
-                      onChange={(e) => handleInputChange('weight_kg', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="volume">Volume (m³)</Label>
-                    <Input
-                      id="volume"
-                      type="number"
-                      step="0.01"
-                      value={shipmentData.volume_m3}
-                      onChange={(e) => handleInputChange('volume_m3', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="value">Valeur estimée (€)</Label>
-                    <Input
-                      id="value"
-                      type="number"
-                      value={shipmentData.estimated_value}
-                      onChange={(e) => handleInputChange('estimated_value', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        }
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                Vos informations sont sécurisées et ne seront partagées qu'avec le GP sélectionné.
+              </AlertDescription>
+            </Alert>
+          </div>
+        );
 
       case 2:
-        if (bookingMode === 'existing') {
-          // Confirmation step for existing shipment
-          const selectedShipmentData = existingShipments.find(s => s.id === selectedShipment);
-          return (
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <Check className="h-12 w-12 mx-auto mb-4 text-success" />
-                <h3 className="text-xl font-semibold">Confirmez votre réservation</h3>
-                <p className="text-muted-foreground">Vérifiez les détails</p>
-              </div>
-              
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Colis sélectionné</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Titre</p>
-                        <p className="font-medium">{selectedShipmentData?.title}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Poids</p>
-                        <p className="font-medium">{selectedShipmentData?.weight_kg} kg</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Prix estimé</p>
-                        <p className="font-medium text-success">{calculateEstimatedPrice().toFixed(2)}€</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          );
-        } else {
-          // Delivery step for new shipment
-          return (
-            <div className="space-y-4">
-              <div className="text-center mb-6">
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-success" />
-                <h3 className="text-xl font-semibold">Adresse de livraison</h3>
-                <p className="text-muted-foreground">Où livrer le colis</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="delivery_address">Adresse *</Label>
-                  <Input
-                    id="delivery_address"
-                    placeholder="456 Main Street"
-                    value={shipmentData.delivery_address}
-                    onChange={(e) => handleInputChange('delivery_address', e.target.value)}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="delivery_city">Ville *</Label>
-                    <Input
-                      id="delivery_city"
-                      value={shipmentData.delivery_city}
-                      onChange={(e) => handleInputChange('delivery_city', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="delivery_country">Pays *</Label>
-                    <Input
-                      id="delivery_country"
-                      value={shipmentData.delivery_country}
-                      onChange={(e) => handleInputChange('delivery_country', e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="delivery_contact_name">Nom du contact *</Label>
-                    <Input
-                      id="delivery_contact_name"
-                      placeholder="Jane Smith"
-                      value={shipmentData.delivery_contact_name}
-                      onChange={(e) => handleInputChange('delivery_contact_name', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="delivery_contact_phone">Téléphone *</Label>
-                    <Input
-                      id="delivery_contact_phone"
-                      placeholder="+1 555 123 4567"
-                      value={shipmentData.delivery_contact_phone}
-                      onChange={(e) => handleInputChange('delivery_contact_phone', e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="special_instructions">Instructions spéciales</Label>
-                  <Textarea
-                    id="special_instructions"
-                    placeholder="Instructions particulières..."
-                    value={shipmentData.special_instructions}
-                    onChange={(e) => handleInputChange('special_instructions', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-      case 3:
-        // Final confirmation for new shipment
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <Check className="h-12 w-12 mx-auto mb-4 text-success" />
-              <h3 className="text-xl font-semibold">Confirmez votre réservation</h3>
-              <p className="text-muted-foreground">Vérifiez les détails avant d'envoyer</p>
+              <Package className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-semibold">Détails du colis</h3>
+              <p className="text-muted-foreground">Informations sur votre envoi</p>
             </div>
             
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Résumé</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Colis</p>
-                      <p className="font-medium">{shipmentData.title}</p>
+              <div>
+                <Label htmlFor="title">Titre *</Label>
+                <Input
+                  id="title"
+                  placeholder="Ex: Colis pour famille"
+                  value={shipmentData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="package_type">Type de colis *</Label>
+                <Select 
+                  value={shipmentData.package_type} 
+                  onValueChange={(val) => handleInputChange('package_type', val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner le type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PACKAGE_TYPES.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Décrivez le contenu..."
+                  value={shipmentData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="weight">Poids estimatif (kg) *</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.1"
+                    value={shipmentData.weight_kg || ''}
+                    onChange={(e) => handleInputChange('weight_kg', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="value">Valeur (€)</Label>
+                  <Input
+                    id="value"
+                    type="number"
+                    value={shipmentData.estimated_value || ''}
+                    onChange={(e) => handleInputChange('estimated_value', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="photo">Photo du colis</Label>
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = await uploadPhoto(file);
+                      if (url) handleInputChange('photo_url', url);
+                    }
+                  }}
+                  disabled={uploading}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {uploading ? 'Upload en cours...' : 'Optionnel - JPG, PNG (max 5MB)'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <MapPin className="h-12 w-12 mx-auto mb-4 text-success" />
+              <h3 className="text-xl font-semibold">Adresse de livraison</h3>
+              <p className="text-muted-foreground">Où livrer le colis</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="delivery_address">Adresse complète *</Label>
+                <Input
+                  id="delivery_address"
+                  placeholder="123 Rue Example"
+                  value={shipmentData.delivery_address}
+                  onChange={(e) => handleInputChange('delivery_address', e.target.value)}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="delivery_city">Ville *</Label>
+                  <Input
+                    id="delivery_city"
+                    value={shipmentData.delivery_city}
+                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_country">Pays *</Label>
+                  <Input
+                    id="delivery_country"
+                    value={shipmentData.delivery_country}
+                    onChange={(e) => handleInputChange('delivery_country', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="contact_name">Nom du contact *</Label>
+                  <Input
+                    id="contact_name"
+                    placeholder="Jean Dupont"
+                    value={shipmentData.delivery_contact_name}
+                    onChange={(e) => handleInputChange('delivery_contact_name', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact_phone">Téléphone *</Label>
+                  <Input
+                    id="contact_phone"
+                    placeholder="+33 6 12 34 56 78"
+                    value={shipmentData.delivery_contact_phone}
+                    onChange={(e) => handleInputChange('delivery_contact_phone', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="instructions">Instructions spéciales</Label>
+                <Textarea
+                  id="instructions"
+                  placeholder="Instructions pour la livraison..."
+                  value={shipmentData.special_instructions}
+                  onChange={(e) => handleInputChange('special_instructions', e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4:
+        const estimatedPrice = calculateEstimatedPrice();
+        
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <User className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-semibold">Informations du GP</h3>
+              <p className="text-muted-foreground">Votre transporteur</p>
+            </div>
+
+            <Card className="border-2 border-primary/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Poids</p>
-                      <p className="font-medium">{shipmentData.weight_kg} kg</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Trajet</p>
-                      <p className="text-sm">{trip.departure_city} → {trip.arrival_city}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Prix estimé</p>
-                      <p className="font-medium text-success">{calculateEstimatedPrice().toFixed(2)}€</p>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">
+                          {trip.profiles?.first_name} {trip.profiles?.last_name}
+                        </h4>
+                        {trip.profiles?.is_verified && (
+                          <Badge variant="outline" className="bg-success/10 text-success border-success">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Vérifié
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="h-3 w-3 fill-warning text-warning" />
+                        <span>{trip.profiles?.rating?.toFixed(1) || '5.0'}</span>
+                        <span>({trip.profiles?.total_reviews || 0} avis)</span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Adresse de dépôt
+                    </p>
+                    <p className="font-medium">{trip.pickup_address || `${trip.departure_city}, ${trip.departure_country}`}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Adresse de récupération
+                    </p>
+                    <p className="font-medium">{trip.delivery_address || `${trip.arrival_city}, ${trip.arrival_country}`}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Résumé de la réservation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Type de colis:</span>
+                  <span className="font-medium">{shipmentData.package_type}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Poids:</span>
+                  <span className="font-medium">{shipmentData.weight_kg} kg</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Prix par kg:</span>
+                  <span className="font-medium">{trip.price_per_kg.toFixed(2)} {trip.currency}</span>
+                </div>
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total estimé:</span>
+                    <span className="text-primary">{estimatedPrice.toFixed(2)} {trip.currency}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  * Prix final à confirmer par le GP
+                </p>
+              </CardContent>
+            </Card>
+
+            <Alert>
+              <Check className="h-4 w-4" />
+              <AlertDescription>
+                Une fois votre demande envoyée, le GP l'examinera et vous répondra rapidement. Vous serez notifié de sa décision.
+              </AlertDescription>
+            </Alert>
           </div>
         );
 
@@ -504,72 +522,53 @@ export function ImprovedBookingWorkflow({ trip, onClose }: BookingWorkflowProps)
   };
 
   return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>Réserver ce trajet</DialogTitle>
-        <DialogDescription>
-          Choisissez un colis existant ou créez-en un nouveau
-        </DialogDescription>
-      </DialogHeader>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Choisir ce trajet</DialogTitle>
+          <DialogDescription>
+            {currentStep === 1 ? 'Connectez-vous pour continuer' : 'Complétez les étapes pour réserver'}
+          </DialogDescription>
+        </DialogHeader>
 
-      {/* Booking Mode Selection */}
-      {currentStep === 1 && (
-        <Tabs value={bookingMode} onValueChange={(value) => setBookingMode(value as 'existing' | 'new')} className="mb-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="existing">Colis existant</TabsTrigger>
-            <TabsTrigger value="new">Nouveau colis</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
-
-      {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>Étape {currentStep} sur {totalSteps}</span>
-          <span>{Math.round(progressPercentage)}%</span>
+        <div className="mb-6">
+          <div className="flex justify-between text-sm text-muted-foreground mb-2">
+            <span>Étape {currentStep} sur {totalSteps}</span>
+            <span>{Math.round(progressPercentage)}%</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
         </div>
-        <Progress value={progressPercentage} className="h-2" />
-      </div>
 
-      {/* Step Content */}
-      <div className="min-h-[400px]">
-        <TabsContent value={bookingMode} className="mt-0">
+        <div className="min-h-[400px]">
           {renderStep()}
-        </TabsContent>
-      </div>
+        </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between pt-6 border-t">
-        <Button 
-          variant="outline" 
-          onClick={prevStep}
-          disabled={currentStep === 1}
-        >
-          Précédent
-        </Button>
-        
-        <div className="flex gap-2">
-          <Button variant="ghost" onClick={onClose}>
-            Annuler
+        <div className="flex justify-between pt-6 border-t">
+          <Button 
+            variant="outline" 
+            onClick={prevStep}
+            disabled={currentStep === (user ? 2 : 1)}
+          >
+            Précédent
           </Button>
           
           {currentStep < totalSteps ? (
             <Button 
               onClick={nextStep}
-              disabled={!validateStep(currentStep)}
+              disabled={!validateStep(currentStep) || uploading}
             >
-              Suivant
+              {currentStep === 1 ? "Se connecter" : "Suivant"}
             </Button>
           ) : (
             <Button 
               onClick={submitBooking}
-              disabled={loading || !validateStep(currentStep)}
+              disabled={loading || uploading}
             >
-              {loading ? 'Envoi...' : 'Confirmer la réservation'}
+              {loading ? 'Envoi...' : 'Envoyer la demande'}
             </Button>
           )}
         </div>
-      </div>
-    </DialogContent>
+      </DialogContent>
+    </Dialog>
   );
 }

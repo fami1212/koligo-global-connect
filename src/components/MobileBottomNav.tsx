@@ -98,41 +98,43 @@ export function MobileBottomNav() {
               </Button>
             </SheetTrigger>
             
-            <SheetContent side="bottom" className="h-[400px] rounded-t-2xl">
-              <SheetHeader className="mb-6">
+            <SheetContent side="bottom" className="h-[70vh] max-h-[600px] rounded-t-2xl overflow-hidden flex flex-col">
+              <SheetHeader className="mb-4 shrink-0">
                 <SheetTitle>Actions rapides</SheetTitle>
               </SheetHeader>
               
-              <div className="grid grid-cols-2 gap-3">
-                {quickActions.map((action) => (
+              <div className="overflow-y-auto flex-1 -mx-6 px-6">
+                <div className="grid grid-cols-2 gap-3 pb-4">
+                  {quickActions.map((action) => (
+                    <NavLink
+                      key={action.title}
+                      to={action.url}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex flex-col items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className="p-3 rounded-full bg-primary/10">
+                        <action.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-center">{action.title}</span>
+                    </NavLink>
+                  ))}
+                </div>
+                
+                <div className="pt-4 border-t border-border">
                   <NavLink
-                    key={action.title}
-                    to={action.url}
+                    to="/profile"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
                   >
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <action.icon className="h-6 w-6 text-primary" />
+                    <div className="p-2 rounded-full bg-secondary/20">
+                      <User className="h-5 w-5 text-secondary" />
                     </div>
-                    <span className="text-sm font-medium text-center">{action.title}</span>
+                    <div>
+                      <p className="font-medium">Mon profil</p>
+                      <p className="text-sm text-muted-foreground">Paramètres et informations</p>
+                    </div>
                   </NavLink>
-                ))}
-              </div>
-              
-              <div className="mt-6 pt-6 border-t border-border">
-                <NavLink
-                  to="/profile"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-secondary/20">
-                    <User className="h-5 w-5 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Mon profil</p>
-                    <p className="text-sm text-muted-foreground">Paramètres et informations</p>
-                  </div>
-                </NavLink>
+                </div>
               </div>
             </SheetContent>
           </Sheet>

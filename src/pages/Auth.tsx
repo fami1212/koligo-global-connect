@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Truck, Package, ArrowLeft, Shield, Building2 } from 'lucide-react';
+import { Truck, Package, ArrowLeft, Shield, Building2, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -49,6 +50,7 @@ export default function Auth() {
     // GP specific fields
     const businessName = formData.get('businessName') as string;
     const idValidityDate = formData.get('idValidityDate') as string;
+    const idDocument = (e.currentTarget.querySelector('#idDocument') as HTMLInputElement)?.files?.[0];
     
     await signUp(email, password, {
       first_name: firstName,
@@ -58,6 +60,35 @@ export default function Auth() {
       id_type: userType === 'traveler' ? idType : null,
       id_validity_date: userType === 'traveler' ? idValidityDate : null,
     });
+    
+    // Upload document si GP (après inscription)
+    if (userType === 'traveler' && idDocument && idType) {
+      setTimeout(async () => {
+        try {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            const fileExt = idDocument.name.split('.').pop();
+            const fileName = `${currentUser.id}/${idType}-${Date.now()}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('kyc-documents')
+              .upload(fileName, idDocument);
+            
+            if (!uploadError) {
+              await supabase.from('kyc_documents').insert({
+                user_id: currentUser.id,
+                document_type: idType,
+                document_url: fileName,
+                status: 'pending'
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error uploading document:', err);
+        }
+      }, 1000);
+    }
+    
     setIsLoading(false);
   };
 
@@ -203,10 +234,27 @@ export default function Auth() {
                         />
                       </div>
 
-                      <Alert className="bg-amber-50 border-amber-200">
-                        <Shield className="h-4 w-4 text-amber-600" />
-                        <AlertDescription className="text-amber-800 text-xs">
-                          Après inscription, vous devrez soumettre vos documents d'identité pour vérification avant de pouvoir publier des trajets.
+                      <div className="space-y-2">
+                        <Label htmlFor="idDocument">Document d'identité *</Label>
+                        <div className="relative">
+                          <Input
+                            id="idDocument"
+                            type="file"
+                            accept="image/*,.pdf"
+                            required={userType === 'traveler'}
+                            className="cursor-pointer"
+                          />
+                          <Upload className="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          JPG, PNG ou PDF - Max 5MB
+                        </p>
+                      </div>
+
+                      <Alert className="bg-blue-50 border-blue-200">
+                        <Shield className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-blue-800 text-xs">
+                          Votre document sera vérifié par notre équipe. Vous pourrez publier des trajets une fois approuvé (24-48h).
                         </AlertDescription>
                       </Alert>
                     </div>
