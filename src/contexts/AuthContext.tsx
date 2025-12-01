@@ -118,13 +118,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, userData?: any) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: userData
       }
     });
@@ -132,7 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       toast({
         title: "Erreur d'inscription",
-        description: error.message,
+        description: error.message === "User already registered" 
+          ? "Cet email est déjà utilisé" 
+          : error.message,
         variant: "destructive",
       });
     } else {
@@ -145,6 +144,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               metadata: userData
             }
           });
+          
+          // Rafraîchir le profil et les roles après création
+          setTimeout(() => {
+            if (data.user?.id) {
+              fetchProfile(data.user.id);
+            }
+          }, 500);
         } catch (error) {
           console.error('Error calling handle-new-user function:', error);
         }
@@ -152,7 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       toast({
         title: "Inscription réussie",
-        description: "Vérifiez votre email pour confirmer votre compte.",
+        description: userData?.user_type === 'traveler' 
+          ? "Votre compte GP a été créé. Votre document sera vérifié sous 24-48h."
+          : "Bienvenue sur GP Connect !",
       });
     }
 

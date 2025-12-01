@@ -51,14 +51,6 @@ interface ShipmentData {
   package_type: string;
   description: string;
   weight_kg: number;
-  volume_m3: number;
-  estimated_value: number;
-  delivery_address: string;
-  delivery_city: string;
-  delivery_country: string;
-  delivery_contact_name: string;
-  delivery_contact_phone: string;
-  special_instructions: string;
   photo_url?: string;
 }
 
@@ -85,18 +77,10 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
     title: '',
     package_type: '',
     description: '',
-    weight_kg: 0,
-    volume_m3: 0,
-    estimated_value: 0,
-    delivery_address: '',
-    delivery_city: trip.arrival_city,
-    delivery_country: trip.arrival_country,
-    delivery_contact_name: '',
-    delivery_contact_phone: '',
-    special_instructions: ''
+    weight_kg: 0
   });
 
-  const totalSteps = user ? 4 : 5;
+  const totalSteps = user ? 3 : 4;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleInputChange = (field: keyof ShipmentData, value: string | number) => {
@@ -143,9 +127,6 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
       case 2:
         return !!(shipmentData.title && shipmentData.package_type && shipmentData.description && shipmentData.weight_kg > 0);
       case 3:
-        return !!(shipmentData.delivery_address && shipmentData.delivery_city && 
-                 shipmentData.delivery_contact_name && shipmentData.delivery_contact_phone);
-      case 4:
         return true;
       default:
         return false;
@@ -183,13 +164,20 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
       const { data: shipment, error: shipmentError } = await supabase
         .from('shipments')
         .insert({
-          ...shipmentData,
+          title: shipmentData.title,
+          description: shipmentData.description,
+          weight_kg: shipmentData.weight_kg,
           sender_id: user.id,
           pickup_address: trip.departure_city + ', ' + trip.departure_country,
           pickup_city: trip.departure_city,
           pickup_country: trip.departure_country,
           pickup_contact_name: trip.profiles?.first_name + ' ' + trip.profiles?.last_name,
           pickup_contact_phone: trip.profiles?.phone || 'À définir',
+          delivery_address: trip.arrival_city + ', ' + trip.arrival_country,
+          delivery_city: trip.arrival_city,
+          delivery_country: trip.arrival_country,
+          delivery_contact_name: 'À définir',
+          delivery_contact_phone: 'À définir',
           photos: shipmentData.photo_url ? [shipmentData.photo_url] : null
         })
         .select()
@@ -204,8 +192,7 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
           shipment_id: shipment.id,
           sender_id: user.id,
           traveler_id: trip.traveler_id,
-          estimated_price: calculateEstimatedPrice(),
-          message: shipmentData.special_instructions
+          estimated_price: calculateEstimatedPrice()
         });
 
       if (matchError) throw matchError;
@@ -297,26 +284,15 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="weight">Poids estimatif (kg) *</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    step="0.1"
-                    value={shipmentData.weight_kg || ''}
-                    onChange={(e) => handleInputChange('weight_kg', parseFloat(e.target.value) || 0)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="value">Valeur (€)</Label>
-                  <Input
-                    id="value"
-                    type="number"
-                    value={shipmentData.estimated_value || ''}
-                    onChange={(e) => handleInputChange('estimated_value', parseFloat(e.target.value) || 0)}
-                  />
-                </div>
+              <div>
+                <Label htmlFor="weight">Poids estimatif (kg) *</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={shipmentData.weight_kg || ''}
+                  onChange={(e) => handleInputChange('weight_kg', parseFloat(e.target.value) || 0)}
+                />
               </div>
 
               <div>
@@ -343,80 +319,6 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
         );
 
       case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <MapPin className="h-12 w-12 mx-auto mb-4 text-success" />
-              <h3 className="text-xl font-semibold">Adresse de livraison</h3>
-              <p className="text-muted-foreground">Où livrer le colis</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="delivery_address">Adresse complète *</Label>
-                <Input
-                  id="delivery_address"
-                  placeholder="123 Rue Example"
-                  value={shipmentData.delivery_address}
-                  onChange={(e) => handleInputChange('delivery_address', e.target.value)}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="delivery_city">Ville *</Label>
-                  <Input
-                    id="delivery_city"
-                    value={shipmentData.delivery_city}
-                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="delivery_country">Pays *</Label>
-                  <Input
-                    id="delivery_country"
-                    value={shipmentData.delivery_country}
-                    onChange={(e) => handleInputChange('delivery_country', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contact_name">Nom du contact *</Label>
-                  <Input
-                    id="contact_name"
-                    placeholder="Jean Dupont"
-                    value={shipmentData.delivery_contact_name}
-                    onChange={(e) => handleInputChange('delivery_contact_name', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact_phone">Téléphone *</Label>
-                  <Input
-                    id="contact_phone"
-                    placeholder="+33 6 12 34 56 78"
-                    value={shipmentData.delivery_contact_phone}
-                    onChange={(e) => handleInputChange('delivery_contact_phone', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="instructions">Instructions spéciales</Label>
-                <Textarea
-                  id="instructions"
-                  placeholder="Instructions pour la livraison..."
-                  value={shipmentData.special_instructions}
-                  onChange={(e) => handleInputChange('special_instructions', e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
         const estimatedPrice = calculateEstimatedPrice();
         
         return (
