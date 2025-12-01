@@ -6,13 +6,47 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, MapPin, Package, Star, Heart, Search, Plane, Car, Train, Ship, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { TripDetailSheet } from '@/components/TripDetailSheet';
 import { Pagination } from '@/components/Pagination';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Liste des pays
+const COUNTRIES = [
+  "Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola", "Antigua-et-Barbuda",
+  "Arabie saoudite", "Argentine", "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas", "Bahreïn",
+  "Bangladesh", "Barbade", "Belgique", "Belize", "Bénin", "Bhoutan", "Biélorussie", "Birmanie", "Bolivie",
+  "Bosnie-Herzégovine", "Botswana", "Brésil", "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cambodge",
+  "Cameroun", "Canada", "Cap-Vert", "Centrafrique", "Chili", "Chine", "Chypre", "Colombie", "Comores",
+  "Corée du Nord", "Corée du Sud", "Costa Rica", "Côte d'Ivoire", "Croatie", "Cuba", "Danemark", "Djibouti",
+  "Dominique", "Égypte", "Émirats arabes unis", "Équateur", "Érythrée", "Espagne", "Estonie", "Eswatini",
+  "États-Unis", "Éthiopie", "Fidji", "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana", "Grèce",
+  "Grenade", "Guatemala", "Guinée", "Guinée équatoriale", "Guinée-Bissau", "Guyana", "Haïti", "Honduras",
+  "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande", "Islande", "Israël", "Italie", "Jamaïque",
+  "Japon", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "Koweït", "Laos", "Lesotho",
+  "Lettonie", "Liban", "Liberia", "Libye", "Liechtenstein", "Lituanie", "Luxembourg", "Macédoine du Nord",
+  "Madagascar", "Malaisie", "Malawi", "Maldives", "Mali", "Malte", "Maroc", "Maurice", "Mauritanie",
+  "Mexique", "Micronésie", "Moldavie", "Monaco", "Mongolie", "Monténégro", "Mozambique", "Namibie",
+  "Nauru", "Népal", "Nicaragua", "Niger", "Nigeria", "Norvège", "Nouvelle-Zélande", "Oman", "Ouganda",
+  "Ouzbékistan", "Pakistan", "Palaos", "Palestine", "Panama", "Papouasie-Nouvelle-Guinée", "Paraguay",
+  "Pays-Bas", "Pérou", "Philippines", "Pologne", "Portugal", "Qatar", "République dominicaine",
+  "République tchèque", "Roumanie", "Royaume-Uni", "Russie", "Rwanda", "Saint-Kitts-et-Nevis",
+  "Saint-Vincent-et-les-Grenadines", "Sainte-Lucie", "Salomon", "Salvador", "Samoa", "São Tomé-et-Príncipe",
+  "Sénégal", "Serbie", "Seychelles", "Sierra Leone", "Singapour", "Slovaquie", "Slovénie", "Somalie",
+  "Soudan", "Soudan du Sud", "Sri Lanka", "Suède", "Suisse", "Suriname", "Syrie", "Tadjikistan", "Tanzanie",
+  "Tchad", "Thaïlande", "Timor oriental", "Togo", "Tonga", "Trinité-et-Tobago", "Tunisie", "Turkménistan",
+  "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vatican", "Venezuela", "Viêt Nam", "Yémen",
+  "Zambie", "Zimbabwe"
+];
+
+const POPULAR_COUNTRIES = [
+  "France", "Belgique", "Luxembourg", "Allemagne", "Espagne", "Italie", 
+  "Royaume-Uni", "États-Unis", "Canada", "Sénégal", "Côte d'Ivoire", "Maroc"
+];
 
 interface Trip {
   id: string;
@@ -45,6 +79,7 @@ interface Trip {
 export default function SearchTrips() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,12 +89,23 @@ export default function SearchTrips() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [countryFilter, setCountryFilter] = useState("");
   const itemsPerPage = 10;
   
   const [filters, setFilters] = useState({
-    departure_city: '',
-    arrival_city: '',
+    departure_country: searchParams.get('from') || '',
+    arrival_country: searchParams.get('to') || '',
   });
+
+  // Auto-search on URL params change
+  useEffect(() => {
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    if (from || to) {
+      setFilters({ departure_country: from || '', arrival_country: to || '' });
+      searchTrips(from || '', to || '');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -77,7 +123,10 @@ export default function SearchTrips() {
     setFavoriteIds(new Set(data?.map(f => f.trip_id) || []));
   };
 
-  const searchTrips = async () => {
+  const searchTrips = async (depCountry?: string, arrCountry?: string) => {
+    const departureCountry = depCountry ?? filters.departure_country;
+    const arrivalCountry = arrCountry ?? filters.arrival_country;
+    
     try {
       setLoading(true);
       setHasSearched(true);
@@ -94,13 +143,13 @@ export default function SearchTrips() {
         .eq('is_active', true)
         .gte('departure_date', new Date().toISOString());
 
-      if (filters.departure_city.trim()) {
-        query = query.ilike('departure_city', `%${filters.departure_city.trim()}%`);
-        countQuery = countQuery.ilike('departure_city', `%${filters.departure_city.trim()}%`);
+      if (departureCountry.trim()) {
+        query = query.ilike('departure_country', `%${departureCountry.trim()}%`);
+        countQuery = countQuery.ilike('departure_country', `%${departureCountry.trim()}%`);
       }
-      if (filters.arrival_city.trim()) {
-        query = query.ilike('arrival_city', `%${filters.arrival_city.trim()}%`);
-        countQuery = countQuery.ilike('arrival_city', `%${filters.arrival_city.trim()}%`);
+      if (arrivalCountry.trim()) {
+        query = query.ilike('arrival_country', `%${arrivalCountry.trim()}%`);
+        countQuery = countQuery.ilike('arrival_country', `%${arrivalCountry.trim()}%`);
       }
 
       const { count } = await countQuery;
@@ -218,6 +267,9 @@ export default function SearchTrips() {
     searchTrips();
   };
 
+  const filteredCountries = (filter: string) => 
+    COUNTRIES.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+
   return (
     <div 
       ref={containerRef}
@@ -244,23 +296,79 @@ export default function SearchTrips() {
           <CardContent className="p-4 sm:p-6">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-                  <Input
-                    placeholder="Ville de départ"
-                    value={filters.departure_city}
-                    onChange={(e) => setFilters(prev => ({ ...prev, departure_city: e.target.value }))}
-                    className="pl-10 h-12"
-                  />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Plane className="h-4 w-4 text-primary" />
+                    Pays de départ
+                  </label>
+                  <Select 
+                    value={filters.departure_country} 
+                    onValueChange={(val) => setFilters(prev => ({ ...prev, departure_country: val }))}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Tous les pays" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <div className="p-2 sticky top-0 bg-background">
+                        <Input
+                          placeholder="Rechercher..."
+                          value={countryFilter}
+                          onChange={(e) => setCountryFilter(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <SelectItem value="">Tous les pays</SelectItem>
+                      {countryFilter === "" && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
+                          {POPULAR_COUNTRIES.map(c => (
+                            <SelectItem key={`pop-dep-${c}`} value={c}>{c}</SelectItem>
+                          ))}
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1">Tous</div>
+                        </>
+                      )}
+                      {filteredCountries(countryFilter).map(c => (
+                        <SelectItem key={`dep-${c}`} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
-                  <Input
-                    placeholder="Ville d'arrivée"
-                    value={filters.arrival_city}
-                    onChange={(e) => setFilters(prev => ({ ...prev, arrival_city: e.target.value }))}
-                    className="pl-10 h-12"
-                  />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-secondary" />
+                    Pays d'arrivée
+                  </label>
+                  <Select 
+                    value={filters.arrival_country} 
+                    onValueChange={(val) => setFilters(prev => ({ ...prev, arrival_country: val }))}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Tous les pays" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <div className="p-2 sticky top-0 bg-background">
+                        <Input
+                          placeholder="Rechercher..."
+                          value={countryFilter}
+                          onChange={(e) => setCountryFilter(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <SelectItem value="">Tous les pays</SelectItem>
+                      {countryFilter === "" && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
+                          {POPULAR_COUNTRIES.map(c => (
+                            <SelectItem key={`pop-arr-${c}`} value={c}>{c}</SelectItem>
+                          ))}
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1">Tous</div>
+                        </>
+                      )}
+                      {filteredCountries(countryFilter).map(c => (
+                        <SelectItem key={`arr-${c}`} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button type="submit" className="w-full h-12" disabled={loading}>

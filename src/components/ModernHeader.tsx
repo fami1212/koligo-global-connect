@@ -11,14 +11,14 @@ const ModernHeader = () => {
   const { t } = useTranslation();
 
   return (
-    <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
+    <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50 border-b">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             {user && <DesktopHamburgerMenu />}
-            <Link to="/" className="flex items-center gap-2">
-              <img src={gpConnectLogo} alt="GP Connect" className="h-12" />
-              <span className="text-xl font-bold text-primary">GP Connect</span>
+            <Link to="/" className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <img src={gpConnectLogo} alt="GP Connect" className="h-8 sm:h-12 shrink-0" />
+              <span className="text-base sm:text-xl font-bold text-primary truncate hidden xs:inline">GP Connect</span>
             </Link>
           </div>
           
@@ -34,23 +34,23 @@ const ModernHeader = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher />
             {user ? (
               <>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
                   <Link to="/dashboard">{t('nav.dashboard')}</Link>
                 </Button>
-                <Button onClick={signOut} variant="ghost" size="sm">
+                <Button onClick={signOut} variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                   {t('auth.signOut')}
                 </Button>
               </>
             ) : (
               <>
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                   <Link to="/auth">{t('auth.signIn')}</Link>
                 </Button>
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                   <Link to="/auth">{t('auth.signUp')}</Link>
                 </Button>
               </>

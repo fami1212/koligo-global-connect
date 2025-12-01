@@ -77,16 +77,16 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
 
   return (
     <>
-      {/* Primary Bottom Navigation - Now for both mobile and desktop */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/40">
-        <div className="flex items-center justify-around h-16 px-2">
+      {/* Primary Bottom Navigation - Fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/40 safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-1 max-w-screen-lg mx-auto">
           {primaryItems.map((item) => (
             <NavLink
               key={item.title}
               to={item.url}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 relative",
+                  "flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg transition-all duration-200 min-w-[60px] max-w-[80px] flex-1 relative",
                   isActive
                     ? "text-primary bg-primary/10 shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -94,9 +94,9 @@ export function UltraModernBottomMenu({ unreadCount }: { unreadCount: number }) 
               }
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              <span className="text-xs font-medium truncate">{item.title.split(' ')[0]}</span>
+              <span className="text-[10px] sm:text-xs font-medium truncate max-w-full">{item.title.split(' ')[0]}</span>
               {item.title === 'Messages' && item.badge && item.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
+                <span className="absolute top-0 right-1 w-2 h-2 bg-destructive rounded-full" />
               )}
             </NavLink>
           ))}
