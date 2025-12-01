@@ -611,12 +611,15 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          business_name: string | null
           city: string | null
           country: string | null
           created_at: string
           email: string
           first_name: string | null
           id: string
+          id_type: string | null
+          id_validity_date: string | null
           is_verified: boolean | null
           last_name: string | null
           phone: string | null
@@ -630,12 +633,15 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          business_name?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email: string
           first_name?: string | null
           id?: string
+          id_type?: string | null
+          id_validity_date?: string | null
           is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
@@ -649,12 +655,15 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          business_name?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string
           first_name?: string | null
           id?: string
+          id_type?: string | null
+          id_validity_date?: string | null
           is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
@@ -878,6 +887,7 @@ export type Database = {
           available_weight_kg: number
           created_at: string
           currency: string
+          delivery_address: string | null
           departure_actual: string | null
           departure_city: string
           departure_country: string
@@ -885,12 +895,14 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean | null
+          last_deposit_date: string | null
           max_volume_m3: number | null
           max_weight_kg: number
           pickup_address: string | null
           pickup_time_limit: string
           price_per_kg: number
           status: string | null
+          ticket_proof_url: string | null
           transport_type: string
           traveler_id: string
           updated_at: string
@@ -903,6 +915,7 @@ export type Database = {
           available_weight_kg: number
           created_at?: string
           currency?: string
+          delivery_address?: string | null
           departure_actual?: string | null
           departure_city: string
           departure_country: string
@@ -910,12 +923,14 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          last_deposit_date?: string | null
           max_volume_m3?: number | null
           max_weight_kg: number
           pickup_address?: string | null
           pickup_time_limit?: string
           price_per_kg: number
           status?: string | null
+          ticket_proof_url?: string | null
           transport_type: string
           traveler_id: string
           updated_at?: string
@@ -928,6 +943,7 @@ export type Database = {
           available_weight_kg?: number
           created_at?: string
           currency?: string
+          delivery_address?: string | null
           departure_actual?: string | null
           departure_city?: string
           departure_country?: string
@@ -935,12 +951,14 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          last_deposit_date?: string | null
           max_volume_m3?: number | null
           max_weight_kg?: number
           pickup_address?: string | null
           pickup_time_limit?: string
           price_per_kg?: number
           status?: string | null
+          ticket_proof_url?: string | null
           transport_type?: string
           traveler_id?: string
           updated_at?: string

@@ -15,6 +15,10 @@ interface Profile {
   avatar_url?: string;
   rating: number;
   total_reviews: number;
+  is_verified?: boolean;
+  business_name?: string;
+  id_type?: string;
+  id_validity_date?: string;
 }
 
 interface UserRole {

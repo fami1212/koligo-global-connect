@@ -6,15 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Truck, Package, ArrowLeft } from 'lucide-react';
+import { Truck, Package, ArrowLeft, Shield, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState('sender');
+  const [idType, setIdType] = useState('');
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -41,12 +45,18 @@ export default function Auth() {
     const password = formData.get('password') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
-    const userType = formData.get('userType') as string;
+    
+    // GP specific fields
+    const businessName = formData.get('businessName') as string;
+    const idValidityDate = formData.get('idValidityDate') as string;
     
     await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
-      user_type: userType
+      user_type: userType,
+      business_name: userType === 'traveler' ? businessName : null,
+      id_type: userType === 'traveler' ? idType : null,
+      id_validity_date: userType === 'traveler' ? idValidityDate : null,
     });
     setIsLoading(false);
   };
@@ -119,9 +129,92 @@ export default function Auth() {
               
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* User type selection */}
+                  <div className="space-y-3">
+                    <Label>{t('auth.userType')}</Label>
+                    <RadioGroup 
+                      value={userType} 
+                      onValueChange={setUserType} 
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      <div className={`flex items-center space-x-2 border rounded-lg p-3 cursor-pointer transition-all ${userType === 'sender' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}>
+                        <RadioGroupItem value="sender" id="sender" />
+                        <Label htmlFor="sender" className="cursor-pointer flex items-center gap-2 flex-1">
+                          <Package className="h-4 w-4 text-primary" />
+                          <div>
+                            <div className="font-medium text-sm">{t('auth.sender')}</div>
+                            <div className="text-xs text-muted-foreground">{t('auth.senderDesc')}</div>
+                          </div>
+                        </Label>
+                      </div>
+                      <div className={`flex items-center space-x-2 border rounded-lg p-3 cursor-pointer transition-all ${userType === 'traveler' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}>
+                        <RadioGroupItem value="traveler" id="traveler" />
+                        <Label htmlFor="traveler" className="cursor-pointer flex items-center gap-2 flex-1">
+                          <Truck className="h-4 w-4 text-success" />
+                          <div>
+                            <div className="font-medium text-sm">GP</div>
+                            <div className="text-xs text-muted-foreground">Transporteur</div>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* GP specific fields */}
+                  {userType === 'traveler' && (
+                    <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Building2 className="h-4 w-4" />
+                        Informations GP
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="businessName">Nom d'enseigne</Label>
+                        <Input
+                          id="businessName"
+                          name="businessName"
+                          placeholder="Ex: Transport Express Paris"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="idType">Type de pièce d'identité *</Label>
+                        <Select value={idType} onValueChange={setIdType} required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="passport">Passeport</SelectItem>
+                            <SelectItem value="national_id">Carte d'identité nationale</SelectItem>
+                            <SelectItem value="driver_license">Permis de conduire</SelectItem>
+                            <SelectItem value="residence_permit">Titre de séjour</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="idValidityDate">Date de validité *</Label>
+                        <Input
+                          id="idValidityDate"
+                          name="idValidityDate"
+                          type="date"
+                          required={userType === 'traveler'}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+
+                      <Alert className="bg-amber-50 border-amber-200">
+                        <Shield className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 text-xs">
+                          Après inscription, vous devrez soumettre vos documents d'identité pour vérification avant de pouvoir publier des trajets.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">{t('auth.firstName')}</Label>
+                      <Label htmlFor="firstName">{t('auth.firstName')} *</Label>
                       <Input
                         id="firstName"
                         name="firstName"
@@ -130,7 +223,7 @@ export default function Auth() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">{t('auth.lastName')}</Label>
+                      <Label htmlFor="lastName">{t('auth.lastName')} *</Label>
                       <Input
                         id="lastName"
                         name="lastName"
@@ -139,8 +232,9 @@ export default function Auth() {
                       />
                     </div>
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
+                    <Label htmlFor="signup-email">{t('auth.email')} *</Label>
                     <Input
                       id="signup-email"
                       name="email"
@@ -150,7 +244,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
+                    <Label htmlFor="signup-password">{t('auth.password')} *</Label>
                     <Input
                       id="signup-password"
                       name="password"
@@ -160,35 +254,11 @@ export default function Auth() {
                       minLength={6}
                     />
                   </div>
-                  <div className="space-y-3">
-                    <Label>{t('auth.userType')}</Label>
-                    <RadioGroup name="userType" defaultValue="sender" className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="sender" id="sender" />
-                        <Label htmlFor="sender" className="cursor-pointer flex items-center gap-2 flex-1">
-                          <Package className="h-4 w-4 text-primary" />
-                          <div>
-                            <div className="font-medium">{t('auth.sender')}</div>
-                            <div className="text-xs text-muted-foreground">{t('auth.senderDesc')}</div>
-                          </div>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
-                        <RadioGroupItem value="traveler" id="traveler" />
-                        <Label htmlFor="traveler" className="cursor-pointer flex items-center gap-2 flex-1">
-                          <Truck className="h-4 w-4 text-success" />
-                          <div>
-                            <div className="font-medium">{t('auth.traveler')}</div>
-                            <div className="text-xs text-muted-foreground">{t('auth.travelerDesc')}</div>
-                          </div>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
+
                   <Button 
                     type="submit" 
                     className="w-full" 
-                    disabled={isLoading}
+                    disabled={isLoading || (userType === 'traveler' && !idType)}
                     variant="default"
                   >
                     {isLoading ? `${t('common.loading')}` : t('auth.createAccount')}
