@@ -110,6 +110,15 @@ export default function AdminKYC() {
               verification_approved_by: user?.id,
             })
             .eq("user_id", doc.user_id);
+
+          // Créer une notification pour le GP vérifié
+          await supabase.from("notifications").insert({
+            user_id: doc.user_id,
+            title: "Vérification KYC approuvée",
+            message: "Votre profil GP a été vérifié avec succès. Vous pouvez maintenant publier des trajets.",
+            type: "success",
+            link: "/traveler/create-trip",
+          });
         }
       }
 

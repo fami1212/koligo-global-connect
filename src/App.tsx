@@ -18,6 +18,7 @@ import CreateShipment from "./pages/CreateShipment";
 import CreateTrip from "./pages/CreateTrip";
 import UltraModernTracking from "./pages/UltraModernTracking";
 import ModernAdmin from "./pages/ModernAdmin";
+import AdminDashboard from "./pages/AdminDashboard";
 import SearchTrips from "./pages/SearchTrips";
 import MyTrips from "./pages/MyTrips";
 import Reservations from "./pages/Reservations";
@@ -122,10 +123,10 @@ function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AppLayout>
                       <PageTransition>
-                        <ModernAdmin />
+                        <AdminDashboard />
                       </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
