@@ -54,8 +54,7 @@ export function MobileBottomNav() {
     { title: "Suivi", url: "/tracking", icon: MapPin },
     { title: "Notifications", url: "/notifications", icon: Bell },
     { title: "Avis", url: "/reviews", icon: Star },
-    { title: "Litiges", url: "/disputes", icon: AlertCircle },
-    { title: "Support", url: "/support", icon: HelpCircle },
+    
     ...(hasRole('admin') ? [
       { title: "Administration", url: "/admin", icon: Shield },
       { title: "KYC Admin", url: "/admin/kyc", icon: Shield },
