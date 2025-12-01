@@ -317,7 +317,6 @@ export default function SearchTrips() {
                           className="h-9"
                         />
                       </div>
-                      <SelectItem value="">Tous les pays</SelectItem>
                       {countryFilter === "" && (
                         <>
                           <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
@@ -354,7 +353,6 @@ export default function SearchTrips() {
                           className="h-9"
                         />
                       </div>
-                      <SelectItem value="">Tous les pays</SelectItem>
                       {countryFilter === "" && (
                         <>
                           <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Populaires</div>
