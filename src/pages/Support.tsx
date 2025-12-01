@@ -25,6 +25,8 @@ interface ProblemReport {
   resolution_notes: string | null;
 }
 
+import UserAdminMessaging from "@/components/UserAdminMessaging";
+
 export default function Support() {
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
@@ -185,13 +187,16 @@ export default function Support() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Support</h1>
-          <p className="text-muted-foreground">Créez et suivez vos tickets de support</p>
+          <p className="text-muted-foreground">Créez et suivez vos tickets de support ou contactez l'administration</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau ticket
         </Button>
       </div>
+
+      {/* Messagerie Admin */}
+      <UserAdminMessaging />
 
       <Tabs defaultValue="open">
         <TabsList>

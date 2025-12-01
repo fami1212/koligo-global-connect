@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,17 @@ export default function CreateTrip() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isVerified = (profile as any)?.is_verified === true;
+
+  // Vérification KYC au chargement
+  useEffect(() => {
+    if (profile && !(profile as any)?.is_verified) {
+      toast({
+        title: "Vérification requise",
+        description: "Vous devez être vérifié pour publier des trajets",
+        variant: "destructive",
+      });
+    }
+  }, [profile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
