@@ -44,6 +44,74 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_conversations: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          id: string
+          status: string | null
+          subject: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "admin_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           commission_amount: number | null
