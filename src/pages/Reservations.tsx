@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Package, Truck, Clock, CheckCircle, XCircle, MessageCircle, Euro } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Package, Truck, Clock, CheckCircle, XCircle, MessageCircle, Euro, Search, Filter, X } from 'lucide-react';
 import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,6 +62,12 @@ export default function Reservations() {
   const [requests, setRequests] = useState<MatchRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [routeFilter, setRouteFilter] = useState('');
 
   const { containerRef, isPulling, isRefreshing, pullDistance, threshold } = usePullToRefresh({
     onRefresh: async () => await loadRequests(),
@@ -360,9 +367,65 @@ export default function Reservations() {
     );
   }
 
-  const pendingRequests = requests.filter(r => r.status === 'pending');
-  const acceptedRequests = requests.filter(r => r.status === 'accepted');
-  const rejectedRequests = requests.filter(r => r.status === 'rejected');
+  // Apply filters
+  const filteredRequests = useMemo(() => {
+    return requests.filter(r => {
+      // Search filter
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch = 
+          r.shipment?.title?.toLowerCase().includes(search) ||
+          r.trip?.departure_city?.toLowerCase().includes(search) ||
+          r.trip?.arrival_city?.toLowerCase().includes(search) ||
+          r.sender_profile?.first_name?.toLowerCase().includes(search) ||
+          r.traveler_profile?.first_name?.toLowerCase().includes(search);
+        if (!matchesSearch) return false;
+      }
+      
+      // Route filter
+      if (routeFilter) {
+        const route = routeFilter.toLowerCase();
+        const matchesRoute = 
+          r.trip?.departure_city?.toLowerCase().includes(route) ||
+          r.trip?.arrival_city?.toLowerCase().includes(route);
+        if (!matchesRoute) return false;
+      }
+      
+      // Price filter
+      if (priceFilter !== 'all') {
+        const price = r.final_price || r.estimated_price;
+        if (priceFilter === 'low' && price > 50) return false;
+        if (priceFilter === 'medium' && (price <= 50 || price > 100)) return false;
+        if (priceFilter === 'high' && price <= 100) return false;
+      }
+      
+      // Date filter
+      if (dateFilter !== 'all' && r.trip?.departure_date) {
+        const tripDate = new Date(r.trip.departure_date);
+        const now = new Date();
+        const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const monthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        if (dateFilter === 'week' && tripDate > weekFromNow) return false;
+        if (dateFilter === 'month' && tripDate > monthFromNow) return false;
+      }
+      
+      return true;
+    });
+  }, [requests, searchTerm, priceFilter, dateFilter, routeFilter]);
+
+  const pendingRequests = filteredRequests.filter(r => r.status === 'pending');
+  const acceptedRequests = filteredRequests.filter(r => r.status === 'accepted');
+  const rejectedRequests = filteredRequests.filter(r => r.status === 'rejected');
+  
+  const clearFilters = () => {
+    setSearchTerm('');
+    setPriceFilter('all');
+    setDateFilter('all');
+    setRouteFilter('');
+  };
+  
+  const hasActiveFilters = searchTerm || priceFilter !== 'all' || dateFilter !== 'all' || routeFilter;
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden overflow-y-auto">
@@ -389,6 +452,59 @@ export default function Reservations() {
             <Link to="/dashboard">Retour au tableau de bord</Link>
           </Button>
         </div>
+
+        {/* Filters */}
+        <Card className="p-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-sm">Filtres</span>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto h-8">
+                  <X className="h-4 w-4 mr-1" />
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Input
+                placeholder="Trajet (ville)"
+                value={routeFilter}
+                onChange={(e) => setRouteFilter(e.target.value)}
+              />
+              <Select value={priceFilter} onValueChange={setPriceFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Prix" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les prix</SelectItem>
+                  <SelectItem value="low">{"< 50€"}</SelectItem>
+                  <SelectItem value="medium">50€ - 100€</SelectItem>
+                  <SelectItem value="high">{"> 100€"}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les dates</SelectItem>
+                  <SelectItem value="week">Cette semaine</SelectItem>
+                  <SelectItem value="month">Ce mois</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
 
         <Tabs defaultValue="pending" className="space-y-4 sm:space-y-6">
           <TabsList className="w-full h-auto flex flex-wrap gap-1 p-1">
