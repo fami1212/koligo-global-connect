@@ -49,6 +49,8 @@ interface Assignment {
     departure_date: string;
     arrival_date: string;
     transport_type: string;
+    currency: string;
+    price_per_kg: number;
   };
   sender_profile: {
     first_name: string;
@@ -127,7 +129,9 @@ export default function Tracking() {
           trip:trips (
             departure_date,
             arrival_date,
-            transport_type
+            transport_type,
+            currency,
+            price_per_kg
           )
         `)
         .or(`sender_id.eq.${user?.id},traveler_id.eq.${user?.id}`)
