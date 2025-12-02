@@ -62,19 +62,45 @@ export default function CreateTrip() {
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isVerified = (profile as any)?.is_verified === true;
-  const hasApprovedKYC = (profile as any)?.verification_approved_at !== null;
+  // Vérification robuste - considère vérifié si is_verified OU verification_approved_at existe
+  const isVerified = (profile as any)?.is_verified === true || 
+                     (profile as any)?.verification_approved_at !== null;
+  
+  const [kycStatus, setKycStatus] = useState<string | null>(null);
+  const [checkingKYC, setCheckingKYC] = useState(true);
 
-  // Vérification KYC au chargement - Ne pas afficher le toast si déjà approuvé
+  // Vérifier le statut KYC depuis la base de données
   useEffect(() => {
-    if (profile && !isVerified && !hasApprovedKYC) {
-      toast({
-        title: "Vérification requise",
-        description: "Vous devez être vérifié pour publier des trajets",
-        variant: "destructive",
-      });
-    }
-  }, [profile, isVerified, hasApprovedKYC, toast]);
+    const checkKYCStatus = async () => {
+      if (!user) {
+        setCheckingKYC(false);
+        return;
+      }
+      
+      try {
+        const { data: kycDocs } = await supabase
+          .from('kyc_documents')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'approved')
+          .limit(1);
+        
+        if (kycDocs && kycDocs.length > 0) {
+          setKycStatus('approved');
+        } else {
+          setKycStatus(null);
+        }
+      } catch (error) {
+        console.error('Error checking KYC:', error);
+      } finally {
+        setCheckingKYC(false);
+      }
+    };
+
+    checkKYCStatus();
+  }, [user]);
+
+  const canCreateTrip = isVerified || kycStatus === 'approved';
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -128,7 +154,7 @@ export default function CreateTrip() {
     if (!user) return;
 
     // Autoriser si déjà approuvé OU vérifié
-    if (!isVerified && !hasApprovedKYC) {
+    if (!canCreateTrip) {
       toast({
         title: "Vérification requise",
         description: "Vous devez être vérifié pour publier un trajet",
@@ -191,8 +217,17 @@ export default function CreateTrip() {
     }
   };
 
+  // Loading state while checking KYC
+  if (checkingKYC) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   // Show verification required message if not verified and not approved
-  if (!isVerified && !hasApprovedKYC) {
+  if (!canCreateTrip) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-2xl">
@@ -203,10 +238,10 @@ export default function CreateTrip() {
             </Link>
           </div>
 
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <AlertTitle className="text-amber-800">Vérification requise</AlertTitle>
-            <AlertDescription className="text-amber-700 mt-2">
+          <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            <AlertTitle className="text-amber-800 dark:text-amber-200">Vérification requise</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300 mt-2">
               <p className="mb-4">
                 Pour publier des trajets et transporter des colis, vous devez d'abord faire vérifier votre identité.
               </p>

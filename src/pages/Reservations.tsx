@@ -206,15 +206,15 @@ export default function Reservations() {
 
   const openConversation = async (request: MatchRequest) => {
     try {
+      // Chercher un assignment existant
       const { data: assignmentData } = await supabase
         .from('assignments')
         .select('id')
         .eq('match_request_id', request.id)
         .maybeSingle();
 
-      const assignmentId = assignmentData?.id || null;
-
-      const { data, error } = await supabase
+      // Chercher une conversation existante entre les deux utilisateurs
+      const { data: existingConversation, error: searchError } = await supabase
         .from('conversations')
         .select('id')
         .or(
@@ -223,23 +223,59 @@ export default function Reservations() {
         .limit(1)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (searchError && searchError.code !== 'PGRST116') throw searchError;
 
-      let conversationId = data?.id;
+      let conversationId = existingConversation?.id;
 
+      // Si pas de conversation existante, en créer une nouvelle
       if (!conversationId) {
-        const { data: created, error: createError } = await supabase
-          .from('conversations')
-          .insert({
-            sender_id: request.sender_id,
-            traveler_id: request.traveler_id,
-            assignment_id: assignmentId
-          })
-          .select('id')
-          .single();
+        // On a besoin d'un assignment_id pour créer la conversation
+        // Si pas d'assignment, on doit d'abord en créer un temporaire ou utiliser une autre approche
         
-        if (createError) throw createError;
-        conversationId = created.id;
+        let assignmentId = assignmentData?.id;
+        
+        // Si pas d'assignment mais request acceptée, créer l'assignment
+        if (!assignmentId && request.status === 'accepted') {
+          const { data: newAssignment, error: assignmentError } = await supabase
+            .from('assignments')
+            .insert({
+              match_request_id: request.id,
+              shipment_id: request.shipment_id,
+              trip_id: request.trip_id,
+              sender_id: request.sender_id,
+              traveler_id: request.traveler_id,
+              final_price: request.final_price || request.estimated_price,
+            })
+            .select('id')
+            .single();
+          
+          if (assignmentError) throw assignmentError;
+          assignmentId = newAssignment.id;
+        }
+        
+        // Si on a un assignment, créer la conversation
+        if (assignmentId) {
+          const { data: newConversation, error: createError } = await supabase
+            .from('conversations')
+            .insert({
+              sender_id: request.sender_id,
+              traveler_id: request.traveler_id,
+              assignment_id: assignmentId
+            })
+            .select('id')
+            .single();
+          
+          if (createError) throw createError;
+          conversationId = newConversation.id;
+        } else {
+          // Si pas d'assignment disponible, informer l'utilisateur
+          toast({
+            title: "Conversation indisponible",
+            description: "La demande doit d'abord être acceptée pour pouvoir discuter",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       navigate(`/messages?conversationId=${conversationId}`);
@@ -257,103 +293,118 @@ export default function Reservations() {
     const [finalPrice, setFinalPrice] = useState(request.final_price || request.estimated_price);
     const isTraveler = hasRole('traveler');
     const otherUser = isTraveler ? request.sender_profile : request.traveler_profile;
+    const isPending = request.status === 'pending';
+    const isAccepted = request.status === 'accepted';
 
     return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              {isTraveler ? (
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-              ) : (
-                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0" />
-              )}
-              <span className="truncate">
-                {isTraveler ? request.shipment?.title : `${request.trip?.departure_city} → ${request.trip?.arrival_city}`}
-              </span>
-            </CardTitle>
+      <Card className={`hover:shadow-md transition-all ${isPending ? 'border-warning/50 bg-warning/5' : isAccepted ? 'border-success/50 bg-success/5' : ''}`}>
+        <CardContent className="p-4 space-y-4">
+          {/* Header with status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${isTraveler ? 'bg-primary/10' : 'bg-accent/10'}`}>
+                {isTraveler ? <Package className="h-5 w-5 text-primary" /> : <Truck className="h-5 w-5 text-accent" />}
+              </div>
+              <div>
+                <h3 className="font-semibold">
+                  {isTraveler ? request.shipment?.title : `${request.trip?.departure_city} → ${request.trip?.arrival_city}`}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {otherUser?.first_name} {otherUser?.last_name} • ★ {otherUser?.rating?.toFixed(1) || '0.0'}
+                </p>
+              </div>
+            </div>
             {getStatusBadge(request.status)}
           </div>
-          <CardDescription className="text-xs sm:text-sm">
-            Par {otherUser?.first_name} {otherUser?.last_name} (★ {otherUser?.rating?.toFixed(1) || '0.0'})
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-3 sm:space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:gap-4">
-            <div>
-              <h4 className="font-medium mb-1 text-sm sm:text-base">Détails du colis</h4>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {request.shipment?.pickup_city} → {request.shipment?.delivery_city}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Poids: {request.shipment?.weight_kg}kg
-              </p>
+
+          {/* Trip & Shipment Info */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-muted/30 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Colis</p>
+              <p className="font-medium">{request.shipment?.pickup_city} → {request.shipment?.delivery_city}</p>
+              <p className="text-xs text-muted-foreground">{request.shipment?.weight_kg} kg</p>
             </div>
-            <div>
-              <h4 className="font-medium mb-1 text-sm sm:text-base">Détails du trajet</h4>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {request.trip?.departure_date ? new Date(request.trip.departure_date).toLocaleDateString('fr-FR') : 'N/A'}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Transport: {request.trip?.transport_type || 'N/A'}
-              </p>
+            <div className="bg-muted/30 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Trajet</p>
+              <p className="font-medium">{request.trip?.departure_date ? new Date(request.trip.departure_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : 'N/A'}</p>
+              <p className="text-xs text-muted-foreground capitalize">{request.trip?.transport_type}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Euro className="h-4 w-4 text-success flex-shrink-0" />
-            <span className="font-medium text-sm sm:text-base">
-              Prix: {request.final_price || request.estimated_price} {request.trip?.currency || 'EUR'}
-            </span>
+          {/* Price */}
+          <div className="flex items-center justify-between bg-success/10 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Euro className="h-5 w-5 text-success" />
+              <span className="font-semibold text-lg">
+                {request.final_price || request.estimated_price} {request.trip?.currency || 'EUR'}
+              </span>
+            </div>
+            {isPending && isTraveler && (
+              <Input
+                type="number"
+                placeholder="Prix final"
+                value={finalPrice}
+                onChange={(e) => setFinalPrice(parseFloat(e.target.value))}
+                className="w-24 h-8 text-sm"
+              />
+            )}
           </div>
 
           {request.message && (
-            <div className="p-2 sm:p-3 bg-muted rounded-lg">
-              <p className="text-xs sm:text-sm">{request.message}</p>
-            </div>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+              "{request.message}"
+            </p>
           )}
 
-          {request.status === 'pending' && isTraveler && (
-            <div className="flex flex-col gap-2 pt-2">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input
-                  type="number"
-                  placeholder="Prix final"
-                  value={finalPrice}
-                  onChange={(e) => setFinalPrice(parseFloat(e.target.value))}
-                  className="w-full sm:w-32"
-                />
+          {/* Actions - Simplified */}
+          <div className="flex flex-col gap-2">
+            {/* Message button - Always visible for easy communication */}
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => openConversation(request)}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Envoyer un message
+            </Button>
+
+            {/* Accept/Reject for travelers on pending requests */}
+            {isPending && isTraveler && (
+              <div className="flex gap-2">
                 <Button
                   onClick={() => updateRequestStatus(request.id, 'accepted', finalPrice)}
                   disabled={processingId === request.id}
-                  className="w-full sm:flex-1"
-                  size="sm"
+                  className="flex-1"
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Accepter
                 </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => updateRequestStatus(request.id, 'rejected')}
+                  disabled={processingId === request.id}
+                  className="flex-1"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Refuser
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => updateRequestStatus(request.id, 'rejected')}
-                disabled={processingId === request.id}
-                className="w-full"
-                size="sm"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Refuser
-              </Button>
-            </div>
-          )}
+            )}
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 text-xs text-muted-foreground">
-            <span>Créé le {new Date(request.created_at).toLocaleDateString('fr-FR')}</span>
-            <Button variant="ghost" size="sm" onClick={() => openConversation(request)} className="w-full sm:w-auto">
-              <MessageCircle className="h-3 w-3 mr-1" />
-              Message
-            </Button>
+            {/* View tracking for accepted */}
+            {isAccepted && (
+              <Button variant="secondary" className="w-full" asChild>
+                <Link to={`/tracking?shipment=${request.shipment_id}`}>
+                  <Package className="h-4 w-4 mr-2" />
+                  Suivre la livraison
+                </Link>
+              </Button>
+            )}
           </div>
+
+          <p className="text-xs text-muted-foreground text-center">
+            Créé le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+          </p>
         </CardContent>
       </Card>
     );
