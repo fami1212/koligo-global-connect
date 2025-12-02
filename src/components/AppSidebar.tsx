@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react"
 import {
-  Package2, Search, Truck, MessageCircle, User, MapPin, Plus,
-  Shield, Home, LogOut, Sparkles, Star, Bell, AlertCircle, HelpCircle, Camera
+  Search, Truck, MessageCircle, User, MapPin,
+  Shield, Home, LogOut, Star, Bell, Sparkles
 } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { NavLink } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -17,7 +16,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import Logo from "@/assets/gp_connect-removebg-preview.png"
-import { useTranslation } from 'react-i18next'
 
 interface NavItem {
   title: string
@@ -30,80 +28,56 @@ interface NavItem {
 export function AppSidebar() {
   const { state } = useSidebar()
   const { user, profile, hasRole, signOut } = useAuth()
-  const { t } = useTranslation()
   const collapsed = state === "collapsed"
   const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
     if (!user) return
-
     loadNotificationCount()
 
     const channel = supabase
       .channel('notifications-sidebar')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         () => loadNotificationCount()
       )
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [user])
 
   const loadNotificationCount = async () => {
     if (!user) return
-
-    try {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('read', false)
-
-      setNotificationCount(count || 0)
-    } catch (error) {
-      console.error('Error loading notification count:', error)
-    }
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false)
+    setNotificationCount(count || 0)
   }
 
+  // Simplified navigation
   const getNavItems = (): NavItem[] => {
     const items: NavItem[] = [
-      { title: t('sidebar.dashboard'), url: "/dashboard", icon: Home },
+      { title: "Accueil", url: "/dashboard", icon: Home },
+      { title: "Rechercher", url: "/search-trips", icon: Search },
     ]
 
-    if (hasRole("sender")) {
-      items.push(
-        { title: t('sidebar.myShipments'), url: "/my-shipments", icon: Package2 },
-        { title: t('sidebar.newShipment'), url: "/sender/create-shipment", icon: Plus },
-        { title: t('sidebar.searchTrips'), url: "/search-trips", icon: Search },
-      )
-    }
-
     if (hasRole("traveler")) {
-      items.push(
-        { title: t('sidebar.myTrips'), url: "/my-trips", icon: Truck },
-        { title: t('sidebar.newTrip'), url: "/traveler/create-trip", icon: Plus },
-      )
+      items.push({ title: "Mes trajets", url: "/my-trips", icon: Truck })
     }
 
     items.push(
-      { title: t('sidebar.reservations'), url: "/reservations", icon: Sparkles },
-      { title: t('sidebar.messages'), url: "/messages", icon: MessageCircle },
-      { title: t('sidebar.notifications'), url: "/notifications", icon: Bell, showBadge: true },
-      { title: t('sidebar.support'), url: "/support", icon: HelpCircle },
-      { title: t('sidebar.profile'), url: "/profile", icon: User }
+      { title: "Réservations", url: "/reservations", icon: Sparkles },
+      { title: "Suivi", url: "/tracking", icon: MapPin },
+      { title: "Messages", url: "/messages", icon: MessageCircle },
+      { title: "Notifications", url: "/notifications", icon: Bell, showBadge: true },
+      { title: "Profil", url: "/profile", icon: User }
     )
 
     if (hasRole("admin")) {
-      items.push({ title: "Administration", url: "/admin", icon: Shield })
+      items.push({ title: "Admin", url: "/admin", icon: Shield })
     }
 
     return items
@@ -119,26 +93,18 @@ export function AppSidebar() {
       className={`${collapsed ? "w-16" : "w-64"} hidden md:flex transition-all duration-300 border-r bg-background`}
       collapsible="icon"
     >
-      {/* HEADER */}
       <SidebarHeader className="border-b p-4">
         <div className="flex items-center gap-3">
-          <img 
-            src={Logo} 
-            alt="GP Connect" 
-            className="h-10 w-auto object-contain" 
-          />
+          <img src={Logo} alt="GP Connect" className="h-10 w-auto object-contain" />
           {!collapsed && (
             <div className="flex flex-col">
-              <h2 className="text-lg font-bold text-foreground">
-                GP Connect
-              </h2>
-              <p className="text-xs text-muted-foreground">{t('sidebar.collaborativeDelivery')}</p>
+              <h2 className="text-lg font-bold text-foreground">GP Connect</h2>
+              <p className="text-xs text-muted-foreground">Livraison collaborative</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      {/* MENU */}
       <SidebarContent className="px-2 py-2 overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -146,15 +112,13 @@ export function AppSidebar() {
               {getNavItems().map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-10">
-                     <NavLink to={item.url} end className={getNavCls}>
-                      {({ isActive }) => (
+                    <NavLink to={item.url} end className={getNavCls}>
+                      {() => (
                         <div className="flex items-center gap-3 w-full">
                           <item.icon className="h-5 w-5 shrink-0" />
                           {!collapsed && (
                             <>
-                              <span className="text-sm font-medium flex-1">
-                                {item.title}
-                              </span>
+                              <span className="text-sm font-medium flex-1">{item.title}</span>
                               {item.showBadge && notificationCount > 0 && (
                                 <Badge variant="destructive" className="h-5 px-2 text-xs">
                                   {notificationCount > 9 ? '9+' : notificationCount}
@@ -173,7 +137,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* FOOTER */}
       <SidebarFooter className="border-t p-3">
         {!collapsed && (
           <div className="mb-3 flex justify-center">
@@ -191,15 +154,9 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-semibold truncate">
-                  {profile?.first_name || "Utilisateur"}
-                </p>
+                <p className="text-sm font-semibold truncate">{profile?.first_name || "Utilisateur"}</p>
                 {(profile as any)?.is_verified && (
-                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/10 border border-success/40">
-                    <svg className="w-3 h-3 text-success" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">✓</Badge>
                 )}
               </div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -218,7 +175,7 @@ export function AppSidebar() {
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            {t('sidebar.logout')}
+            Déconnexion
           </Button>
         )}
       </SidebarFooter>
