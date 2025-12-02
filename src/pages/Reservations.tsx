@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package, Truck, Clock, CheckCircle, XCircle, MessageCircle, Euro, Search, Filter, X } from 'lucide-react';
-import { DeliveryStatusTracker } from '@/components/DeliveryStatusTracker';
+import { TravelerDeliveries } from '@/components/TravelerDeliveries';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -629,7 +629,7 @@ export default function Reservations() {
 
           {hasRole('traveler') && (
             <TabsContent value="deliveries" className="space-y-3 sm:space-y-4">
-              <DeliveryStatusTracker mode="update" />
+              <TravelerDeliveries />
             </TabsContent>
           )}
         </Tabs>
