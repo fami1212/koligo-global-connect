@@ -103,7 +103,7 @@ export function AppSidebar() {
     )
 
     if (hasRole("admin")) {
-      items.push({ title: "Administration", url: "/admin-dashboard", icon: Shield })
+      items.push({ title: "Administration", url: "/admin", icon: Shield })
     }
 
     return items
