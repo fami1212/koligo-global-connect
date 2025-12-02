@@ -13,11 +13,9 @@ import Auth from "./pages/Auth";
 import ModernDashboard from "./pages/ModernDashboard";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
-import Tracking from "./pages/Tracking";
 import CreateShipment from "./pages/CreateShipment";
 import CreateTrip from "./pages/CreateTrip";
 import UltraModernTracking from "./pages/UltraModernTracking";
-import ModernAdmin from "./pages/ModernAdmin";
 import AdminDashboard from "./pages/AdminDashboard";
 import SearchTrips from "./pages/SearchTrips";
 import MyTrips from "./pages/MyTrips";
@@ -25,7 +23,6 @@ import Reservations from "./pages/Reservations";
 import Reviews from "./pages/Reviews";
 import ProofOfDelivery from "./pages/ProofOfDelivery";
 import Notifications from "./pages/Notifications";
-import AdminKYC from "./pages/AdminKYC";
 import Disputes from "./pages/Disputes";
 import Support from "./pages/Support";
 import Favorites from "./pages/Favorites";
@@ -211,18 +208,6 @@ function App() {
                     <AppLayout>
                       <PageTransition>
                         <Notifications />
-                      </PageTransition>
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/kyc"
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AppLayout>
-                      <PageTransition>
-                        <AdminKYC />
                       </PageTransition>
                     </AppLayout>
                   </ProtectedRoute>
