@@ -359,15 +359,7 @@ export default function Reservations() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Apply filters
+  // Apply filters - MUST be before any conditional return
   const filteredRequests = useMemo(() => {
     return requests.filter(r => {
       // Search filter
@@ -426,6 +418,14 @@ export default function Reservations() {
   };
   
   const hasActiveFilters = searchTerm || priceFilter !== 'all' || dateFilter !== 'all' || routeFilter;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden overflow-y-auto">
