@@ -78,28 +78,57 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
 
   const uploadPhoto = async (file: File) => {
     if (!file) return null;
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour uploader une photo",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // Valider la taille du fichier (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximum est de 5 Mo",
+        variant: "destructive",
+      });
+      return null;
+    }
 
     try {
       setUploading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('shipment-photos')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error details:', uploadError);
+        throw uploadError;
+      }
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('shipment-photos')
         .getPublicUrl(fileName);
 
-      return publicUrl;
-    } catch (error) {
+      toast({
+        title: "Photo uploadée",
+        description: "La photo a été ajoutée avec succès",
+      });
+
+      return urlData.publicUrl;
+    } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible d'uploader la photo",
+        title: "Erreur d'upload",
+        description: error.message || "Impossible d'uploader la photo",
         variant: "destructive",
       });
       return null;
