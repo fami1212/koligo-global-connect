@@ -39,6 +39,8 @@ interface MatchRequest {
     arrival_city: string;
     departure_date: string;
     transport_type: string;
+    currency: string;
+    price_per_kg: number;
   };
   sender_profile?: {
     first_name: string;
@@ -97,7 +99,7 @@ export default function Reservations() {
 
       const [shipmentsData, tripsData, sendersData, travelersData] = await Promise.all([
         supabase.from('shipments').select('id, title, pickup_city, delivery_city, weight_kg').in('id', shipmentIds),
-        supabase.from('trips').select('id, departure_city, arrival_city, departure_date, transport_type').in('id', tripIds),
+        supabase.from('trips').select('id, departure_city, arrival_city, departure_date, transport_type, currency, price_per_kg').in('id', tripIds),
         supabase.from('profiles').select('user_id, first_name, last_name, rating').in('user_id', senderIds),
         supabase.from('profiles').select('user_id, first_name, last_name, rating').in('user_id', travelerIds)
       ]);
@@ -295,7 +297,7 @@ export default function Reservations() {
           <div className="flex items-center gap-2">
             <Euro className="h-4 w-4 text-success flex-shrink-0" />
             <span className="font-medium text-sm sm:text-base">
-              Prix: {request.final_price || request.estimated_price}€
+              Prix: {request.final_price || request.estimated_price} {request.trip?.currency || 'EUR'}
             </span>
           </div>
 
@@ -363,7 +365,7 @@ export default function Reservations() {
   const rejectedRequests = requests.filter(r => r.status === 'rejected');
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8 overflow-x-hidden overflow-y-auto">
       <PullToRefreshIndicator
         isPulling={isPulling}
         isRefreshing={isRefreshing}
