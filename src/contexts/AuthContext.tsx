@@ -145,12 +145,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           });
           
-          // Rafraîchir le profil et les roles après création
+          // Rafraîchir le profil et les roles après création (délai augmenté pour s'assurer que tout est créé)
           setTimeout(() => {
             if (data.user?.id) {
               fetchProfile(data.user.id);
             }
-          }, 500);
+          }, 1000);
         } catch (error) {
           console.error('Error calling handle-new-user function:', error);
         }

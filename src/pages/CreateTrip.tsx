@@ -65,7 +65,7 @@ export default function CreateTrip() {
   const isVerified = (profile as any)?.is_verified === true;
   const hasApprovedKYC = (profile as any)?.verification_approved_at !== null;
 
-  // Vérification KYC au chargement - Ne pas revérifier si déjà approuvé
+  // Vérification KYC au chargement - Ne pas afficher le toast si déjà approuvé
   useEffect(() => {
     if (profile && !isVerified && !hasApprovedKYC) {
       toast({
@@ -74,7 +74,7 @@ export default function CreateTrip() {
         variant: "destructive",
       });
     }
-  }, [profile, isVerified, hasApprovedKYC]);
+  }, [profile, isVerified, hasApprovedKYC, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -127,7 +127,8 @@ export default function CreateTrip() {
     e.preventDefault();
     if (!user) return;
 
-    if (!isVerified) {
+    // Autoriser si déjà approuvé OU vérifié
+    if (!isVerified && !hasApprovedKYC) {
       toast({
         title: "Vérification requise",
         description: "Vous devez être vérifié pour publier un trajet",
@@ -190,8 +191,8 @@ export default function CreateTrip() {
     }
   };
 
-  // Show verification required message if not verified
-  if (!isVerified) {
+  // Show verification required message if not verified and not approved
+  if (!isVerified && !hasApprovedKYC) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20 md:pb-8">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-2xl">

@@ -48,23 +48,10 @@ interface BookingWorkflowProps {
 
 interface ShipmentData {
   title: string;
-  package_type: string;
   description: string;
   weight_kg: number;
   photo_url?: string;
 }
-
-const PACKAGE_TYPES = [
-  "Documents",
-  "Vêtements",
-  "Électronique",
-  "Alimentaire",
-  "Médicaments",
-  "Livres",
-  "Jouets",
-  "Cosmétiques",
-  "Autre"
-];
 
 export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflowProps) {
   const { user } = useAuth();
@@ -75,7 +62,6 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
   const [uploading, setUploading] = useState(false);
   const [shipmentData, setShipmentData] = useState<ShipmentData>({
     title: '',
-    package_type: '',
     description: '',
     weight_kg: 0
   });
@@ -125,7 +111,7 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 2:
-        return !!(shipmentData.title && shipmentData.package_type && shipmentData.description && shipmentData.weight_kg > 0);
+        return !!(shipmentData.title && shipmentData.description && shipmentData.weight_kg > 0);
       case 3:
         return true;
       default:
@@ -257,23 +243,6 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
               </div>
 
               <div>
-                <Label htmlFor="package_type">Type de colis *</Label>
-                <Select 
-                  value={shipmentData.package_type} 
-                  onValueChange={(val) => handleInputChange('package_type', val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PACKAGE_TYPES.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
                 <Label htmlFor="description">Description *</Label>
                 <Textarea
                   id="description"
@@ -385,10 +354,6 @@ export function ImprovedBookingWorkflow({ trip, open, onClose }: BookingWorkflow
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Type de colis:</span>
-                  <span className="font-medium">{shipmentData.package_type}</span>
-                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Poids:</span>
                   <span className="font-medium">{shipmentData.weight_kg} kg</span>
