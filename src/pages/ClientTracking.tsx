@@ -391,16 +391,8 @@ export default function ClientTracking() {
                     </div>
                     <TrackingMap
                       transporterLocation={lastLocation}
-                      pickupLocation={selectedAssignment.shipment ? {
-                        lat: 0, // Would need geocoding
-                        lng: 0,
-                        city: selectedAssignment.shipment.pickup_city
-                      } : undefined}
-                      deliveryLocation={selectedAssignment.shipment ? {
-                        lat: 0,
-                        lng: 0,
-                        city: selectedAssignment.shipment.delivery_city
-                      } : undefined}
+                      pickupCity={selectedAssignment.shipment?.pickup_city}
+                      deliveryCity={selectedAssignment.shipment?.delivery_city}
                       className="h-[200px] md:h-[250px]"
                     />
                   </div>
