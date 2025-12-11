@@ -146,7 +146,7 @@ export function InstantMessaging({ conversationId, otherUserId, className }: Ins
   }
 
   return (
-    <Card className={cn("flex flex-col h-96", className)}>
+    <Card className={cn("flex flex-col", className)}>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-primary" />
