@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
-import { CallButtons } from '@/components/CallButtons';
 import { ProblemReporter } from '@/components/ProblemReporter';
 
 interface Assignment {
@@ -367,7 +366,6 @@ export default function ModernTracking() {
                           </div>
                         </div>
                         <div className="flex gap-1">
-                          <CallButtons assignment={assignment} currentUserId={user?.id} />
                           <ProblemReporter assignmentId={assignment.id} />
                         </div>
                       </div>
