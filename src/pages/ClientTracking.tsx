@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { InstantMessaging } from '@/components/InstantMessaging';
+import { TrackingMap } from '@/components/TrackingMap';
 import { 
   MapPin, 
   Package, 
@@ -18,7 +19,8 @@ import {
   Phone,
   User,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Map
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -380,21 +382,28 @@ export default function ClientTracking() {
                     </div>
                   </div>
 
-                  {/* Last known location */}
-                  {lastLocation && (
-                    <>
-                      <Separator />
-                      <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Navigation className="h-4 w-4 text-primary animate-pulse" />
-                          <span className="text-sm font-medium">Position en temps réel</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {lastLocation.lat.toFixed(6)}, {lastLocation.lng.toFixed(6)}
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  {/* Map */}
+                  <Separator />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Map className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">Carte en temps réel</span>
+                    </div>
+                    <TrackingMap
+                      transporterLocation={lastLocation}
+                      pickupLocation={selectedAssignment.shipment ? {
+                        lat: 0, // Would need geocoding
+                        lng: 0,
+                        city: selectedAssignment.shipment.pickup_city
+                      } : undefined}
+                      deliveryLocation={selectedAssignment.shipment ? {
+                        lat: 0,
+                        lng: 0,
+                        city: selectedAssignment.shipment.delivery_city
+                      } : undefined}
+                      className="h-[200px] md:h-[250px]"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
