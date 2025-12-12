@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GPSTracker } from '@/components/GPSTracker';
 import { 
   Package, 
   Truck, 
@@ -219,6 +220,7 @@ export function TravelerDeliveries() {
     const isPending = status === 'pending';
     const isInTransit = status === 'in_transit';
     const isCompleted = status === 'delivered';
+    const [showGPS, setShowGPS] = useState(false);
 
     return (
       <Card className={`overflow-hidden ${isPending ? 'border-warning/50' : isInTransit ? 'border-primary/50' : 'border-success/50'}`}>
@@ -342,6 +344,14 @@ export function TravelerDeliveries() {
             </span>
           </div>
 
+          {/* GPS Tracker for in-transit */}
+          {isInTransit && showGPS && (
+            <GPSTracker 
+              assignmentId={assignment.id} 
+              onClose={() => setShowGPS(false)}
+            />
+          )}
+
           {/* Actions */}
           <div className="flex flex-col gap-2 pt-2 border-t">
             {/* Main status action */}
@@ -357,21 +367,33 @@ export function TravelerDeliveries() {
             )}
 
             {isInTransit && (
-              <Button 
-                onClick={() => updateStatus(assignment, 'delivery')}
-                disabled={processingId === assignment.id}
-                className="w-full bg-success hover:bg-success/90"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                {processingId === assignment.id ? 'Mise à jour...' : 'Marquer comme livré'}
-              </Button>
+              <>
+                <Button 
+                  onClick={() => updateStatus(assignment, 'delivery')}
+                  disabled={processingId === assignment.id}
+                  className="w-full bg-success hover:bg-success/90"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  {processingId === assignment.id ? 'Mise à jour...' : 'Marquer comme livré'}
+                </Button>
+                {!showGPS && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowGPS(true)}
+                    className="w-full"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Partager ma position GPS
+                  </Button>
+                )}
+              </>
             )}
 
             {/* Secondary actions */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button 
                 variant="outline" 
-                className="flex-1"
+                className="flex-1 min-w-[100px]"
                 onClick={() => openConversation(assignment)}
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
@@ -379,7 +401,7 @@ export function TravelerDeliveries() {
               </Button>
               
               {isInTransit && (
-                <Button variant="outline" className="flex-1" asChild>
+                <Button variant="outline" className="flex-1 min-w-[100px]" asChild>
                   <Link to={`/proof-of-delivery?assignment=${assignment.id}`}>
                     <Camera className="h-4 w-4 mr-2" />
                     Preuve
@@ -387,7 +409,7 @@ export function TravelerDeliveries() {
                 </Button>
               )}
 
-              <Button variant="outline" className="flex-1" asChild>
+              <Button variant="outline" className="flex-1 min-w-[100px]" asChild>
                 <Link to={`/tracking?shipment=${assignment.shipment_id}`}>
                   <Navigation className="h-4 w-4 mr-2" />
                   Suivi
