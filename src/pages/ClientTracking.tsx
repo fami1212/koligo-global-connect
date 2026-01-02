@@ -473,8 +473,10 @@ export default function ClientTracking() {
               <TrackingMap
                 transporterLocation={lastLocation}
                 pickupCity={selectedAssignment.shipment?.pickup_city}
+                pickupCountry={selectedAssignment.shipment?.pickup_country}
                 deliveryCity={selectedAssignment.shipment?.delivery_city}
-                className="h-48 lg:h-64"
+                deliveryCountry={selectedAssignment.shipment?.delivery_country}
+                className="h-56 sm:h-64 lg:h-80"
               />
 
               {/* Traveler Card */}
