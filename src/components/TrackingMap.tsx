@@ -22,6 +22,7 @@ interface ETAInfo {
   distanceKm: number;
   durationMinutes: number;
   durationText: string;
+  arrivalTime: string;
 }
 
 // Fix Leaflet default marker icons
@@ -143,6 +144,29 @@ function formatDuration(minutes: number): string {
   return remainingHours > 0 ? `${days}j ${remainingHours}h` : `${days}j`;
 }
 
+// Format arrival time
+function formatArrivalTime(durationMinutes: number): string {
+  const now = new Date();
+  const arrivalDate = new Date(now.getTime() + durationMinutes * 60 * 1000);
+  
+  const hours = arrivalDate.getHours().toString().padStart(2, '0');
+  const minutes = arrivalDate.getMinutes().toString().padStart(2, '0');
+  
+  // Check if arrival is today or another day
+  const isToday = arrivalDate.toDateString() === now.toDateString();
+  const isTomorrow = arrivalDate.toDateString() === new Date(now.getTime() + 24 * 60 * 60 * 1000).toDateString();
+  
+  if (isToday) {
+    return `${hours}h${minutes}`;
+  } else if (isTomorrow) {
+    return `Demain ${hours}h${minutes}`;
+  } else {
+    const day = arrivalDate.getDate();
+    const month = arrivalDate.toLocaleDateString('fr-FR', { month: 'short' });
+    return `${day} ${month} ${hours}h${minutes}`;
+  }
+}
+
 // Calculate ETA based on distance and average speed
 function calculateETA(
   transporterLocation: { lat: number; lng: number } | null,
@@ -166,6 +190,7 @@ function calculateETA(
     distanceKm: roadDistanceKm,
     durationMinutes,
     durationText: formatDuration(durationMinutes),
+    arrivalTime: formatArrivalTime(durationMinutes),
   };
 }
 
@@ -359,14 +384,20 @@ export function TrackingMap({
       
       {/* ETA Panel */}
       {transporterLocation && etaInfo && (
-        <div className="absolute top-2 left-2 z-20 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[200px]">
+        <div className="absolute top-2 left-2 z-20 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[220px]">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="h-4 w-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground">Arrivée estimée</span>
           </div>
           
-          <div className="text-xl font-bold text-foreground mb-1">
-            {etaInfo.durationText}
+          {/* Arrival time */}
+          <div className="text-2xl font-bold text-foreground mb-0.5">
+            {etaInfo.arrivalTime}
+          </div>
+          
+          {/* Duration remaining */}
+          <div className="text-sm text-muted-foreground mb-2">
+            Dans {etaInfo.durationText}
           </div>
           
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
