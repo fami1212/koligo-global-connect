@@ -23,7 +23,10 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  Send,
+  Camera,
+  MapPinned
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -61,6 +64,11 @@ interface Assignment {
     phone: string;
     rating: number;
   };
+  sender_profile?: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+  };
 }
 
 interface TrackingEvent {
@@ -73,6 +81,8 @@ interface TrackingEvent {
   created_at: string;
   photo_url: string | null;
 }
+
+type UserRole = 'sender' | 'traveler';
 
 export default function ClientTracking() {
   const { user } = useAuth();
@@ -89,6 +99,19 @@ export default function ClientTracking() {
   const [showMessages, setShowMessages] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAssignments, setShowAssignments] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('sender');
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+
+  // Determine user role for selected assignment
+  useEffect(() => {
+    if (selectedAssignment && user) {
+      if (selectedAssignment.traveler_id === user.id) {
+        setUserRole('traveler');
+      } else {
+        setUserRole('sender');
+      }
+    }
+  }, [selectedAssignment, user]);
 
   useEffect(() => {
     if (user) {
@@ -119,7 +142,7 @@ export default function ClientTracking() {
             }
             toast({
               title: "Mise à jour",
-              description: newEvent.description || "Position du transporteur mise à jour",
+              description: newEvent.description || "Position mise à jour",
             });
           }
         )
@@ -136,6 +159,7 @@ export default function ClientTracking() {
     setIsLoading(true);
 
     try {
+      // Load assignments where user is sender OR traveler
       const { data, error } = await supabase
         .from('assignments')
         .select(`
@@ -143,21 +167,26 @@ export default function ClientTracking() {
           shipment:shipments(id, title, pickup_city, pickup_country, delivery_city, delivery_country, pickup_contact_name, pickup_contact_phone, delivery_contact_name, delivery_contact_phone, weight_kg),
           trip:trips(departure_date, arrival_date, transport_type, currency)
         `)
-        .eq('sender_id', user.id)
+        .or(`sender_id.eq.${user.id},traveler_id.eq.${user.id}`)
         .is('delivery_completed_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Get all unique user IDs (travelers and senders)
       const travelerIds = [...new Set(data?.map(a => a.traveler_id) || [])];
+      const senderIds = [...new Set(data?.map(a => a.sender_id) || [])];
+      const allUserIds = [...new Set([...travelerIds, ...senderIds])];
+      
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, first_name, last_name, phone, rating')
-        .in('user_id', travelerIds);
+        .in('user_id', allUserIds);
 
       const assignmentsWithProfiles = data?.map(assignment => ({
         ...assignment,
-        traveler_profile: profiles?.find(p => p.user_id === assignment.traveler_id)
+        traveler_profile: profiles?.find(p => p.user_id === assignment.traveler_id),
+        sender_profile: profiles?.find(p => p.user_id === assignment.sender_id)
       })) || [];
 
       setAssignments(assignmentsWithProfiles);
@@ -238,6 +267,126 @@ export default function ClientTracking() {
     }
   };
 
+  // Traveler action: Update location
+  const updateMyLocation = async () => {
+    if (!selectedAssignment || !user || userRole !== 'traveler') return;
+    
+    setIsUpdatingLocation(true);
+    
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('Géolocalisation non supportée');
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Insert tracking event with location
+      const { error } = await supabase
+        .from('tracking_events')
+        .insert({
+          assignment_id: selectedAssignment.id,
+          event_type: 'location_update',
+          description: 'Position mise à jour par le transporteur',
+          latitude,
+          longitude,
+          created_by: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Position partagée",
+        description: "Votre position a été envoyée au client",
+      });
+    } catch (error: any) {
+      console.error('Error updating location:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de partager votre position",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
+  // Traveler action: Mark pickup complete
+  const markPickupComplete = async () => {
+    if (!selectedAssignment || userRole !== 'traveler') return;
+
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ pickup_completed_at: new Date().toISOString() })
+        .eq('id', selectedAssignment.id);
+
+      if (error) throw error;
+
+      // Add tracking event
+      await supabase.from('tracking_events').insert({
+        assignment_id: selectedAssignment.id,
+        event_type: 'pickup_completed',
+        description: 'Colis récupéré',
+        created_by: user?.id
+      });
+
+      toast({
+        title: "Collecte confirmée",
+        description: "Le client a été notifié",
+      });
+
+      loadAssignments();
+    } catch (error) {
+      console.error('Error marking pickup:', error);
+      toast({
+        title: "Erreur",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Traveler action: Mark delivery complete
+  const markDeliveryComplete = async () => {
+    if (!selectedAssignment || userRole !== 'traveler') return;
+
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ delivery_completed_at: new Date().toISOString() })
+        .eq('id', selectedAssignment.id);
+
+      if (error) throw error;
+
+      // Add tracking event
+      await supabase.from('tracking_events').insert({
+        assignment_id: selectedAssignment.id,
+        event_type: 'delivery_completed',
+        description: 'Colis livré',
+        created_by: user?.id
+      });
+
+      toast({
+        title: "Livraison confirmée",
+        description: "Le colis a été marqué comme livré",
+      });
+
+      loadAssignments();
+    } catch (error) {
+      console.error('Error marking delivery:', error);
+      toast({
+        title: "Erreur",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusInfo = (assignment: Assignment) => {
     if (assignment.delivery_completed_at) {
       return { text: 'Livré', progress: 100, variant: 'default' as const, icon: CheckCircle };
@@ -271,6 +420,27 @@ export default function ClientTracking() {
     });
   };
 
+  // Get the other party's info based on role
+  const getOtherPartyInfo = () => {
+    if (!selectedAssignment) return null;
+    
+    if (userRole === 'traveler') {
+      return {
+        name: `${selectedAssignment.sender_profile?.first_name || ''} ${selectedAssignment.sender_profile?.last_name || ''}`.trim() || 'Client',
+        phone: selectedAssignment.sender_profile?.phone,
+        label: 'Client',
+        id: selectedAssignment.sender_id
+      };
+    } else {
+      return {
+        name: `${selectedAssignment.traveler_profile?.first_name || ''} ${selectedAssignment.traveler_profile?.last_name || ''}`.trim() || 'Transporteur',
+        phone: selectedAssignment.traveler_profile?.phone,
+        label: 'Transporteur',
+        id: selectedAssignment.traveler_id
+      };
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -300,6 +470,7 @@ export default function ClientTracking() {
 
   const status = selectedAssignment ? getStatusInfo(selectedAssignment) : null;
   const StatusIcon = status?.icon || Clock;
+  const otherParty = getOtherPartyInfo();
 
   return (
     <div className="min-h-screen bg-background pb-24 lg:pb-8">
@@ -308,9 +479,15 @@ export default function ClientTracking() {
         <div className="sticky top-0 z-20 bg-background border-b p-3 lg:hidden">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold truncate">
-                {selectedAssignment?.shipment?.title || 'Suivi'}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-semibold truncate">
+                  {selectedAssignment?.shipment?.title || 'Suivi'}
+                </h1>
+                {/* Role badge */}
+                <Badge variant={userRole === 'traveler' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
+                  {userRole === 'traveler' ? 'Transporteur' : 'Expéditeur'}
+                </Badge>
+              </div>
               {status && (
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant={status.variant} className="text-xs">
@@ -344,6 +521,7 @@ export default function ClientTracking() {
             <div className="mt-2 border rounded-lg bg-card max-h-48 overflow-auto">
               {assignments.map((assignment) => {
                 const info = getStatusInfo(assignment);
+                const isMyDelivery = assignment.traveler_id === user?.id;
                 return (
                   <button
                     key={assignment.id}
@@ -355,7 +533,11 @@ export default function ClientTracking() {
                       setShowAssignments(false);
                     }}
                   >
-                    <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    {isMyDelivery ? (
+                      <Truck className="h-4 w-4 text-primary flex-shrink-0" />
+                    ) : (
+                      <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{assignment.shipment?.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
@@ -387,6 +569,7 @@ export default function ClientTracking() {
                   {assignments.map((assignment) => {
                     const info = getStatusInfo(assignment);
                     const Icon = info.icon;
+                    const isMyDelivery = assignment.traveler_id === user?.id;
                     return (
                       <Card
                         key={assignment.id}
@@ -399,7 +582,11 @@ export default function ClientTracking() {
                       >
                         <CardContent className="p-3">
                           <div className="flex items-start gap-2">
-                            <Icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                            {isMyDelivery ? (
+                              <Truck className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                            ) : (
+                              <Icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                            )}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{assignment.shipment?.title}</p>
                               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -407,9 +594,14 @@ export default function ClientTracking() {
                                 <ArrowRight className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">{assignment.shipment?.delivery_city}</span>
                               </p>
-                              <Badge variant={info.variant} className="mt-1.5 text-xs">
-                                {info.text}
-                              </Badge>
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <Badge variant={info.variant} className="text-xs">
+                                  {info.text}
+                                </Badge>
+                                <Badge variant={isMyDelivery ? 'default' : 'outline'} className="text-xs">
+                                  {isMyDelivery ? 'Je transporte' : 'J\'envoie'}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -424,6 +616,51 @@ export default function ClientTracking() {
           {/* Main Content */}
           {selectedAssignment && status && (
             <div className="lg:col-span-6 space-y-3 p-3 lg:p-0">
+              {/* Traveler Actions Panel - Only for transporters */}
+              {userRole === 'traveler' && (
+                <Card className="border-primary/50 bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Truck className="h-5 w-5 text-primary" />
+                      <span className="font-semibold text-sm">Actions Transporteur</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={updateMyLocation}
+                        disabled={isUpdatingLocation}
+                        className="flex items-center gap-2"
+                      >
+                        <MapPinned className="h-4 w-4" />
+                        {isUpdatingLocation ? 'Envoi...' : 'Partager ma position'}
+                      </Button>
+                      
+                      {!selectedAssignment.pickup_completed_at ? (
+                        <Button
+                          size="sm"
+                          onClick={markPickupComplete}
+                          className="flex items-center gap-2"
+                        >
+                          <Package className="h-4 w-4" />
+                          Confirmer collecte
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={markDeliveryComplete}
+                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Confirmer livraison
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Progress Card */}
               <Card>
                 <CardContent className="p-4">
@@ -489,15 +726,15 @@ export default function ClientTracking() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-sm truncate">
-                          {selectedAssignment.traveler_profile?.first_name} {selectedAssignment.traveler_profile?.last_name}
+                          {otherParty?.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">Transporteur</p>
+                        <p className="text-xs text-muted-foreground">{otherParty?.label}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {selectedAssignment.traveler_profile?.phone && (
+                      {otherParty?.phone && (
                         <Button variant="outline" size="sm" asChild>
-                          <a href={`tel:${selectedAssignment.traveler_profile.phone}`}>
+                          <a href={`tel:${otherParty.phone}`}>
                             <Phone className="h-4 w-4" />
                           </a>
                         </Button>
@@ -582,14 +819,14 @@ export default function ClientTracking() {
           )}
 
           {/* Desktop Messages */}
-          {selectedAssignment && conversationId && (
+          {selectedAssignment && conversationId && otherParty && (
             <div className="hidden lg:block lg:col-span-3">
               <div className="sticky top-4">
                 <Card className="h-[calc(100vh-120px)]">
                   <CardContent className="p-0 h-full">
                     <InstantMessaging
                       conversationId={conversationId}
-                      otherUserId={selectedAssignment.traveler_id}
+                      otherUserId={otherParty.id}
                     />
                   </CardContent>
                 </Card>
@@ -599,14 +836,14 @@ export default function ClientTracking() {
         </div>
 
         {/* Mobile Messages Modal */}
-        {showMessages && selectedAssignment && conversationId && (
+        {showMessages && selectedAssignment && conversationId && otherParty && (
           <div className="fixed inset-0 z-50 bg-background lg:hidden">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-3 border-b">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-primary" />
                   <span className="font-medium">
-                    {selectedAssignment.traveler_profile?.first_name} {selectedAssignment.traveler_profile?.last_name}
+                    {otherParty.name}
                   </span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowMessages(false)}>
@@ -616,7 +853,7 @@ export default function ClientTracking() {
               <div className="flex-1 overflow-hidden">
                 <InstantMessaging
                   conversationId={conversationId}
-                  otherUserId={selectedAssignment.traveler_id}
+                  otherUserId={otherParty.id}
                 />
               </div>
             </div>
