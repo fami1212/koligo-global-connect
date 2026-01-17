@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { MapPin, Navigation, Loader2, Clock, Route } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,6 +16,12 @@ interface GeocodedLocation {
   lat: number;
   lng: number;
   name: string;
+}
+
+interface ETAInfo {
+  distanceKm: number;
+  durationMinutes: number;
+  durationText: string;
 }
 
 // Fix Leaflet default marker icons
@@ -104,6 +110,65 @@ async function geocodeCity(city: string, country?: string): Promise<GeocodedLoca
   }
 }
 
+// Calculate distance between two points using Haversine formula
+function calculateDistance(
+  lat1: number, 
+  lng1: number, 
+  lat2: number, 
+  lng2: number
+): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Format duration to readable text
+function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (hours < 24) {
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0 ? `${days}j ${remainingHours}h` : `${days}j`;
+}
+
+// Calculate ETA based on distance and average speed
+function calculateETA(
+  transporterLocation: { lat: number; lng: number } | null,
+  destinationLocation: GeocodedLocation | null,
+  averageSpeedKmh: number = 60 // Default average speed
+): ETAInfo | null {
+  if (!transporterLocation || !destinationLocation) return null;
+  
+  const distanceKm = calculateDistance(
+    transporterLocation.lat,
+    transporterLocation.lng,
+    destinationLocation.lat,
+    destinationLocation.lng
+  );
+  
+  // Apply road factor (roads are ~1.3x longer than straight line)
+  const roadDistanceKm = distanceKm * 1.3;
+  const durationMinutes = (roadDistanceKm / averageSpeedKmh) * 60;
+  
+  return {
+    distanceKm: roadDistanceKm,
+    durationMinutes,
+    durationText: formatDuration(durationMinutes),
+  };
+}
+
 export function TrackingMap({ 
   transporterLocation, 
   pickupCity,
@@ -120,6 +185,30 @@ export function TrackingMap({
   const [deliveryLocation, setDeliveryLocation] = useState<GeocodedLocation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
+
+  // Calculate ETA
+  const etaInfo = useMemo(() => 
+    calculateETA(transporterLocation, deliveryLocation),
+    [transporterLocation, deliveryLocation]
+  );
+
+  // Calculate progress percentage
+  const progressPercentage = useMemo(() => {
+    if (!pickupLocation || !deliveryLocation || !transporterLocation) return null;
+    
+    const totalDistance = calculateDistance(
+      pickupLocation.lat, pickupLocation.lng,
+      deliveryLocation.lat, deliveryLocation.lng
+    );
+    
+    const remainingDistance = calculateDistance(
+      transporterLocation.lat, transporterLocation.lng,
+      deliveryLocation.lat, deliveryLocation.lng
+    );
+    
+    const progress = ((totalDistance - remainingDistance) / totalDistance) * 100;
+    return Math.max(0, Math.min(100, progress));
+  }, [pickupLocation, deliveryLocation, transporterLocation]);
 
   // Geocode cities when they change
   useEffect(() => {
@@ -265,6 +354,40 @@ export function TrackingMap({
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
           </div>
+        </div>
+      )}
+      
+      {/* ETA Panel */}
+      {transporterLocation && etaInfo && (
+        <div className="absolute top-2 left-2 z-20 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[200px]">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Arrivée estimée</span>
+          </div>
+          
+          <div className="text-xl font-bold text-foreground mb-1">
+            {etaInfo.durationText}
+          </div>
+          
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Route className="h-3 w-3" />
+            <span>{etaInfo.distanceKm.toFixed(1)} km restants</span>
+          </div>
+          
+          {progressPercentage !== null && (
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Progression</span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-green-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
       
